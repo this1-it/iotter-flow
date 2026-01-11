@@ -15,7 +15,6 @@ import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.samples.about.AboutView;
 import com.vaadin.samples.authentication.AccessControlFactory;
-import com.vaadin.samples.crud.SampleCrudView;
 
 /**
  * The main layout. Contains the navigation menu.
@@ -31,8 +30,6 @@ public class MainLayout extends FlexLayout implements RouterLayout {
         setClassName("main-layout");
 
         menu = new Menu();
-        menu.addView(SampleCrudView.class, SampleCrudView.VIEW_NAME,
-                VaadinIcon.EDIT.create());
         menu.addView(AboutView.class, AboutView.VIEW_NAME,
                 VaadinIcon.INFO_CIRCLE.create());
 

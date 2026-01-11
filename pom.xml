@@ -18,6 +18,17 @@
         <failOnMissingWebXml>false</failOnMissingWebXml>
 
         <vaadin.version>14.8.14</vaadin.version>
+
+        <!-- Spring -->
+        <spring.framework.version>5.3.39</spring.framework.version>
+        <org.springframework.version>5.3.39</org.springframework.version>
+        <spring-security.version>5.8.15</spring-security.version>
+        <spring.data.jpa.version>2.7.18</spring.data.jpa.version>
+        <spring.data.cassandra.version>2.2.14.RELEASE</spring.data.cassandra.version>
+        <spring.integration.version>5.5.20</spring.integration.version>
+
+        <!-- Boot (USED ONLY BY VAADIN MODULE) -->
+        <spring.boot.version>2.7.18</spring.boot.version>
     </properties>
 
     <prerequisites>
