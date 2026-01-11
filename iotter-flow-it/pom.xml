@@ -45,7 +45,7 @@
 
         <!-- Vaadin Testbench -->
         <dependency>
-            <groupId>it.thisone.iotter</groupId>
+            <groupId>com.vaadin</groupId>
             <artifactId>vaadin-testbench</artifactId>
             <scope>test</scope>
         </dependency>
