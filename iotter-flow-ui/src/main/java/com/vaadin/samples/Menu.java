@@ -43,7 +43,7 @@ public class Menu extends FlexLayout {
         top.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         top.setClassName("menu-header");
 
-        Label title = new Label("My CRUD");
+        Label title = new Label("Iotter Flow");
 
         // Note! Image resource url is resolved here as it is dependent on the
         // execution mode (development or production) and browser ES level support
