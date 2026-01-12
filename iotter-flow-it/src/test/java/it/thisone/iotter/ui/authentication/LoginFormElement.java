@@ -1,4 +1,4 @@
-package com.vaadin.samples.authentication;
+package it.thisone.iotter.ui.authentication;
 
 import com.vaadin.flow.component.button.testbench.ButtonElement;
 import com.vaadin.flow.component.textfield.testbench.PasswordFieldElement;

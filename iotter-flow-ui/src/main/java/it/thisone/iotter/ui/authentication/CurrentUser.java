@@ -1,4 +1,4 @@
-package com.vaadin.samples.authentication;
+package it.thisone.iotter.ui.authentication;
 
 import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinService;

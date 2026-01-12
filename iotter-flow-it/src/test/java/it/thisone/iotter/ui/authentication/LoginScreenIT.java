@@ -1,11 +1,12 @@
-package com.vaadin.samples.authentication;
+package it.thisone.iotter.ui.authentication;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.vaadin.flow.theme.lumo.Lumo;
-import com.vaadin.samples.AbstractViewTest;
-import com.vaadin.samples.MainLayoutElement;
+
+import it.thisone.iotter.ui.AbstractViewTest;
+import it.thisone.iotter.ui.MainLayoutElement;
 
 public class LoginScreenIT extends AbstractViewTest {
 

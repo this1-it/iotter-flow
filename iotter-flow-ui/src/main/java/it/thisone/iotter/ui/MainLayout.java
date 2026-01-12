@@ -1,4 +1,4 @@
-package com.vaadin.samples;
+package it.thisone.iotter.ui;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Key;
@@ -10,8 +10,9 @@ import com.vaadin.flow.router.RouterLayout;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
-import com.vaadin.samples.about.AboutView;
-import com.vaadin.samples.authentication.AccessControlFactory;
+
+import it.thisone.iotter.ui.about.AboutView;
+import it.thisone.iotter.ui.authentication.AccessControlFactory;
 
 /**
  * The main layout. Contains the navigation menu.

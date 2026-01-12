@@ -1,4 +1,4 @@
-package com.vaadin.samples;
+package it.thisone.iotter.ui;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

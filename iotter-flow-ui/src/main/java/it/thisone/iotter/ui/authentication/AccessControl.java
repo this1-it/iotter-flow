@@ -1,4 +1,4 @@
-package com.vaadin.samples.authentication;
+package it.thisone.iotter.ui.authentication;
 
 import java.io.Serializable;
 

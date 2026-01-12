@@ -1,4 +1,4 @@
-package com.vaadin.samples;
+package it.thisone.iotter.ui;
 
 import org.junit.After;
 import org.junit.Assert;

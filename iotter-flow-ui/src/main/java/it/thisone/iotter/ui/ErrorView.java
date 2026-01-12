@@ -1,4 +1,4 @@
-package com.vaadin.samples;
+package it.thisone.iotter.ui;
 
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;

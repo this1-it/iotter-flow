@@ -1,12 +1,13 @@
-package com.vaadin.samples.about;
+package it.thisone.iotter.ui.about;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.vaadin.flow.component.html.testbench.SpanElement;
-import com.vaadin.samples.AbstractViewTest;
-import com.vaadin.samples.MainLayoutElement;
-import com.vaadin.samples.authentication.LoginFormElement;
+
+import it.thisone.iotter.ui.AbstractViewTest;
+import it.thisone.iotter.ui.MainLayoutElement;
+import it.thisone.iotter.ui.authentication.LoginFormElement;
 
 public class AboutViewIT extends AbstractViewTest {
 
