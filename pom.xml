@@ -100,7 +100,7 @@
     </pluginRepositories>
 
     <modules>
-        <module>iotter-flow-backend</module>
+        <!-- <module>iotter-flow-backend</module> -->
         <module>iotter-flow-ui</module>
         <module>iotter-flow-it</module>
     </modules>
