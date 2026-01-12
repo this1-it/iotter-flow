@@ -6,11 +6,15 @@
 - `iotter-flow-it/` contains integration/UI tests using Vaadin TestBench, under `iotter-flow-it/src/test/java`.
 - The root `pom.xml` aggregates the modules for multi-module builds.
 
+## ExecPlans
+
+When writing complex features or significant refactors, use an ExecPlan (as described in .agents/_template/PLANS.md) from design to implementation. Write new plans to the .agents dir, Place any temporary research, clones, etc., in a .gitignored subdirectory of .agents. But for permanent features, open a new subdir under .agents, so for example for the orchestrator, we would use .agents/orchestrator/PLAN.md ... start by doing `cp -r .agents/_template .agents/orchestrator`. You need to remove the preamble of each plan, do not copy blindly. And if you need to take a different approach than TDD just for a particular plan, put that clearly in the plan.
+
+
 ## Build, Test, and Development Commands
 - `mvn clean install` builds all modules.
 - `mvn -pl iotter-flow-ui jetty:run` runs the UI locally via Jetty (default goal in the UI module).
 - `mvn -pl iotter-flow-ui -Pproduction package` builds the UI in production mode (frontend bundle generated).
-- `mvn -pl iotter-flow-backend test` runs backend unit tests.
 - `mvn -pl iotter-flow-it -Pintegration-tests verify -Dwebdriver.chrome.driver=/path/to/chromedriver` runs integration tests; the profile downloads drivers into `iotter-flow-it/drivers/`.
 
 ## Coding Style & Naming Conventions

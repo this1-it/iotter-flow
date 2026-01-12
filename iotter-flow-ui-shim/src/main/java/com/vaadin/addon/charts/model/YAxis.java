@@ -18,10 +18,11 @@ package com.vaadin.addon.charts.model;
  */
 
 import com.vaadin.addon.charts.model.style.Color;
+import com.vaadin.flow.component.Unit;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import com.vaadin.server.SizeWithUnit;
-import com.vaadin.server.Sizeable.Unit;
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vaadin.addon.charts.model.serializers.SizeSerializer;
 /**
@@ -1358,30 +1359,14 @@ public class YAxis extends Axis {
 	 *            CSS style string representation
 	 */
 	public void setHeight(String height) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(height);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setHeight(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setHeight(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**
 	 * @see #setHeight(float,Unit)
 	 */
 	public Unit getHeightUnit() {
-		if (this.height == null) {
-			return Unit.PIXELS;
-		}
-		if (this.height.contains("%")) {
-			return Unit.PERCENTAGE;
-		}
+
 		return Unit.PIXELS;
 	}
 
@@ -1394,19 +1379,7 @@ public class YAxis extends Axis {
 	 *            the unit used for the height
 	 */
 	public void setHeight(float height, Unit unit) {
-		if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-			throw new IllegalArgumentException(
-					unit.toString()
-							+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-		}
-		String value = Float.toString(height);
-		if (unit.equals(Unit.PERCENTAGE)) {
-			value += "%";
-		}
-		if (height == -1) {
-			value = null;
-		}
-		this.height = value;
+
 	}
 
 	/**
@@ -1487,18 +1460,7 @@ public class YAxis extends Axis {
 	 *            CSS style string representation
 	 */
 	public void setTop(String top) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(top);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setTop(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setTop(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**

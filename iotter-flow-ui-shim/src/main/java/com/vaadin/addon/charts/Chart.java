@@ -1,66 +1,19 @@
 package com.vaadin.addon.charts;
 
-/*
- * #%L
- * Vaadin Charts
- * %%
- * Copyright (C) 2014 Vaadin Ltd
- * %%
- * This program is available under Commercial Vaadin Add-On License 3.0
- * (CVALv3).
- * 
- * See the file licensing.txt distributed with this software for more
- * information about licensing.
- * 
- * You should have received a copy of the CVALv3 along with this program.
- * If not, see <https://vaadin.com/license/cval-3>.
- * #L%
- */
-
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
 
-import org.jsoup.nodes.Element;
-
-//import com.vaadin.addon.charts.declarative.ChartDesignReader;
-//import com.vaadin.addon.charts.declarative.ChartDesignWriter;
-//import com.vaadin.addon.charts.events.AbstractSeriesEvent;
-//import com.vaadin.addon.charts.events.AxisRescaledEvent;
-//import com.vaadin.addon.charts.events.ConfigurationChangeListener;
-//import com.vaadin.addon.charts.events.DataAddedEvent;
-//import com.vaadin.addon.charts.events.DataRemovedEvent;
-//import com.vaadin.addon.charts.events.DataUpdatedEvent;
-//import com.vaadin.addon.charts.events.ItemSlicedEvent;
-//import com.vaadin.addon.charts.events.SeriesStateEvent;
-import com.vaadin.addon.charts.model.AbstractConfigurationObject;
 import com.vaadin.addon.charts.model.AbstractSeries;
 import com.vaadin.addon.charts.model.ChartModel;
 import com.vaadin.addon.charts.model.ChartType;
 import com.vaadin.addon.charts.model.Configuration;
 import com.vaadin.addon.charts.model.DataSeries;
 import com.vaadin.addon.charts.model.DataSeriesItem;
-import com.vaadin.addon.charts.model.Label;
 import com.vaadin.addon.charts.model.PlotOptionsSeries;
 import com.vaadin.addon.charts.model.Series;
-import com.vaadin.addon.charts.model.XAxis;
-import com.vaadin.addon.charts.model.YAxis;
-//import com.vaadin.addon.charts.shared.ChartClientRpc;
-//import com.vaadin.addon.charts.shared.ChartConnector;
-//import com.vaadin.addon.charts.shared.ChartServerRpc;
-//import com.vaadin.addon.charts.shared.ChartState;
-//import com.vaadin.addon.charts.shared.DrilldownEventDetails;
-//import com.vaadin.addon.charts.shared.MouseEventDetails;
-import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.CustomComponent;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.declarative.DesignContext;
-import com.vaadin.util.ReflectTools;
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 /**
  * Chart is a Vaadin component that is used to visualize data.
@@ -89,7 +42,7 @@ import com.vaadin.util.ReflectTools;
  * @see <a href="https://vaadin.com/add-ons/charts">Vaadin Charts</a>
  */
 @SuppressWarnings("serial")
-public class Chart extends CustomComponent {
+public class Chart extends Composite<Div> {
 
 
 
@@ -114,8 +67,6 @@ public class Chart extends CustomComponent {
      * @See {@link Chart}
      */
     public Chart() {
-        setWidth(100, Unit.PERCENTAGE);
-        setHeight(400, Unit.PIXELS);
         configuration = new Configuration();
 
         
@@ -141,13 +92,10 @@ public class Chart extends CustomComponent {
         chart.setType(type);
         configuration.setChart(chart);
 
-        setCompositionRoot(new VerticalLayout());
+        getContent().add(new VerticalLayout());
     }
 
-    @Override
-    public void beforeClientResponse(boolean initial) {
-        super.beforeClientResponse(initial);
-    }
+
 
 
 

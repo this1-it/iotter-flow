@@ -22,8 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import com.vaadin.addon.charts.util.Util;
-import com.vaadin.server.SizeWithUnit;
-import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.flow.component.Unit;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vaadin.addon.charts.model.serializers.SizeSerializer;
 /**
@@ -861,30 +860,14 @@ public class PlotOptionsBubble extends AbstractPlotOptions {
 	 *            CSS style string representation
 	 */
 	public void setMinSize(String minSize) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(minSize);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setMinSize(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setMinSize(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**
 	 * @see #setMinSize(float,Unit)
 	 */
 	public Unit getMinSizeUnit() {
-		if (this.minSize == null) {
-			return Unit.PIXELS;
-		}
-		if (this.minSize.contains("%")) {
-			return Unit.PERCENTAGE;
-		}
+
 		return Unit.PIXELS;
 	}
 
@@ -936,18 +919,7 @@ public class PlotOptionsBubble extends AbstractPlotOptions {
 	 *            CSS style string representation
 	 */
 	public void setMaxSize(String maxSize) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(maxSize);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setMaxSize(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setMaxSize(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**

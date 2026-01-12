@@ -25,12 +25,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.vaadin.addon.charts.model.Lang;
 import com.vaadin.addon.charts.model.style.Theme;
 
-import com.vaadin.server.AbstractClientConnector;
-import com.vaadin.server.AbstractExtension;
-import com.vaadin.server.Extension;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.HasComponents;
-import com.vaadin.ui.UI;
+
 
 /**
  * The ChartOptions extension configures a page local theme and other global
@@ -38,7 +33,7 @@ import com.vaadin.ui.UI;
  * to configure e.g. default colors used by all Chart objects displayed in the
  * UI.
  */
-public class ChartOptions extends AbstractExtension {
+public class ChartOptions  {
 
     @JsonUnwrapped
     private Theme theme;
@@ -49,27 +44,9 @@ public class ChartOptions extends AbstractExtension {
     }
 
     private void notifyListeners() {
-        UI ui = getUI();
+     }
 
-        if (ui == null) {
-            return;
-        }
 
-        searchAndNotifyListeners(ui);
-    }
-
-    private void searchAndNotifyListeners(Component component) {
-        if (component instanceof HasComponents) {
-            HasComponents container = (HasComponents) component;
-            Iterator<Component> iter = container.iterator();
-            while (iter.hasNext()) {
-                searchAndNotifyListeners(iter.next());
-            }
-        } else if (component instanceof Chart) {
-            Chart listener = (Chart) component;
-            listener.drawChart();
-        }
-    }
 
     /**
      * Sets the theme to use.
@@ -121,38 +98,8 @@ public class ChartOptions extends AbstractExtension {
     }
 
 
-    void extendConnector(AbstractClientConnector connector) {
-        super.extend(connector);
-    }
 
-    /**
-     * Returns a ChartOptions extension for the given UI. If a ChartOptions
-     * extension has not yet been added, a new one is created and added.
-     *
-     * @param ui
-     *            the UI for which the ChartOptions should be returned
-     * @return the ChartOptions instance connected to the given UI
-     */
-    public static ChartOptions get(UI ui) {
-        ChartOptions optioner = null;
-
-        // Search singleton optioner
-        for (Extension extension : ui.getExtensions()) {
-            if (extension instanceof ChartOptions) {
-                optioner = (ChartOptions) extension;
-                break;
-            }
-        }
-
-        // Create new optioner if not found
-        if (optioner == null) {
-            optioner = new ChartOptions();
-            optioner.extendConnector(ui);
-        }
-
-        return optioner;
-
-    }
+ 
 
     /**
      * Returns a ChartOptions extension for the current UI. If a ChartOptions
@@ -161,13 +108,8 @@ public class ChartOptions extends AbstractExtension {
      * @return a ChartOptions instance connected to the currently active UI
      */
     public static ChartOptions get() {
-        UI ui = UI.getCurrent();
 
-        if (ui == null) {
-            throw new IllegalStateException(
-                    "This method must be used from UI thread");
-        }
-        return get(ui);
+        return null;
     }
 
 }

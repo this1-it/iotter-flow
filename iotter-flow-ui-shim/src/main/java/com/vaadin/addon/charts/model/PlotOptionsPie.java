@@ -18,10 +18,11 @@ package com.vaadin.addon.charts.model;
  */
 
 import com.vaadin.addon.charts.model.style.Color;
+import com.vaadin.flow.component.Unit;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import com.vaadin.server.SizeWithUnit;
-import com.vaadin.server.Sizeable.Unit;
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vaadin.addon.charts.model.serializers.SizeSerializer;
 /**
@@ -393,30 +394,14 @@ public class PlotOptionsPie extends AbstractPlotOptions {
 	 *            CSS style string representation
 	 */
 	public void setInnerSize(String innerSize) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(innerSize);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setInnerSize(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setInnerSize(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**
 	 * @see #setInnerSize(float,Unit)
 	 */
 	public Unit getInnerSizeUnit() {
-		if (this.innerSize == null) {
-			return Unit.PIXELS;
-		}
-		if (this.innerSize.contains("%")) {
-			return Unit.PERCENTAGE;
-		}
+
 		return Unit.PIXELS;
 	}
 
@@ -604,18 +589,7 @@ public class PlotOptionsPie extends AbstractPlotOptions {
 	 *            CSS style string representation
 	 */
 	public void setSize(String size) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(size);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setSize(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setSize(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**

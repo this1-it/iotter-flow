@@ -18,12 +18,11 @@ package com.vaadin.addon.charts.model;
  */
 
 import com.vaadin.addon.charts.model.style.Color;
-import com.vaadin.server.SizeWithUnit;
-import com.vaadin.server.Sizeable.Unit;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vaadin.addon.charts.model.serializers.SizeSerializer;
 import java.util.Date;
 import com.vaadin.addon.charts.util.Util;
+import com.vaadin.flow.component.Unit;
 /**
  * An array of objects defining plot bands on the Y axis.
  */
@@ -147,30 +146,13 @@ public class PlotBand extends AbstractConfigurationObject {
 	 *            CSS style string representation
 	 */
 	public void setInnerRadius(String innerRadius) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(innerRadius);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setInnerRadius(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setInnerRadius(-1, Unit.PIXELS);
-		}
 	}
 
 	/**
 	 * @see #setInnerRadius(float,Unit)
 	 */
 	public Unit getInnerRadiusUnit() {
-		if (this.innerRadius == null) {
-			return Unit.PIXELS;
-		}
-		if (this.innerRadius.contains("%")) {
-			return Unit.PERCENTAGE;
-		}
+
 		return Unit.PIXELS;
 	}
 
@@ -240,18 +222,6 @@ public class PlotBand extends AbstractConfigurationObject {
 	 *            CSS style string representation
 	 */
 	public void setOuterRadius(String outerRadius) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(outerRadius);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setOuterRadius(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setOuterRadius(-1, Unit.PIXELS);
-		}
 	}
 
 	/**
@@ -316,18 +286,6 @@ public class PlotBand extends AbstractConfigurationObject {
 	 *            CSS style string representation
 	 */
 	public void setThickness(String thickness) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(thickness);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setThickness(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setThickness(-1, Unit.PIXELS);
-		}
 	}
 
 	/**

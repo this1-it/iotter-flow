@@ -19,10 +19,9 @@ package com.vaadin.addon.charts.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import com.vaadin.server.SizeWithUnit;
-import com.vaadin.server.Sizeable.Unit;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vaadin.addon.charts.model.serializers.SizeSerializer;
+import com.vaadin.flow.component.Unit;
 /**
  * Applies only to polar charts and angular gauges. This configuration object
  * holds general options for the combined X and Y axes set. Each xAxis or yAxis
@@ -151,30 +150,13 @@ public class Pane extends AbstractConfigurationObject {
 	 *            CSS style string representation
 	 */
 	public void setSize(String size) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(size);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setSize(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setSize(-1, Unit.PIXELS);
-		}
 	}
 
 	/**
 	 * @see #setSize(float,Unit)
 	 */
 	public Unit getSizeUnit() {
-		if (this.size == null) {
-			return Unit.PIXELS;
-		}
-		if (this.size.contains("%")) {
-			return Unit.PERCENTAGE;
-		}
+
 		return Unit.PIXELS;
 	}
 

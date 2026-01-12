@@ -18,10 +18,11 @@ package com.vaadin.addon.charts.model;
  */
 
 import com.vaadin.addon.charts.model.style.Color;
+import com.vaadin.flow.component.Unit;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import com.vaadin.server.SizeWithUnit;
-import com.vaadin.server.Sizeable.Unit;
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vaadin.addon.charts.model.serializers.SizeSerializer;
 /**
@@ -313,30 +314,14 @@ public class PlotOptionsFunnel extends PyramidOptions {
 	 *            CSS style string representation
 	 */
 	public void setHeight(String height) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(height);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setHeight(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setHeight(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**
 	 * @see #setHeight(float,Unit)
 	 */
 	public Unit getHeightUnit() {
-		if (this.height == null) {
-			return Unit.PIXELS;
-		}
-		if (this.height.contains("%")) {
-			return Unit.PERCENTAGE;
-		}
+
 		return Unit.PIXELS;
 	}
 
@@ -469,18 +454,7 @@ public class PlotOptionsFunnel extends PyramidOptions {
 	 *            CSS style string representation
 	 */
 	public void setNeckHeight(String neckHeight) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(neckHeight);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setNeckHeight(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setNeckHeight(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**
@@ -545,18 +519,7 @@ public class PlotOptionsFunnel extends PyramidOptions {
 	 *            CSS style string representation
 	 */
 	public void setNeckWidth(String neckWidth) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(neckWidth);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setNeckWidth(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setNeckWidth(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**
@@ -783,18 +746,7 @@ public class PlotOptionsFunnel extends PyramidOptions {
 	 *            CSS style string representation
 	 */
 	public void setWidth(String width) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(width);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setWidth(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setWidth(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**

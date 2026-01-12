@@ -18,7 +18,8 @@ package com.vaadin.addon.charts.model;
  */
 
 import com.vaadin.addon.charts.model.style.Color;
-import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.flow.component.Unit;
+
 
 public abstract class PyramidOptions extends AbstractPlotOptions {
 

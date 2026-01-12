@@ -20,12 +20,11 @@ package com.vaadin.addon.charts.model;
 import com.vaadin.addon.charts.model.style.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
-import com.vaadin.server.SizeWithUnit;
-import com.vaadin.server.Sizeable.Unit;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vaadin.addon.charts.model.serializers.SizeSerializer;
 import java.util.Date;
 import com.vaadin.addon.charts.util.Util;
+import com.vaadin.flow.component.Unit;
 /**
  * Error bars are a graphical representation of the variability of data and are
  * used on graphs to indicate the error, or uncertainty in a reported
@@ -791,30 +790,13 @@ public class PlotOptionsErrorbar extends AbstractPlotOptions {
 	 *            CSS style string representation
 	 */
 	public void setWhiskerLength(String whiskerLength) {
-		SizeWithUnit sizeWithUnit = SizeWithUnit.parseStringSize(whiskerLength);
-		if (sizeWithUnit != null) {
-			Unit unit = sizeWithUnit.getUnit();
-			if (!(unit.equals(Unit.PERCENTAGE) || unit.equals(Unit.PIXELS))) {
-				throw new IllegalArgumentException(
-						unit.toString()
-								+ "is not a valid unit for sizing. Only percentage and pixels are allowed.");
-			}
-			setWhiskerLength(sizeWithUnit.getSize(), sizeWithUnit.getUnit());
-		} else {
-			setWhiskerLength(-1, Unit.PIXELS);
-		}
+
 	}
 
 	/**
 	 * @see #setWhiskerLength(float,Unit)
 	 */
 	public Unit getWhiskerLengthUnit() {
-		if (this.whiskerLength == null) {
-			return Unit.PIXELS;
-		}
-		if (this.whiskerLength.contains("%")) {
-			return Unit.PERCENTAGE;
-		}
 		return Unit.PIXELS;
 	}
 
