@@ -1,0 +1,8 @@
+mail.smtp.username=noreply@appytech.it
+mail.smtp.password=!noreply2015#
+mail.smtp.auth=true
+mail.smtp.starttls.enable=false
+mail.smtp.host=mail.appytech.it
+mail.smtp.port=25
+mail.no-reply=noreply@appytech.it
+mail.catch-all=noreply@appytech.it

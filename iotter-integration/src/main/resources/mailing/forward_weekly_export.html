@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <meta name="HandheldFriendly" content="true" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="format-detection" content="telephone=no">
+    <title>Forward visualization</title>
+    <style type="text/css" media="screen">
+      * { line-height: inherit; }
+      body, p { margin: 0; padding: 0; -webkit-text-size-adjust: none; -ms-text-size-adjust: none; }
+      img { outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+      a img { border: none; }
+      #backgroundTable { margin: 0; padding: 0; width: 100% !important; }
+      a, a:link, .no-detect-local a, .appleLinks a { color: #5555ff !important; text-decoration: underline; }
+      .ExternalClass { display: block !important; width: 100%; }
+      .ExternalClass * { line-height: inherit; }
+      table td { border-collapse: collapse; }
+      sup { position: relative; top: 4px; line-height: 7px !important; font-size: 11px !important; }
+      .mobile_link a[href^="tel"],
+      .mobile_link a[href^="sms"] {
+        text-decoration: default; color: #5555ff !important; pointer-events: auto; cursor: default;
+      }
+      .nounderline { text-decoration: none !important; }
+      h1, h2, h3 { margin: 0; padding: 0; }
+      p { margin: 0 !important; }
+      table.email-root-wrapper { width: 600px !important; }
+      body { min-width: 280px; width: 100%; }
+    </style>
+    <style>
+      @media only screen and (max-width: 599px),
+      only screen and (max-device-width: 599px),
+      only screen and (max-width: 400px),
+      only screen and (max-device-width: 400px) {
+        .email-root-wrapper { width: 100% !important; }
+        table.email-root-wrapper { width: 100% !important; }
+        td.wrap .full-width { width: 100% !important; height: auto !important; }
+        td.wrap .fullwidthhalfleft,
+        td.wrap .fullwidthhalfright { width: 100% !important; }
+        td.wrap .fullwidthhalfinner {
+          width: 100% !important; margin: 0 auto !important; float: none !important; clear: both !important;
+        }
+        td.wrap .hide { display: none !important; width: 0; height: 0; overflow: hidden; }
+      }
+    </style>
+    <!--[if gte mso 9]>
+      <style type="text/css">
+        table, td { border-collapse: collapse !important; }
+        .email-root-wrapper { width: 600px !important; }
+        .imglink, .edm_button { font-size: 0px; }
+      </style>
+    <![endif]-->
+  </head>
+  <body style="font-family: Arial, sans-serif; font-size: 0; margin: 0; padding: 0;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable">
+      <tr>
+        <td class="wrap" align="left" valign="top" width="100%">
+          <div style="padding: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td valign="top" style="padding: 0;">
+                  <table cellpadding="0" cellspacing="0" width="600" align="center"
+                    class="email-root-wrapper" style="max-width:600px; min-width:240px; margin:10px 0 0 10px; padding-right:20px;">
+                    <tr>
+                      <td valign="top" style="padding: 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                          <tr>
+                            <td valign="top" style="padding: 5px;">
+                              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                  <td valign="top">
+                                    <div style="text-align: left; font-family: Arial, sans-serif; font-size: 14px; color: #000; line-height: 20px;">
+
+                                      <p>
+                                        <br/>This message contains, as an attachment, the raw data acquired from the Aernet device
+                                        <br/>$device
+
+                                      </p>
+                                      <p>&#xA0;</p>
+                                      <p>Sincerely</p>
+                                      <br/>
+                                      <hr>
+                                      <br/>
+                                      <p>Salve,</p>
+                                      <p>
+                                        <br/>Questo messaggio include in allegato i dati raccolti dal dispositivo Aernet
+                                        <br/>$device
+
+                                      </p>
+                                      <p>&#xA0;</p>
+                                      <p>Cordialmente</p>
+                                      <br/>
+                                    </div>
+                                    
+                                    
+#if ($slaves)
+<table cellpadding="1" cellspacing="1" border="1" width="50%" style="margin-top: 5px; font-size:14px; text-align:center;">
+<tr height="30">
+    <td valign="center" style="">Profilo/<br/>Profile</td>
+   <td valign="center" style="">Intervallo/<br/>Interval</td>
+</tr>
+	#foreach( $slave in $slaves )
+	<tr height="30">
+	    <td valign="center" style="">$slave.label</td>
+	   <td valign="center" style="">$slave.interval</td>
+	</tr>
+	#end
+</table>
+#end
+                                    
+                                    
+                                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 5px;">
+                                      <tr>
+                                        <td valign="top">
+                                          <table cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                              <td valign="top">
+<a href="https://aernet.aermec.com">
+<img src="$images/mail_logo.jpg" width="100%" height="" alt="Logo" border="0" class="" style="display: block; margin-top:5px;" />
+</a>
+                                              </td>
+                                            </tr>
+                                          </table>
+                                        </td>
+                                      </tr>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </table>
+                              
+                              
+                              
+                              
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

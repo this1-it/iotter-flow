@@ -70,7 +70,7 @@ public class ListSelect<T> extends MultiSelectListBox<T> {
      * @deprecated use {@link #setItemLabelGenerator(ItemLabelGenerator)}.
      */
     @Deprecated
-    public void setItemCaptionGenerator( ItemLabelGenerator<T> generator) {
+    public void setLabelCaptionGenerator( ItemLabelGenerator<T> generator) {
         setItemLabelGenerator(generator);
     }
 

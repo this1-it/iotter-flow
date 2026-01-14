@@ -1,7 +1,6 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `iotter-flow-backend/` is the Java backend module (data models and services) with unit tests in `iotter-flow-backend/src/test/java`.
 - `iotter-flow-ui/` is the Vaadin Flow UI module (Java views, resources, and web assets). Java lives in `iotter-flow-ui/src/main/java`, static assets in `iotter-flow-ui/src/main/webapp`, and frontend resources in `iotter-flow-ui/frontend`.
 - `iotter-flow-it/` contains integration/UI tests using Vaadin TestBench, under `iotter-flow-it/src/test/java`.
 - The root `pom.xml` aggregates the modules for multi-module builds.

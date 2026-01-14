@@ -1,0 +1,8 @@
+mail.smtp.username=aernet@aermec.lan
+mail.smtp.password=G!uliano_2016
+mail.smtp.auth=true
+mail.smtp.starttls.enable=false
+mail.smtp.host=webmail.aermec.com
+mail.smtp.port=25
+mail.no-reply=noreply.aernet@aermec.com
+mail.catch-all=support.aernet@aermec.com

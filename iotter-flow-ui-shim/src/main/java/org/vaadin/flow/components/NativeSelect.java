@@ -72,7 +72,7 @@ public class NativeSelect<T> extends Select<T> {
      * @deprecated Use {@link #setItemLabelGenerator(ItemLabelGenerator)}
      */
     @Deprecated
-    public void setItemCaptionGenerator(ItemLabelGenerator<T> generator) {
+    public void setLabelCaptionGenerator(ItemLabelGenerator<T> generator) {
         setItemLabelGenerator(generator);
     }
 }

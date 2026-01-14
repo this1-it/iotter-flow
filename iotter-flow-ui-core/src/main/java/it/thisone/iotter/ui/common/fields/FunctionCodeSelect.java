@@ -1,0 +1,17 @@
+package it.thisone.iotter.ui.common.fields;
+
+import com.vaadin.flow.component.combobox.ComboBox;
+
+import it.thisone.iotter.enums.modbus.FunctionCode;
+
+public class FunctionCodeSelect extends ComboBox<FunctionCode> {
+
+	private static final long serialVersionUID = -2993122599439071404L;
+	
+	public FunctionCodeSelect() {
+		super();
+		setItems(FunctionCode.values());
+		setLabelCaptionGenerator(type -> type.getDisplayName());
+	}
+
+}

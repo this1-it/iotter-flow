@@ -10,7 +10,7 @@
 
     <artifactId>iotter-flow-ui-shim</artifactId>
     <name>iotter-flow-ui-shim</name>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
 
 

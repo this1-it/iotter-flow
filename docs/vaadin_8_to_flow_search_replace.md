@@ -336,15 +336,15 @@ com.vaadin.flow.component
 
 | Vaadin 8 | Vaadin Flow |
 |--------|-------------|
-| `com.vaadin.data.provider.AbstractBackEndDataProvider` | `com.vaadin.flow.data.provider.AbstractBackEndDataProvider` |
+| `com.vaadin.flow.data.provider.AbstractBackEndDataProvider` | `com.vaadin.flow.data.provider.AbstractBackEndDataProvider` |
 
 ### Mandatory search & replace
 
 | Search | Replace |
 |------|---------|
-| `com.vaadin.data.provider.AbstractBackEndDataProvider` | `com.vaadin.flow.data.provider.AbstractBackEndDataProvider` |
-| `com.vaadin.data.provider.Query` | `com.vaadin.flow.data.provider.Query` |
-| `com.vaadin.data.provider.QuerySortOrder` | `com.vaadin.flow.data.provider.QuerySortOrder` |
+| `com.vaadin.flow.data.provider.AbstractBackEndDataProvider` | `com.vaadin.flow.data.provider.AbstractBackEndDataProvider` |
+| `com.vaadin.flow.data.provider.Query` | `com.vaadin.flow.data.provider.Query` |
+| `com.vaadin.flow.data.provider.QuerySortOrder` | `com.vaadin.flow.data.provider.QuerySortOrder` |
 
 ### Notes (no automatic replace)
 
@@ -403,3 +403,5 @@ Manual refactor required.
 Covers **~80% mechanical migration**.  
 Remaining effort is **layout semantics and UX parity**.
 
+
+import com.vaadin.flow.component.ComponentEvent;

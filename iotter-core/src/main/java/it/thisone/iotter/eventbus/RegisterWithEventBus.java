@@ -1,0 +1,12 @@
+package it.thisone.iotter.eventbus;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Inherited // important when working with dynamically generated proxies i.e. CGLib
+public @interface RegisterWithEventBus {}

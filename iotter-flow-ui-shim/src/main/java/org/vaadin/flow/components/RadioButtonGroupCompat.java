@@ -48,7 +48,7 @@ public class RadioButtonGroupCompat<T> extends RadioButtonGroup<T> {
     }
 
     @Deprecated
-    public void setItemCaptionGenerator( ItemLabelGenerator<T> generator) {
+    public void setLabelCaptionGenerator( ItemLabelGenerator<T> generator) {
         setItemLabelGenerator(generator);
     }
 
