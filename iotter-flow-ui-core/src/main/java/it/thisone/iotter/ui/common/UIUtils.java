@@ -304,15 +304,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 	@SuppressWarnings("serial")
 	public static ReCaptcha createReCaptcha() {
-		// https://developers.google.com/recaptcha/docs/faq
-
-		/*
-		 * 
-		 * Site key: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI Secret key:
-		 * 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
-		 * 
-		 */
-
+	
 		try {
 			Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
 			String privateKey = properties.getProperty("recaptcha.privatekey");
