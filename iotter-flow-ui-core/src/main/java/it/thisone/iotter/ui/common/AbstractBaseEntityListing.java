@@ -5,14 +5,13 @@ import java.util.Iterator;
 import com.vaadin.flow.data.provider.AbstractDataProvider;
 import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.data.provider.Query;
-import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.flow.component.Alignment;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.Layout;
+
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
@@ -28,7 +27,7 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 	public static final String ALWAYS_ENABLED_BUTTON = "always_enabled_button";
 
 	private final VerticalLayout mainLayout;
-	private Layout editorLayout;
+	private VerticalLayout editorLayout;
 	private final HorizontalLayout buttonsLayout;
 	private Component selectable;
 	private AbstractDataProvider<T, ?> dataProvider;
@@ -41,24 +40,24 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
 		mainLayout.setSpacing(false);
-		mainLayout.setPadding(new MarginInfo(true, false, false, false));
+		
 		editorLayout = new VerticalLayout();
 		editorLayout.setSizeFull();
-		setSizeFull();
+		//setSizeFull();
 		this.permissions = permissions;
 		if (this.permissions != null && this.permissions.isViewAllMode()) {
 			this.permissions.setViewMode(true);
 		}
 
 		buttonsLayout = new HorizontalLayout();
-		buttonsLayout.setStyleName(UIUtils.BUTTONS_STYLE);
+		//buttonsLayout.setStyleName(UIUtils.BUTTONS_STYLE);
 		buttonsLayout.setSpacing(true);
-		buttonsLayout.setDefaultComponentAlignment(Alignment.MIDDLE_RIGHT);
+		//buttonsLayout.setDefaultComponentAlignment(Alignment.MIDDLE_RIGHT);
 		Span counter = new Span();
-		counter.setStyleName(COUNTER_STYLE);
+		//counter.setStyleName(COUNTER_STYLE);
 		counter.setId(COUNTER_STYLE);
-		buttonsLayout.addComponent(counter);
-		setCompositionRoot(mainLayout);
+		buttonsLayout.add(counter);
+		//setCompositionRoot(mainLayout);
 	}
 
 	public abstract AbstractBaseEntityForm<T> getEditor(T item);
@@ -69,11 +68,11 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		return mainLayout;
 	}
 
-	public Layout getEditorLayout() {
+	public VerticalLayout getEditorLayout() {
 		return editorLayout;
 	}
 
-	public void setEditorLayout(Layout editorLayout) {
+	public void setEditorLayout(VerticalLayout editorLayout) {
 		this.editorLayout = editorLayout;
 	}
 
@@ -151,26 +150,26 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 	public void enableButtons(T item) {
 		boolean enabled = item != null;
 		int size = getSize();
-		Iterator<Component> iterator = buttonsLayout.iterator();
-		while (iterator.hasNext()) {
-			Component c = iterator.next();
-			if (c instanceof Button) {
-				Button button = (Button) c;
-				if (button.getId() != null && button.getId().contains(ALWAYS_ENABLED_BUTTON)) {
-					if (maxSize > 0) {
-						button.setEnabled(size < maxSize);
-					}
-				} else {
-					button.setEnabled(enabled);
-				}
-			} else if (c instanceof Span) {
-				Span label = (Span) c;
-				if (COUNTER_STYLE.equals(label.getId())) {
-					//label.setValue(Integer.toString(size));
-					label.setValue(Long.toString(size));
-				}
-			}
-		}
+//		Iterator<Component> iterator = buttonsLayout.iterator();
+//		while (iterator.hasNext()) {
+//			Component c = iterator.next();
+//			if (c instanceof Button) {
+//				Button button = (Button) c;
+//				if (button.getId() != null && button.getId().contains(ALWAYS_ENABLED_BUTTON)) {
+//					if (maxSize > 0) {
+//						button.setEnabled(size < maxSize);
+//					}
+//				} else {
+//					button.setEnabled(enabled);
+//				}
+//			} else if (c instanceof Span) {
+//				Span label = (Span) c;
+//				if (COUNTER_STYLE.equals(label.getId())) {
+//					//label.setValue(Integer.toString(size));
+//					label.setText(Long.toString(size));
+//				}
+//			}
+//		}
 	}
 
 	private int getSize() {

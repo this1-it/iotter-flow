@@ -47,10 +47,6 @@ public class RadioButtonGroupCompat<T> extends RadioButtonGroup<T> {
         setVertical(true);
     }
 
-    @Deprecated
-    public void setLabelCaptionGenerator( ItemLabelGenerator<T> generator) {
-        setItemLabelGenerator(generator);
-    }
 
     public void setItemLabelGenerator(ItemLabelGenerator<T> generator) {
         this.itemLabelGenerator = Objects.requireNonNull(generator);

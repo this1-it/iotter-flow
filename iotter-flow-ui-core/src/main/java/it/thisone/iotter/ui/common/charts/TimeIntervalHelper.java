@@ -8,9 +8,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
-import com.vaadin.shared.ui.datefield.DateResolution;
-import com.vaadin.flow.component.DateField;
-
+import com.vaadin.flow.component.datepicker.DatePicker;
 
 import it.thisone.iotter.enums.Period;
 import it.thisone.iotter.ui.model.TimeInterval;
@@ -318,12 +316,11 @@ public class TimeIntervalHelper {
 
 
 	@SuppressWarnings("serial")
-	public DateField createDateField() {
-		DateField field = new DateField();
+	public DatePicker createDateField() {
+		DatePicker field = new DatePicker();
 		
-		field.setResolution(DateResolution.DAY);
 		field.setPlaceholder(dateFormat);
-		field.setStyleName("timeinterval");
+		//field.setStyleName("timeinterval");
 
 
 		

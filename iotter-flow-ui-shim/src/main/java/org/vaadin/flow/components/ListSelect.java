@@ -66,13 +66,6 @@ public class ListSelect<T> extends MultiSelectListBox<T> {
     
     private ItemLabelGenerator<T> itemLabelGenerator = Object::toString;
 
-    /**
-     * @deprecated use {@link #setItemLabelGenerator(ItemLabelGenerator)}.
-     */
-    @Deprecated
-    public void setLabelCaptionGenerator( ItemLabelGenerator<T> generator) {
-        setItemLabelGenerator(generator);
-    }
 
     public void setItemLabelGenerator(ItemLabelGenerator<T> generator) {
         // see+vote for https://github.com/vaadin/platform/issues/2601

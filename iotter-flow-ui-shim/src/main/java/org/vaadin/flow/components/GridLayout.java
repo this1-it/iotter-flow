@@ -218,7 +218,7 @@ public class GridLayout extends FlexLayout {
      * @param row2      the row of the lower right corner of the area <code>c</code>
      *                  is supposed to occupy.
      */
-    public void addComponent( Component component, int column1, int row1,
+    public void add( Component component, int column1, int row1,
                              int column2, int row2) {
         Objects.requireNonNull(component);
         final int spanColumns = column2 - column1 + 1;
@@ -249,8 +249,8 @@ public class GridLayout extends FlexLayout {
      * @param row
      *            the row index, starting from 0.
      */
-    public void addComponent( Component component, int column, int row) {
-        addComponent(component, column, row, column, row);
+    public void add( Component component, int column, int row) {
+        add(component, column, row, column, row);
     }
 
     public void removeComponent(Component component) {

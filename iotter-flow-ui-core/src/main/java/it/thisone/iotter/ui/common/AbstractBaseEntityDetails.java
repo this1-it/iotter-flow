@@ -6,26 +6,29 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.vaadin.flow.component.Alignment;
+
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.Button.ClickEvent;
+
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.CustomComponent;
+import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.Layout;
+
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.notification.Notification;
 import org.vaadin.flow.components.PanelFlow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.themes.ValoTheme;
+import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.lumo.Lumo;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.util.PopupNotification;
 
 @SuppressWarnings("serial")
-public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends CustomComponent implements Button.ClickListener {
+public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Composite<Div>  {
 
 	private final String name;
 	private final Class<T> beanType;
@@ -45,9 +48,7 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Cu
 		removeButton = new Button(UIUtils.localize("basic.editor.remove"), this);
 		cancelButton = new Button(UIUtils.localize("basic.editor.close"), this);
 
-		selectButton.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
-		removeButton.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
-		cancelButton.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
+
 	}
 
 	public AbstractBaseEntityDetails(T item, Class<T> itemType, String name, String[] fieldIds, boolean remove) {
@@ -56,43 +57,42 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Cu
 		removeButton.setVisible(remove);
 		selectButton.setVisible(false);
 		if (remove) {
-			removeButton.setLabel(UIUtils.localize("basic.editor.yes"));
-			cancelButton.setLabel(UIUtils.localize("basic.editor.no"));
+			removeButton.setText(UIUtils.localize("basic.editor.yes"));
+			cancelButton.setText(UIUtils.localize("basic.editor.no"));
 		}
 		buildLayout(details);
 	}
 
 	protected void buildLayout(Component content) {
 		VerticalLayout verticalLayout = new VerticalLayout();
-		verticalLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		
 		verticalLayout.setSizeFull();
 		verticalLayout.setSpacing(true);
-		verticalLayout.addComponent(content);
-		verticalLayout.setExpandRatio(content, 1f);
+		verticalLayout.add(content);
+
 
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
 		buttonLayout.setPadding(true);
-		buttonLayout.addComponent(selectButton);
-		buttonLayout.addComponent(removeButton);
-		buttonLayout.addComponent(cancelButton);
+		buttonLayout.add(selectButton);
+		buttonLayout.add(removeButton);
+		buttonLayout.add(cancelButton);
 
 		HorizontalLayout footer = new HorizontalLayout();
-		footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
 		footer.setWidth(100.0f, Unit.PERCENTAGE);
-		footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-		footer.addComponent(buttonLayout);
+		//footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		footer.add(buttonLayout);
 
-		verticalLayout.addComponent(footer);
+		verticalLayout.add(footer);
 
-		setCompositionRoot(verticalLayout);
-		setSizeFull();
+//		setCompositionRoot(verticalLayout);
+//		setSizeFull();
 	}
 
 	private HorizontalLayout initDetails(String[] fieldIds) {
 		fieldsLayout = new FormLayout();
-		fieldsLayout.setSpacing(true);
-		fieldsLayout.setPadding(true);
+//		fieldsLayout.setSpacing(true);
+//		fieldsLayout.setPadding(true);
 
 		Collection<String> properties = new ArrayList<String>();
 		if (fieldIds != null) {
@@ -117,7 +117,7 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Cu
 			field.setReadOnly(false);
 			field.setValue(value == null ? "" : String.valueOf(value));
 			field.setReadOnly(true);
-			fieldsLayout.addComponent(field);
+			fieldsLayout.add(field);
 		}
 
         PanelFlow panel = new PanelFlow();
@@ -125,71 +125,60 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Cu
 		panel.setSizeFull();
 
 		HorizontalLayout layout = new HorizontalLayout();
-		layout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		//layout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 		layout.setSizeFull();
-		layout.addComponent(panel);
+		layout.add(panel);
 		layout.setPadding(true);
 
 		return layout;
 	}
 
 
-	/*
-	
-	Vaadin 8 (old)
 
-addListener(...)
+//	@Override
+//	public void buttonClick(ClickEvent event) {
+//		if (event.getButton() == removeButton) {
+//			try {
+//				onRemove();
+//				UIUtils.getUIEventBus().post(new PendingChangesEvent());
+//				fireEvent(new EntityRemovedEvent<T>(this, bean));
+//			} catch (EditorConstraintException e) {
+//				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+//			}
+//		} else if (event.getButton() == selectButton) {
+//			fireEvent(new EntitySelectedEvent<T>(this, bean));
+//		} else if (event.getButton() == cancelButton) {
+//			if (removeButton.isVisible()) {
+//				fireEvent(new EntityRemovedEvent<T>(this, null));
+//			} else {
+//				fireEvent(new EntitySelectedEvent<T>(this, null));
+//			}
+//		}
+//	}
+//
+//	public void addListener(EntityRemovedListener listener) {
+//		try {
+//			Method method = EntityRemovedListener.class.getDeclaredMethod(EntityRemovedListener.ENTITY_REMOVED,
+//					new Class[] { EntityRemovedEvent.class });
+//			addListener(EntityRemovedEvent.class, listener, method);
+//		} catch (final java.lang.NoSuchMethodException e) {
+//			throw new java.lang.RuntimeException("Internal error, entity removed method not found");
+//		}
+//	}
+//
+//	public void addListener(EntitySelectedListener listener) {
+//		try {
+//			Method method = EntitySelectedListener.class.getDeclaredMethod(EntitySelectedListener.ENTITY_SELECTED,
+//					new Class[] { EntitySelectedEvent.class });
+//			addListener(EntitySelectedEvent.class, listener, method);
+//		} catch (final java.lang.NoSuchMethodException e) {
+//			throw new java.lang.RuntimeException("Internal error, entity selected method not found");
+//		}
+//	}
 
-fireEvent(...)
-
-Reflection-based event dispatch
-
-Component.Event
-	*/
-	@Override
-	public void buttonClick(ClickEvent event) {
-		if (event.getButton() == removeButton) {
-			try {
-				onRemove();
-				UIUtils.getUIEventBus().post(new PendingChangesEvent());
-				fireEvent(new EntityRemovedEvent<T>(this, bean));
-			} catch (EditorConstraintException e) {
-				PopupNotification.show(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-			}
-		} else if (event.getButton() == selectButton) {
-			fireEvent(new EntitySelectedEvent<T>(this, bean));
-		} else if (event.getButton() == cancelButton) {
-			if (removeButton.isVisible()) {
-				fireEvent(new EntityRemovedEvent<T>(this, null));
-			} else {
-				fireEvent(new EntitySelectedEvent<T>(this, null));
-			}
-		}
-	}
-
-	public void addListener(EntityRemovedListener listener) {
-		try {
-			Method method = EntityRemovedListener.class.getDeclaredMethod(EntityRemovedListener.ENTITY_REMOVED,
-					new Class[] { EntityRemovedEvent.class });
-			addListener(EntityRemovedEvent.class, listener, method);
-		} catch (final java.lang.NoSuchMethodException e) {
-			throw new java.lang.RuntimeException("Internal error, entity removed method not found");
-		}
-	}
-
-	public void addListener(EntitySelectedListener listener) {
-		try {
-			Method method = EntitySelectedListener.class.getDeclaredMethod(EntitySelectedListener.ENTITY_SELECTED,
-					new Class[] { EntitySelectedEvent.class });
-			addListener(EntitySelectedEvent.class, listener, method);
-		} catch (final java.lang.NoSuchMethodException e) {
-			throw new java.lang.RuntimeException("Internal error, entity selected method not found");
-		}
-	}
-
-	public void removeListener(EntityRemovedListener listener) {
-		removeListener(EntityRemovedEvent.class, listener);
-	}
+//	public void removeListener(EntityRemovedListener listener) {
+//		removeListener(EntityRemovedEvent.class, listener);
+//	}
 
 	public String getI18nLabel(String key) {
 		return UIUtils.localize(name + "." + key);
@@ -217,14 +206,13 @@ Component.Event
 		return fieldsLayout;
 	}
 
-	public void setDetails(Layout content) {
+	public void setDetails(Component content) {
         PanelFlow panel = new PanelFlow();
 		panel.setContent(content);
 		panel.setSizeFull();
 		HorizontalLayout layout = new HorizontalLayout();
-		layout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 		layout.setSizeFull();
-		layout.addComponent(panel);
+		layout.add(panel);
 		layout.setPadding(true);
 		details = layout;
 		buildLayout(details);

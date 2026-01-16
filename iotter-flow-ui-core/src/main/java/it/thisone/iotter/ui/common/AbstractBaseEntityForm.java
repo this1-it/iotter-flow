@@ -14,10 +14,9 @@ import org.vaadin.firitin.form.AbstractForm;
 
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.flow.component.Alignment;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasOrderedComponents;
@@ -61,15 +60,12 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         setEntity(entity);
         
         if (getEntity().getOwner() == null) {
-        	getEntity().setOwner(UIUtils.getUserDetails().getTenant());
+        	//getEntity().setOwner(UIUtils.getUserDetails().getTenant());
         }
         
         
         // Configure buttons styling
-        getSaveButton().addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
-        getResetButton().addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
-        getDeleteButton().addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
-        getCancelButton().addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
+
         getSaveButton().setWidth(ACTION_BUTTON_WIDTH, Unit.PIXELS);
         getCancelButton().setWidth(ACTION_BUTTON_WIDTH, Unit.PIXELS);
         
@@ -86,16 +82,16 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 
     @Override
     protected Component createContent() {
-    	HasComponents fieldsLayout = getFieldsLayout();
+    	VerticalLayout fieldsLayout = getFieldsLayout();
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
         buttonLayout.setPadding(true);
 
-        buttonLayout.addComponent(getSaveButton());
-        buttonLayout.addComponent(getCancelButton());
-        buttonLayout.addComponent(getResetButton());
-        buttonLayout.addComponent(getDeleteButton());
+        buttonLayout.add(getSaveButton());
+        buttonLayout.add(getCancelButton());
+        buttonLayout.add(getResetButton());
+        buttonLayout.add(getDeleteButton());
 
         HorizontalLayout footer = new HorizontalLayout();
         //footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
@@ -103,33 +99,30 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         footer.setHeight(UIUtils.TOOLBAR_HEIGHT, Unit.PIXELS);
         footer.setPadding(false);
         footer.setSpacing(false);
-        footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-        footer.addComponent(buttonLayout);
-        footer.setExpandRatio(buttonLayout, 1f);
+        footer.setAlignItems(Alignment.CENTER);
+        footer.add(buttonLayout);
 
         VerticalLayout layout = new VerticalLayout();
         layout.setSizeFull();
         layout.setSpacing(true);
-        layout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-        layout.addComponent(fieldsLayout);
-        layout.setExpandRatio(fieldsLayout, 1f);
-        layout.addComponent(footer);
+        layout.add(fieldsLayout);
+        layout.add(footer);
         return layout;
     }
 
     /**
      * Add fields to form. Default implementation adds fields to a form layout
      */
-    public HasComponents getFieldsLayout() {
+    public VerticalLayout getFieldsLayout() {
         VerticalLayout mainLayout = buildMainLayout();
-        mainLayout.addComponent(buildPanel(getOrCreateFormLayout()));
+        mainLayout.add(buildPanel(getOrCreateFormLayout()));
         return mainLayout;
     }
 
     protected VerticalLayout buildMainLayout() {
         VerticalLayout mainLayout = new VerticalLayout();
         mainLayout.setSpacing(false);
-        mainLayout.setPadding(new MarginInfo(true, false, false, false));
+        mainLayout.setPadding(true);
         mainLayout.setSizeFull();
         return mainLayout;
     }
@@ -137,13 +130,11 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
     private FormLayout getOrCreateFormLayout() {
         if (formLayout == null) {
             formLayout = new FormLayout();
-            formLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-            formLayout.setSpacing(true);
-            formLayout.setPadding(true);
+
             for (String property : properties) {
                 Component field = getField(property);
                 if (field != null) {
-                    formLayout.addComponent(field);
+                    formLayout.add(field);
                 }
             }
         }
@@ -166,7 +157,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 		fields.put(name,field);
 		properties.add(name);
         if (formLayout != null) {
-            formLayout.addComponent(field);
+            formLayout.add(field);
         }
 	}
 
@@ -179,7 +170,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
     public Component buildForm(Component[] fields) {
         for (int i = 0; i < fields.length; i++) {
             if (fields[i] != null) {
-                getOrCreateFormLayout().addComponent(fields[i]);
+                getOrCreateFormLayout().add(fields[i]);
             }
         }
         return buildPanel(getOrCreateFormLayout());
@@ -191,9 +182,8 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         panel.setSizeFull();
 
         HorizontalLayout layout = new HorizontalLayout();
-        layout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
         layout.setSizeFull();
-        layout.addComponent(panel);
+        layout.add(panel);
         layout.setPadding(true);
         return layout;
     }
@@ -205,7 +195,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
                 ((Dialog) parent).close();
                 return;
             }
-            parent = parent.getParent();
+            //parent = parent.getParent();
         }
     }
 
@@ -236,16 +226,16 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
                 message = e.getCause().getMessage();
             }
             if (message == null) {
-                message = " check application log for details ";
-                UIUtils.trace(TracingAction.ERROR_UI, UIUtils.getUserDetails().getName(), 
-                        UIUtils.getUserDetails().getTenant(), null, null, Utils.stackTrace(e));
+//                message = " check application log for details ";
+//                UIUtils.trace(TracingAction.ERROR_UI, UIUtils.getUserDetails().getName(), 
+//                        UIUtils.getUserDetails().getTenant(), null, null, Utils.stackTrace(e));
             }
 
             PopupNotification.show(
                     UIUtils.localize("validators.fieldgroup_errors") + " \n " + message,
-                    Notification.Type.ERROR_MESSAGE);
+                    PopupNotification.Type.ERROR);
         } catch (EditorConstraintException e) {
-            PopupNotification.show(e.getMessage(), Notification.Type.ERROR_MESSAGE);
+            PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
         }
     }
 
@@ -267,7 +257,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
                 getDeleteHandler().onDelete(entity);
             }
         } catch (EditorConstraintException e) {
-            PopupNotification.show(e.getMessage(), Notification.Type.ERROR_MESSAGE);
+            PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
         }
     }
 

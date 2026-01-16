@@ -2,29 +2,29 @@ package it.thisone.iotter.ui.common.fields;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.StreamResource;
-import com.vaadin.server.StreamResource.StreamSource;
-import com.vaadin.server.ThemeResource;
-import com.vaadin.flow.component.Alignment;
+import com.vaadin.flow.component.icon.VaadinIcon;
+
+import com.vaadin.flow.component.AbstractCompositeField;
+
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.Button.ClickListener;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.CustomField;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import org.vaadin.flow.components.PanelFlow;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.themes.ValoTheme;
+import com.vaadin.flow.server.StreamResource;
 
 import it.thisone.iotter.persistence.model.ImageData;
 import it.thisone.iotter.ui.common.UIUtils;
-public class EmbeddedImageData extends CustomField<ImageData> {
+public class EmbeddedImageData extends 
+
+AbstractCompositeField<VerticalLayout, EmbeddedImageData, ImageData>
+
+
+{
 
 	private static final long serialVersionUID = -4520882923454628875L;
 	
@@ -42,96 +42,67 @@ public class EmbeddedImageData extends CustomField<ImageData> {
 	private Image image;
 
 	public EmbeddedImageData() {
+		super(null);
 		image = new Image();
 		panel = new PanelFlow();
 		label = new Span("");
-		// panel.setImmediate(true);
-		image.setStyleName("embedded-image");
+
 		panel.setContent(image);
 		panel.setSizeFull();
-		button = new Button(VaadinIcons.UPLOAD);
-		button.addClassName(ValoTheme.BUTTON_PRIMARY);
-		button.addClassName(ValoTheme.BUTTON_LARGE);
-		button.setCaptionAsHtml(true);
+		button = new Button(VaadinIcon.UPLOAD.create());
 		button.setSizeFull();
 		
 		HorizontalLayout top = new HorizontalLayout();
 		top.setSpacing(true);
-		top.addComponent(button);
-		top.addComponent(label);
+		top.add(button);
+		top.add(label);
 		
 		content = new VerticalLayout();
 		content.setSpacing(true);
-		content.setDefaultComponentAlignment(Alignment.TOP_LEFT);
-		content.addComponent(top);
-		content.addComponent(image);
-		content.setExpandRatio(image, 1f);
+		
+		content.add(top);
+		content.add(image);
+
 	}
 
-    public void addClickListener(ClickListener listener) {
-    	button.addClickListener(listener);
-    }
 
-
-	@Override
-	public void setWidth(float width, Unit unit) {
-		if (content != null) {
-			content.setWidth(width, unit);
-		}
-		super.setWidth(width, unit);
-	}
 
 	
 	
-	/* This should be static method */
-	private StreamSource createStreamSource(final ImageData imageData) {
-		return new StreamSource() {
-			private static final long serialVersionUID = -4905654404647215809L;
-			@Override
-			public InputStream getStream() {
-				return new ByteArrayInputStream(imageData.getData());
-			}
-		};
+	private StreamResource createStreamResource(final ImageData imageData) {
+		return new StreamResource(imageData.getFilename(),
+				() -> new ByteArrayInputStream(imageData.getData()));
 	}
 
 	@Override
-	protected void doSetValue(final ImageData data) {
+	protected void setPresentationValue(final ImageData data) {
 		this.currentValue = data;
 		if (data == null) {
-			label.setValue(UIUtils.localize("groupwidgets.custommap.missing_image"));
-			button.setIcon(VaadinIcons.UPLOAD);
-			image.setSource(new ThemeResource("img/empty-image.png"));
-			image.markAsDirty();
-			image.markAsDirty();
+			label.setText(UIUtils.localize("groupwidgets.custommap.missing_image"));
+			button.setIcon(VaadinIcon.UPLOAD.create());
+			//image.setSource(new ThemeResource("img/empty-image.png"));
+	
+
 			return;
 		}
 		try {
-			StreamSource source = createStreamSource(data);
-			image.setSource(new StreamResource(source, data.getFilename()));
-			StreamResource streamSource = (StreamResource) image.getSource();
-			BufferedImage bi = ImageIO.read(streamSource.getStream()
-					.getStream());
+			image.setSrc(createStreamResource(data));
+			BufferedImage bi = ImageIO.read(new ByteArrayInputStream(data.getData()));
 			data.setWidth(bi.getWidth());
 			data.setHeight(bi.getHeight());
 			int size = (int)(data.getData().length * 0.001);
 			String caption = String.format("<b>%s %d Kbytes<b/>", data.toString(),size);
-			label.setValue(caption);
-			button.setIcon(VaadinIcons.EDIT);
+			label.setText(caption);
+			button.setIcon(VaadinIcon.EDIT.create());
 		} catch (Exception e) {
-			image.setSource(new ThemeResource("img/empty-image.png"));
-			image.markAsDirty();
-			label.setValue(UIUtils.localize("groupwidgets.custommap.missing_image"));
-			button.setIcon(VaadinIcons.UPLOAD);
+			//image.setSource(new ThemeResource("img/empty-image.png"));
+			label.setText(UIUtils.localize("groupwidgets.custommap.missing_image"));
+			button.setIcon(VaadinIcon.UPLOAD.create());
 			return;
 		}
-		image.markAsDirty();
+
 	}
 
-
-	@Override
-	protected Component initContent() {
-		return content;
-	}
 
 
 

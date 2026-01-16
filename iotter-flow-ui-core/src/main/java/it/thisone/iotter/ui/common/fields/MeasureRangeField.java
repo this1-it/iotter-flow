@@ -2,17 +2,24 @@ package it.thisone.iotter.ui.common.fields;
 
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.CustomField;
+
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
+import it.thisone.iotter.persistence.model.Channel;
 import it.thisone.iotter.persistence.model.MeasureRange;
 import it.thisone.iotter.ui.common.UIUtils;
 
 
-public class MeasureRangeField extends CustomField<MeasureRange> {
+public class MeasureRangeField extends 
+AbstractCompositeField<HorizontalLayout, MeasureRangeField, MeasureRange>
+
+ 
+{
 
 	private static final long serialVersionUID = 3406308824644017551L;
 	private MeasureRange currentValue;
@@ -23,10 +30,16 @@ public class MeasureRangeField extends CustomField<MeasureRange> {
 
 	@SuppressWarnings("serial")
 	public MeasureRangeField() {
-		super();
+		super(null);
 		binder = new Binder<>(MeasureRange.class);
 		upperField = new TextField(getI18nLabel("upper"));
 		lowerField = new TextField(getI18nLabel("lower"));
+		
+		HorizontalLayout content = getContent();
+		content.setSpacing(true);
+		content.add(lowerField);
+		content.add(upperField);
+
 		
 		binder.forField(upperField).bind("upper");
 		binder.forField(lowerField).bind("lower");
@@ -39,23 +52,7 @@ public class MeasureRangeField extends CustomField<MeasureRange> {
 
 	}
 
-	@Override
-	public void setWidth(float width, Unit unit) {
-		if (binder != null) {
-			upperField.setWidth(width, unit);
-			lowerField.setWidth(width, unit);	
-		}
-		super.setWidth(width, unit);
-	}
-	
-	@Override
-	protected Component initContent() {
-		HorizontalLayout content = new HorizontalLayout();
-		content.setSpacing(true);
-		content.addComponent(lowerField);
-		content.addComponent(upperField);
-		return content;
-	}
+
 
     @Override
     public void setEnabled(boolean enabled) {
@@ -66,7 +63,7 @@ public class MeasureRangeField extends CustomField<MeasureRange> {
     }
 	
 	@Override
-	protected void doSetValue(MeasureRange bean) {
+	protected void setPresentationValue(MeasureRange bean) {
 		this.currentValue = bean;
 		if (bean == null) {
 			bean = new MeasureRange();
@@ -90,9 +87,6 @@ public class MeasureRangeField extends CustomField<MeasureRange> {
 	public MeasureRange getValue() {
 		return this.currentValue;
 	}
-	
-	
-	// Validation is now handled by Binder in Vaadin 8
 	
 
     public String getI18nLabel(String key) {

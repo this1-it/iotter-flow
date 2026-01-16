@@ -1,15 +1,15 @@
 package it.thisone.iotter.ui.common;
 
 import com.google.common.eventbus.Subscribe;
-import com.vaadin.flow.component.AbsoluteLayout;
+//import com.vaadin.flow.component.AbsoluteLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.Unit;
 
 import it.thisone.iotter.persistence.ifc.IWidget;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.main.IMainUI;
-import it.thisone.iotter.ui.uitask.UIExecutor;
 import it.thisone.iotter.ui.uitask.UIRunnable;
 
 @SuppressWarnings("serial")
@@ -66,8 +66,8 @@ public abstract class AbstractWidgetVisualizer extends BaseComponent {
 //				x, y, //
 //				width, height); //
 		
-		setWidth(width, Unit.PIXELS);
-		setHeight(height, Unit.PIXELS);
+//		setWidth(width, Unit.PIXELS);
+//		setHeight(height, Unit.PIXELS);
 	}
 	
 	private int resize(float dimension, int canonical) {
@@ -110,13 +110,13 @@ public abstract class AbstractWidgetVisualizer extends BaseComponent {
 		return String.format("top:%dpx;left:%dpx;right:%dpx;bottom:%dpx;z-index:%d", left, top, right, bottom, zindex);
 	}
 	
-	public AbsoluteLayout getMainLayout() {
-		HasComponents layout = getParent();
-		if (layout != null && layout instanceof AbsoluteLayout) {
-			return (AbsoluteLayout)layout;
-		}
-		return null;
-	}
+//	public AbsoluteLayout getMainLayout() {
+//		HasComponents layout = getParent();
+//		if (layout != null && layout instanceof AbsoluteLayout) {
+//			return (AbsoluteLayout)layout;
+//		}
+//		return null;
+//	}
 
 	public int getX() {
 		return x;
@@ -146,17 +146,17 @@ public abstract class AbstractWidgetVisualizer extends BaseComponent {
 	@Subscribe
 	public abstract void refreshWithUiAccess(final WidgetRefreshEvent event);
 	
-	@Override
-	public void attach() {
-		super.attach();
-		register();
-	}
-
-	@Override
-	public void detach() {
-		super.detach();
-		unregister();
-	}
+//	@Override
+//	public void attach() {
+//		super.attach();
+//		register();
+//	}
+//
+//	@Override
+//	public void detach() {
+//		super.detach();
+//		unregister();
+//	}
 	
 	public void register() {
 		UIUtils.getUIEventBus().register(this);

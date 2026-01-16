@@ -11,7 +11,7 @@ public class FunctionCodeSelect extends ComboBox<FunctionCode> {
 	public FunctionCodeSelect() {
 		super();
 		setItems(FunctionCode.values());
-		setLabelCaptionGenerator(type -> type.getDisplayName());
+		setItemLabelGenerator(type -> type.getDisplayName());
 	}
 
 }

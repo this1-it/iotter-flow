@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 
 import it.thisone.iotter.ui.common.UIUtils;
@@ -44,13 +45,13 @@ public class BacNetMeasureUnitSelect extends ComboBox<String> {
 	private void initialize() {
 		// Set items and caption generator
 		setItems(getUnitCodes());
-		setLabelCaptionGenerator(code -> unitDescriptions.getOrDefault(code, code));
+		setItemLabelGenerator(code -> unitDescriptions.getOrDefault(code, code));
 		
 		// Set a reasonable width
 		setWidth(16, Unit.EM);
 		// Disallow null selections
-		setEmptySelectionAllowed(false);
-		setTextInputAllowed(true);
-		setPageLength(10);
+//		setEmptySelectionAllowed(false);
+//		setTextInputAllowed(true);
+//		setPageLength(10);
 	}
 }

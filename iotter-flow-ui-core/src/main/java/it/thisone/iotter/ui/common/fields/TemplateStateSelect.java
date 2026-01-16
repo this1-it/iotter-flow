@@ -16,7 +16,7 @@ public class TemplateStateSelect extends ComboBox<TemplateState> {
 	public TemplateStateSelect() {
 		super();
 		setItems(TemplateState.values());
-		setLabelCaptionGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
 	}
 
 	

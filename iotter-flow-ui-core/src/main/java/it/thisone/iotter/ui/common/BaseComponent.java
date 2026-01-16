@@ -5,14 +5,14 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.CustomComponent;
+import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasComponents;
-import com.vaadin.flow.component.HasLabel;
+
 import org.vaadin.flow.components.TabSheet;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.page.Page.BrowserWindowResizeEvent;
-import com.vaadin.flow.component.page.Page.BrowserWindowResizeListener;
+import com.vaadin.flow.component.html.Div;
+
 
 import it.thisone.iotter.ui.main.UiConstants;
 
@@ -22,7 +22,7 @@ import it.thisone.iotter.ui.main.UiConstants;
  * @author tisone
  *
  */
-public abstract class BaseComponent extends CustomComponent implements UiConstants {
+public abstract class BaseComponent extends Composite<Div> implements UiConstants {
 	private static final long serialVersionUID = -2527235916632043029L;
 	private String i18nkey;
 
@@ -83,16 +83,16 @@ public abstract class BaseComponent extends CustomComponent implements UiConstan
 
 		dialog.setDraggable(false);
 		String headerTitle = label;
-		if (content instanceof HasLabel) {
-			String contentLabel = ((HasLabel) content).getLabel();
-			if (contentLabel != null) {
-				headerTitle = contentLabel;
-				((HasLabel) content).setLabel(null);
-			}
-		}
-		dialog.setHeaderTitle(headerTitle);
+//		if (content instanceof HasLabel) {
+//			String contentLabel = ((HasLabel) content).getLabel();
+//			if (contentLabel != null) {
+//				headerTitle = contentLabel;
+//				((HasLabel) content).setLabel(null);
+//			}
+//		}
+		//dialog.setHeaderTitle(headerTitle);
 		// dialog.setImmediate(true);
-		content.setSizeFull();
+		//content.setSizeFull();
 		dialog.add(content);
 		makeResponsiveDialog(dialog, dimension, style);
 		
@@ -107,61 +107,61 @@ public abstract class BaseComponent extends CustomComponent implements UiConstan
 
 	
 	public static void makeFullSizeDialog(Dialog dialog) {
-		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
-		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
-		dialog.setWidth(width, Unit.PIXELS);
-		dialog.setHeight(height, Unit.PIXELS);
+//		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
+//		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
+//		dialog.setWidth(width, Unit.PIXELS);
+//		dialog.setHeight(height, Unit.PIXELS);
 	}	
 	
 	public static void makeResponsiveDialog(Dialog dialog, float[] dimension, String style) {
-		if (dimension == null || dimension.length < 2) {
-			dimension = UIUtils.M_DIMENSION;
-		}
-		final BrowserWindowResizeListener resizeListener = createBrowserWindowResizeListener(dialog, dimension);
-		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
-		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
-		if (width < 481 || height < 481) {
-			dimension = new float[]{1f,1f};
-		}
-		if (UIUtils.isMobile()) {
-			dimension = new float[]{1f,1f};
-		}
+//		if (dimension == null || dimension.length < 2) {
+//			dimension = UIUtils.M_DIMENSION;
+//		}
+//		final BrowserWindowResizeListener resizeListener = createBrowserWindowResizeListener(dialog, dimension);
+//		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
+//		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
+//		if (width < 481 || height < 481) {
+//			dimension = new float[]{1f,1f};
+//		}
+//		if (UIUtils.isMobile()) {
+//			dimension = new float[]{1f,1f};
+//		}
 		
-		dialog.setWidth(width * dimension[0], Unit.PIXELS);
-		dialog.setHeight(height * dimension[1], Unit.PIXELS);
-		UI.getCurrent().getPage()
-				.addBrowserWindowResizeListener(resizeListener);
+//		dialog.setWidth(width * dimension[0], Unit.PIXELS);
+//		dialog.setHeight(height * dimension[1], Unit.PIXELS);
+//		UI.getCurrent().getPage()
+//				.addBrowserWindowResizeListener(resizeListener);
 		
-		dialog.addOpenedChangeListener(event -> {
-			if (!event.isOpened()) {
-				UI.getCurrent().getPage()
-					.removeBrowserWindowResizeListener(resizeListener);
-			}
-		});
+//		dialog.addOpenedChangeListener(event -> {
+//			if (!event.isOpened()) {
+//				UI.getCurrent().getPage()
+//					.removeBrowserWindowResizeListener(resizeListener);
+//			}
+//		});
 		
 		//dialog.setStyleName(UIUtils.MODAL_DIALOG_STYLE);
 		//dialog.addClassName(style);
 		
 	}
 	
-	@SuppressWarnings("serial")
-	public static BrowserWindowResizeListener createBrowserWindowResizeListener(final Dialog component, final float[] dimension) {
-		return new BrowserWindowResizeListener() {
-			@Override
-			public void browserWindowResized(BrowserWindowResizeEvent event) {
-				int width = UI.getCurrent().getPage().getBrowserWindowWidth();
-				int height = UI.getCurrent().getPage().getBrowserWindowHeight();
-				float x = dimension[0];
-				float y = dimension[1];
-				if (width < 481 || height < 481) {
-					x = 1f;
-					y = 1f;
-				}
-				component.setWidth(width * x, Unit.PIXELS);
-				component.setHeight(height * y, Unit.PIXELS);
-			}
-		};
-	}
+//	@SuppressWarnings("serial")
+//	public static BrowserWindowResizeListener createBrowserWindowResizeListener(final Dialog component, final float[] dimension) {
+//		return new BrowserWindowResizeListener() {
+//			@Override
+//			public void browserWindowResized(BrowserWindowResizeEvent event) {
+//				int width = UI.getCurrent().getPage().getBrowserWindowWidth();
+//				int height = UI.getCurrent().getPage().getBrowserWindowHeight();
+//				float x = dimension[0];
+//				float y = dimension[1];
+//				if (width < 481 || height < 481) {
+//					x = 1f;
+//					y = 1f;
+//				}
+//				component.setWidth(width * x, Unit.PIXELS);
+//				component.setHeight(height * y, Unit.PIXELS);
+//			}
+//		};
+//	}
 
 	
 
@@ -170,24 +170,24 @@ public abstract class BaseComponent extends CustomComponent implements UiConstan
 	 * 
 	 */
 	public void setRootComposition(Component compositionRoot) {
-		setCompositionRoot(compositionRoot);
+		//setCompositionRoot(compositionRoot);
 	}
 
 	//@Override
-	@Override
-	protected void setCompositionRoot(Component compositionRoot) {
-		super.setCompositionRoot(compositionRoot);
-	}
+//	@Override
+//	protected void setCompositionRoot(Component compositionRoot) {
+//		super.setCompositionRoot(compositionRoot);
+//	}
 	
-	public HasComponents findParentTabSheet() {
-		HasComponents component = getParent();
-		while (component != null) {
-			if (component instanceof TabSheet) {
-				return component;
-			}
-			component = component.getParent();
-		}
-		return null;
-	}
+//	public HasComponents findParentTabSheet() {
+//		HasComponents component = getParent();
+//		while (component != null) {
+//			if (component instanceof TabSheet) {
+//				return component;
+//			}
+//			component = component.getParent();
+//		}
+//		return null;
+//	}
 	
 }

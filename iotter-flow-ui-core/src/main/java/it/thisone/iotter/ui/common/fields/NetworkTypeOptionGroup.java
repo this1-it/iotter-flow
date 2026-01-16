@@ -8,6 +8,8 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 
 import it.thisone.iotter.enums.NetworkType;
 import it.thisone.iotter.ui.common.UIUtils;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.component.html.Span;
 
 public class NetworkTypeOptionGroup extends RadioButtonGroup<NetworkType> {
 
@@ -15,7 +17,7 @@ public class NetworkTypeOptionGroup extends RadioButtonGroup<NetworkType> {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	public NetworkTypeOptionGroup() {
 		super();
 		
@@ -25,9 +27,9 @@ public class NetworkTypeOptionGroup extends RadioButtonGroup<NetworkType> {
 			.sorted(Comparator.comparing(Enum::ordinal))
 			.collect(Collectors.toList()));
 		
-		// Set caption generator to use i18n keys
-		setLabelCaptionGenerator(type -> UIUtils.localize(type.getI18nKey()));
+			
+		
+	       setRenderer(new ComponentRenderer<>(type -> new Span(UIUtils.localize(type.getI18nKey()))));
 	}
-	
 
 }

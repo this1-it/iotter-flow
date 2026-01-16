@@ -292,7 +292,7 @@ Responsive.makeResponsive
 
 ```text
 FontAwesome.
-VaadinIcons.
+VaadinIcon.
 ```
 
 Replace with:

@@ -47,7 +47,17 @@
 			<version>${project.version}</version>
 		</dependency>
 		
+		<dependency>
+			<groupId>com.googlecode.jatl</groupId>
+			<artifactId>jatl</artifactId>
+			<version>0.2.2</version>
+		</dependency>
 
+		<dependency>
+			<groupId>eu.bitwalker</groupId>
+			<artifactId>UserAgentUtils</artifactId>
+			<version>1.19</version>
+		</dependency>
 
 	</dependencies>
 

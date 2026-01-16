@@ -27,7 +27,6 @@ import com.vaadin.addon.charts.model.DataSeriesItem;
 import com.vaadin.addon.charts.model.Lang;
 import com.vaadin.addon.charts.model.Marker;
 import com.vaadin.addon.charts.model.YAxis;
-import com.vaadin.server.Page;
 
 import it.thisone.iotter.cassandra.model.CassandraExportFeed;
 import it.thisone.iotter.cassandra.model.FeedKey;
@@ -389,12 +388,12 @@ public class ChartUtils {
 	}
 
 	public static void loadCustomMarkers() {
-		try {
-			String js = IOUtils.toString(ChartUtils.class.getResourceAsStream(ARROW_MARKER_JS), "UTF-8");
-			Page.getCurrent().getJavaScript().execute(js);
-		} catch (Exception e) {
-			logger.error(ARROW_MARKER_JS, e);
-		}
+//		try {
+//			String js = IOUtils.toString(ChartUtils.class.getResourceAsStream(ARROW_MARKER_JS), "UTF-8");
+//			Page.getCurrent().getJavaScript().execute(js);
+//		} catch (Exception e) {
+//			logger.error(ARROW_MARKER_JS, e);
+//		}
 	}
 
 	public static void setAxisExtremes(GraphicFeed feed, YAxis axis) {

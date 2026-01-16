@@ -1,16 +1,12 @@
 package it.thisone.iotter.ui.common;
 
-import java.lang.reflect.Method;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
-import com.vaadin.flow.component.Alignment;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.Button.ClickEvent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.Layout;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.icon.VaadinIcon;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
@@ -68,39 +64,39 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
 		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
-		Layout buttonbar = createButtonbar();
-		toolbar.addComponent(buttonbar);
-		toolbar.setComponentAlignment(buttonbar, Alignment.MIDDLE_RIGHT);
+		HorizontalLayout buttonbar = createButtonbar();
+		toolbar.add(buttonbar);
+		//toolbar.setComponentAlignment(buttonbar, Alignment.MIDDLE_RIGHT);
 		return toolbar;
 	}
 
-	protected Layout createButtonbar() {
+	protected HorizontalLayout createButtonbar() {
 		HorizontalLayout buttonbar = new HorizontalLayout();
-		buttonbar.setStyleName(UIUtils.BUTTONS_STYLE);
+		//buttonbar.setStyleName(UIUtils.BUTTONS_STYLE);
 		buttonbar.setSpacing(true);
 		saveButton = createSaveButton();
-		buttonbar.addComponent(saveButton);
-		buttonbar.setExpandRatio(saveButton, 1);
-		buttonbar.setComponentAlignment(saveButton, Alignment.MIDDLE_RIGHT);
+		buttonbar.add(saveButton);
+		//buttonbar.setExpandRatio(saveButton, 1);
+		//buttonbar.setComponentAlignment(saveButton, Alignment.MIDDLE_RIGHT);
 		cancelButton = createCancelButton();
-		buttonbar.addComponent(cancelButton);
-		buttonbar.setExpandRatio(cancelButton, 1);
-		buttonbar.setComponentAlignment(cancelButton, Alignment.MIDDLE_RIGHT);
+		buttonbar.add(cancelButton);
+//		buttonbar.setExpandRatio(cancelButton, 1);
+//		buttonbar.setComponentAlignment(cancelButton, Alignment.MIDDLE_RIGHT);
 		return buttonbar;
 	}	
 	
 	
 	
-	@SuppressWarnings("serial")
+
 	protected Button createSaveButton() {
 		//Button button = new Button(getI18nLabel("save_button"));
 		Button button = new Button();
-		button.setIcon(UIUtils.ICON_SAVE);
+		button.setIcon(VaadinIcon.FILE_TEXT.create());
 		//button.setStyleName(UIUtils.ICON_SAVE_STYLE);
-		button.setDescription(getI18nLabel("save_button"));
-		button.addClickListener(new Button.ClickListener() {
-			@Override
-			public void buttonClick(ClickEvent event) {
+		button.getElement()
+	      .setProperty("title", getI18nLabel("save_button"));
+		button.addClickListener(event -> {
+ {
 				onSave();
 				UIUtils.getUIEventBus().post(new PendingChangesEvent());
 				//fireEvent(new EditorSavedEvent(BaseEditor.this, getItem()));
@@ -109,16 +105,15 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 		return button;
 	}
 
-	@SuppressWarnings("serial")
+
 	protected Button createCancelButton() {
 		//Button button = new Button(getI18nLabel("cancel_button"));
 		Button button = new Button();
-		button.setIcon(UIUtils.ICON_CANCEL);
-		button.setDescription(getI18nLabel("cancel_button"));
+		button.setIcon(VaadinIcon.CLOSE.create());
+		button.getElement()
+	      .setProperty("title", getI18nLabel("cancel_button"));
 		
-		button.addClickListener(new Button.ClickListener() {
-			@Override
-			public void buttonClick( ClickEvent event ) {
+		button.addClickListener(event -> {
 				final EditorSavedEvent evt = new EditorSavedEvent(BaseEditor.this, null);
 				if (pendingChanges) {
 					String caption = UIUtils.localize("basic.editor.forget_changes");
@@ -139,23 +134,23 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 					onCancel();
 					fireEvent(evt);
 				}
-			}
+			
 		});
 		return button;
 	}
 
 	
 	public void addListener(EditorSavedListener listener) {
-		try {
-			Method method = EditorSavedListener.class.getDeclaredMethod(EditorSavedListener.EDITOR_SAVED, new Class[] { EditorSavedEvent.class });
-			addListener(EditorSavedEvent.class, listener, method);
-		} catch (final java.lang.NoSuchMethodException e) {
-			throw new java.lang.RuntimeException("Internal error, editor saved method not found");
-		}
+//		try {
+//			Method method = EditorSavedListener.class.getDeclaredMethod(EditorSavedListener.EDITOR_SAVED, new Class[] { EditorSavedEvent.class });
+//			addListener(EditorSavedEvent.class, listener, method);
+//		} catch (final java.lang.NoSuchMethodException e) {
+//			throw new java.lang.RuntimeException("Internal error, editor saved method not found");
+//		}
 	}
 
 	public void removeListener(EditorSavedListener listener) {
-		removeListener(EditorSavedEvent.class, listener);
+		//removeListener(EditorSavedEvent.class, listener);
 	}
 	
 	
@@ -183,14 +178,14 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 	public void pendingChanges(){
 		if (!isPendingChanges()) {
 			setPendingChanges(true);
-			UI.getCurrent().access(new Runnable() {
-			    @Override
-			    public void run() {
-					getSaveButton().setStyleName("pending-changes");
-					getSaveButton().markAsDirty();
-					UIUtils.push();
-			    }
-			});	
+//			UI.getCurrent().access(new Runnable() {
+//			    @Override
+//			    public void run() {
+//					getSaveButton().setStyleName("pending-changes");
+//					getSaveButton().markAsDirty();
+//					UIUtils.push();
+//			    }
+//			});	
 		}
 	}
 	

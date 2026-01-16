@@ -21,12 +21,12 @@ public class RoleSelect extends ComboBox<Role> {
      */
     public RoleSelect() {
         super("", retrieveAllRoles());
-        this.setLabelCaptionGenerator(Role::getName);
+        this.setItemLabelGenerator(Role::getName);
     }
     
     public RoleSelect(List<Role> roles) {
         super("", roles);
-        this.setLabelCaptionGenerator(Role::getName);
+        this.setItemLabelGenerator(Role::getName);
     }
 
 	public void setOptionsForCreation() {

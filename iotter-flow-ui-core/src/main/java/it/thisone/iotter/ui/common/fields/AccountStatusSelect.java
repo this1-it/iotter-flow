@@ -19,7 +19,7 @@ public class AccountStatusSelect extends ComboBox<AccountStatus> {
 		List<AccountStatus> items = new ArrayList<>(
 				Arrays.asList(AccountStatus.NEED_ACTIVATION, AccountStatus.ACTIVE, AccountStatus.SUSPENDED));
 		setItems(items);
-		setLabelCaptionGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
 	}
 
 		@SuppressWarnings("unchecked")

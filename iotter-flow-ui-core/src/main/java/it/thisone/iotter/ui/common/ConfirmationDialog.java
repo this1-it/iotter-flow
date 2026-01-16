@@ -1,18 +1,16 @@
 package it.thisone.iotter.ui.common;
 
 
-import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.flow.component.Alignment;
+
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.Button.ClickEvent;
-import com.vaadin.flow.component.button.Button.ClickListener;
+
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.html.Span;
 import org.vaadin.flow.components.PanelFlow;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.themes.ValoTheme;
 
 public class ConfirmationDialog extends Dialog {
 
@@ -36,18 +34,18 @@ public class ConfirmationDialog extends Dialog {
 	private Button cancel;
 
 	public ConfirmationDialog(String caption, String message, final Callback callback) {
-		this(caption, new Span(message, ContentMode.HTML), callback);
+		this(caption, new Span(message), callback);
 	}
 
 	public ConfirmationDialog(String caption, Component component, final Callback callback) {
 		super();
-		setHeaderTitle(caption);
+		//setHeaderTitle(caption);
 		BaseComponent.makeResponsiveDialog(this, UIUtils.S_DIMENSION, UIUtils.S_WINDOW_STYLE);
 		setDraggable(false);
 		// setImmediate(true);
 
 		VerticalLayout verticalLayout = new VerticalLayout();
-		verticalLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		//verticalLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 		verticalLayout.setSizeFull();
 		verticalLayout.setSpacing(true);
 		add(verticalLayout);
@@ -57,53 +55,47 @@ public class ConfirmationDialog extends Dialog {
 		panel.setSizeFull();
 		
 		HorizontalLayout content = new HorizontalLayout();
-		content.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		//content.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 		content.setSizeFull();
-		content.addComponent(panel);
+		content.add(panel);
 		content.setPadding(true);
-		verticalLayout.addComponent(content);
-		verticalLayout.setExpandRatio(content, 1f);
+		verticalLayout.add(content);
+		//verticalLayout.setExpandRatio(content, 1f);
 		
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
 		buttonLayout.setPadding(true);
 		HorizontalLayout footer = new HorizontalLayout();
 		footer.setWidth(100.0f, Unit.PERCENTAGE);
-		footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
-		footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-		footer.addComponent(buttonLayout);
+//		footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+//		footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		footer.add(buttonLayout);
 		
 		if (callback != null) {
 			confirm = new Button(UIUtils.localize("basic.editor.yes"));
-			confirm.addClickListener(new ClickListener() {
-				private static final long serialVersionUID = 1L;
-				@Override
-				public void buttonClick(ClickEvent event) {
+			confirm.addClickListener(event-> {
 					callback.onDialogResult(true);
 					close();
 				}
-			});
+			);
 			// confirm.setImmediate(true);
 			confirm.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
-			buttonLayout.addComponent(confirm);
+			buttonLayout.add(confirm);
 		}
 
 		cancel = new Button(UIUtils.localize("basic.editor.no"));
-		cancel.addClickListener(new ClickListener() {
-			private static final long serialVersionUID = 1L;
-			@Override
-			public void buttonClick(ClickEvent event) {
+		cancel.addClickListener(event -> {
 				close();
 			}
-		});
+		);
 
 		// cancel.setImmediate(true);
 		cancel.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
 
-		buttonLayout.addComponent(cancel);
+		buttonLayout.add(cancel);
 
 
-		verticalLayout.addComponent(footer);
+		verticalLayout.add(footer);
 
 	}
 

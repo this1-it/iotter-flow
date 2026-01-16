@@ -1,6 +1,7 @@
 package it.thisone.iotter.ui.validators;
 
-import com.vaadin.flow.data.binder.Validator.RegexpValidator;
+
+import com.vaadin.flow.data.validator.RegexpValidator;
 
 /*
  * https://vaadin.com/security/2021-03-11
@@ -13,7 +14,7 @@ import com.vaadin.flow.data.binder.Validator.RegexpValidator;
  * 
  */
 
-@SuppressWarnings("serial")
+
 public class AntiReDoSEmailValidator extends RegexpValidator {
 	private static final String PATTERN = "^" + "([a-zA-Z0-9_\\.\\-+])+" // local
             + "@" + "[a-zA-Z0-9-.]+" // domain

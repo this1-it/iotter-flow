@@ -10,9 +10,6 @@ import org.slf4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.security.core.session.SessionRegistry;
 
-import com.vaadin.flow.component.CustomComponent;
-import com.vaadin.flow.component.Layout;
-
 import it.thisone.iotter.eventbus.EventBusWrapper;
 import it.thisone.iotter.integration.CassandraService;
 import it.thisone.iotter.integration.ServiceFactory;
@@ -21,7 +18,6 @@ import it.thisone.iotter.persistence.service.DatabaseMessageSource;
 import it.thisone.iotter.security.EntityPermission;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.ifc.IUiFactory;
-import it.thisone.iotter.ui.uitask.UIExecutor;
 
 public interface IMainUI  {
 
@@ -45,9 +41,9 @@ public interface IMainUI  {
 	
 	public String getServerName();
 
-	public Layout getHeader();
+	// public Layout getHeader();
 
-	public Layout getFooter();
+	// public Layout getFooter();
 	
 	public CassandraService getCassandraService();
 
@@ -77,13 +73,13 @@ public interface IMainUI  {
 	
 	public int getUnAvailableHeight();
 	
-	public void addListener(ToggleMenuListener listener);
+	// public void addListener(ToggleMenuListener listener);
 	
-	public void removeListener(ToggleMenuListener listener);
+	// public void removeListener(ToggleMenuListener listener);
 	
 	public EventBusWrapper getUIEventBus();
 	
-	public UIExecutor getUIExecutor();
+	//public UIExecutor getUIExecutor();
 	
 	public ThreadPoolExecutor getThreadPoolExecutor();
 
@@ -91,7 +87,7 @@ public interface IMainUI  {
 	
 	public Properties getAppProperties();
 
-	public DrawerLayout getDrawer();
+	//public DrawerLayout getDrawer();
 
 	public TimeZone getTimeZone();
 
@@ -103,7 +99,7 @@ public interface IMainUI  {
 	
 	public void startWidgetRefresher();
 	
-	public CustomComponent getMenu();
+	//public CustomComponent getMenu();
 
 
 	public <T> T getBean(Class<T> requiredType) throws BeansException;

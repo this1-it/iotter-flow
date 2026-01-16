@@ -12,7 +12,7 @@ public class DeviceStatusSelect extends ComboBox<DeviceStatus> {
 	public DeviceStatusSelect() {
 		super();
 		setItems(DeviceStatus.values());
-		setLabelCaptionGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
 	}
 
 }

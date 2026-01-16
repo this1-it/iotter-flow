@@ -9,14 +9,13 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.server.StreamResource;
-import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.server.StreamResource;
 
 import it.thisone.iotter.cassandra.model.ExportRow;
 import it.thisone.iotter.exporter.filegenerator.FileBuilder;
 
-public abstract class Exporter extends Button implements StreamSource {
+public abstract class Exporter extends Button {
 	/**
 	 * 
 	 */
@@ -28,13 +27,13 @@ public abstract class Exporter extends Button implements StreamSource {
 	private static Logger logger = LoggerFactory.getLogger(Exporter.class);
 
 	public Exporter() {
-		fileDownloader = new EnhancedFileDownloader(new StreamResource(this, getDownloadFileName()));
+		fileDownloader = new EnhancedFileDownloader(createStreamResource());
 		fileDownloader.extend(this);
 	}
 
 	public Exporter(List<ExportRow> data, List<String> columnHeaders) {
 		this();
-		setCaption("Exporter");
+		setText("Exporter");
 		setDataToBeExported(data, columnHeaders);
 	}
 
@@ -53,10 +52,7 @@ public abstract class Exporter extends Button implements StreamSource {
 		fileBuilder.setHeader(header);
 	}
 
-	@Override
-	public void setLocale(Locale locale) {
-		this.locale = locale;
-	}
+
 
 	public void setTimestampHeader(String header) {
 		fileBuilder.setTimestampHeader(header);
@@ -72,10 +68,10 @@ public abstract class Exporter extends Button implements StreamSource {
 
 	public void setDownloadFileName(String fileName) {
 		downloadFileName = fileName;
-		((StreamResource) fileDownloader.getFileDownloadResource()).setFilename(getDownloadFileName());
+		fileDownloader.setFileDownloadResource(createStreamResource());
 	}
 
-	@Override
+	
 	public InputStream getStream() {
 		try {
 			return new FileInputStream(fileBuilder.getFile());
@@ -87,5 +83,9 @@ public abstract class Exporter extends Button implements StreamSource {
 
 	public EnhancedFileDownloader getFileDownloader() {
 		return fileDownloader;
+	}
+
+	private StreamResource createStreamResource() {
+		return new StreamResource(getDownloadFileName(), this::getStream);
 	}
 }

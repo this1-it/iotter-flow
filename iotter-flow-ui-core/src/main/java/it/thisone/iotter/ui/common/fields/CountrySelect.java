@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 
 import it.thisone.iotter.ui.common.UIUtils;
@@ -127,13 +128,13 @@ public class CountrySelect extends ComboBox<String> {
 	private void initialize() {
 		// Set items and caption generator
 		setItems(getCountryCodes());
-		setLabelCaptionGenerator(code -> countryNames.getOrDefault(code, code));
+		setItemLabelGenerator(code -> countryNames.getOrDefault(code, code));
 		
 		// Set a reasonable width
 		setWidth(16, Unit.EM);
 		// Disallow null selections
-		setEmptySelectionAllowed(false);
-		setTextInputAllowed(true);
-		setPageLength(10);
+//		setEmptySelectionAllowed(false);
+//		setTextInputAllowed(true);
+//		setPageLength(10);
 	}
 }

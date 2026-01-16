@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 
 import it.thisone.iotter.ui.common.UIUtils;
@@ -33,13 +34,13 @@ public class TimeZoneSelect extends ComboBox<TimeZone> {
 		setItems(getTimeZones());
 		
 		// Set custom item caption generator to show timezone with offset
-		setLabelCaptionGenerator(this::formatTimeZone);
+		setItemLabelGenerator(this::formatTimeZone);
 		
 		// Configuration
 		setWidth(16, Unit.EM);
-		setEmptySelectionAllowed(false);
-		setTextInputAllowed(true);
-		setPageLength(10);
+//		setEmptySelectionAllowed(false);
+//		setTextInputAllowed(true);
+//		setPageLength(10);
 	}
 
 	private String formatTimeZone(TimeZone timeZone) {

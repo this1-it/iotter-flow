@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.googlecode.jatl.Html;
-import com.vaadin.icons.VaadinIcons;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.UI;
 
 import it.thisone.iotter.config.Constants;
@@ -22,6 +22,7 @@ import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.UIUtils;
+//import it.thisone.iotter.ui.main.IMainUI;
 import it.thisone.iotter.ui.main.IMainUI;
 
 public class MapUtils implements Serializable {
@@ -69,8 +70,7 @@ public class MapUtils implements Serializable {
 
 	public static Map<Device, Set<GroupWidget>> mappableDevices(Network network) {
 		Collection<NetworkGroup> groups = new ArrayList<NetworkGroup>();
-		UserDetailsAdapter details = ((IMainUI) UI.getCurrent())
-				.getUserDetails();
+		UserDetailsAdapter details = ((IMainUI) UI.getCurrent()).getUserDetails();
 		if (details == null) {
 			if (network.isAnonymous()) {
 				groups = UIUtils.getServiceFactory().getNetworkGroupService().findByNetwork(network);
@@ -133,7 +133,7 @@ public class MapUtils implements Serializable {
 		markup.div().id(feed.getKey()).style("background:" + color + "; padding: 4px; border-radius: 10px; -moz-border-radius: 10px;" );
 		markup.raw(label);
 		markup.raw("<br/>");
-		markup.raw(VaadinIcons.SIGNAL.getHtml());
+		//markup.raw(VaadinIcon.SIGNAL.create());
 		markup.raw("&nbsp;");
 		if (measure != null) {
 			markup.raw(measure);

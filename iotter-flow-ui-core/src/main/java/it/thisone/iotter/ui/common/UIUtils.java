@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.persistence.EntityManager;
-import javax.servlet.http.Cookie;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
@@ -26,16 +25,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
-import com.vaadin.server.Page;
-import com.vaadin.server.Page.Styles;
+
 import com.vaadin.flow.server.VaadinService;
-import com.vaadin.server.WebBrowser;
-import com.vaadin.shared.Position;
-import com.vaadin.shared.communication.PushMode;
+import com.vaadin.flow.server.VaadinRequest;
+
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.UI;
-import com.wcs.wcslib.vaadin.widget.recaptcha.ReCaptcha;
-import com.wcs.wcslib.vaadin.widget.recaptcha.shared.ReCaptchaOptions;
 
 import eu.bitwalker.useragentutils.UserAgent;
 import it.thisone.iotter.config.Constants;
@@ -72,74 +67,11 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		UsernamePasswordAuthenticationToken request = new UsernamePasswordAuthenticationToken(principal, credentials);
 		Authentication result = ((IMainUI) UI.getCurrent()).getServiceFactory().getAuthManager().authenticate(request);
 		UserDetailsAdapter user = (UserDetailsAdapter) result.getPrincipal();
-		if (UIUtils.isCookiesEnabled()) {
-			if (remember) {
-				addCookie(USERNAME_COOKIE, principal.toString(), MAX_COOKIE_AGE);
-				addCookie(PASSWORD_COOKIE, credentials.toString(), MAX_COOKIE_AGE);
-			} else {
-				if (getCookieByName(USERNAME_COOKIE) != null) {
-					addCookie(USERNAME_COOKIE, principal.toString(), 0);
-				}
-				if (getCookieByName(PASSWORD_COOKIE) != null) {
-					addCookie(PASSWORD_COOKIE, credentials.toString(), 0);
-				}
-			}
-		}
 
 		return user;
 	}
 
-	public static boolean isMobile() {
-		return ((IMainUI) UI.getCurrent()).isMobile();
-	}
 
-	public static boolean isCookiesEnabled() {
-		Cookie[] cookies = VaadinService.getCurrentRequest().getCookies();
-		return (cookies != null);
-	}
-
-	public static String getCookieByName(String name) {
-		// Fetch all cookies from the request
-		Cookie[] cookies = VaadinService.getCurrentRequest().getCookies();
-		if (cookies == null) {
-			return null;
-		}
-		// Iterate to find cookie by its name
-		for (Cookie cookie : cookies) {
-			if (name.equals(cookie.getName())) {
-				URLCodec codec = new URLCodec();
-				try {
-					// Bug #200 (In Progress): [VAADIN] remember me cookie is
-					// not working after enabling vaadin push
-					return codec.decode(cookie.getValue());
-				} catch (DecoderException e) {
-				}
-			}
-		}
-		return null;
-	}
-
-	public static void addCookie(String name, String value, int age) {
-		if (VaadinService.getCurrentResponse() != null) {
-			Cookie cookie = new Cookie(name, value);
-			// Make cookie expire in 30 days
-			cookie.setMaxAge(age);
-			cookie.setPath(VaadinService.getCurrentRequest().getContextPath());
-			VaadinService.getCurrentResponse().addCookie(cookie);
-		} else {
-			// Bug #184 [Tomcat][Vaadin] push not working ( Push + WebSocket ) ≠
-			// Cookies
-			// Bug #200 (In Progress): [VAADIN] remember me cookie is not
-			// working after enabling vaadin push
-			URLCodec codec = new URLCodec();
-			try {
-				Page.getCurrent().getJavaScript()
-						.execute(String.format("document.cookie = '%s=%s);';", name, codec.encode(value)));
-			} catch (EncoderException e) {
-				// Intentionally unhandled
-			}
-		}
-	}
 
 	public static Map<String, String> parseParameters(String event) {
 		Map<String, String> parameters = new HashMap<String, String>();
@@ -302,24 +234,6 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 				network, device, message);
 	}
 
-	@SuppressWarnings("serial")
-	public static ReCaptcha createReCaptcha() {
-	
-		try {
-			Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
-			String privateKey = properties.getProperty("recaptcha.privatekey");
-			String publicKey = properties.getProperty("recaptcha.publickey");
-			return new ReCaptcha(privateKey, new ReCaptchaOptions() {
-				{
-					theme = "clean";
-					sitekey = publicKey;
-				}
-			});
-		} catch (Exception e) {
-			logger.error("unable to instantiate ReCaptcha", e);
-		}
-		return null;
-	}
 
 	public static Locale getLocale() {
 		return UI.getCurrent().getLocale();
@@ -348,9 +262,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return value;
 	}
 
-	public static String getUserTokenCookie() {
-		return getCookieByName(USERTOKEN_COOKIE);
-	}
+
 
 	public static String toHtml(String input) {
 		if (input == null) {
@@ -360,161 +272,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return input;
 	}
 
-	public static String addBackgroundImageStyle(long imageId, int imageWidth, int imageHeight) {
-		return addBackgroundImageStyle("image/" + imageId, imageWidth, imageHeight);
-	}
 
-	public static String addBackgroundImageStyle(String imageUrl, int imageWidth, int imageHeight) {
-		String backgroundStyleName = String.format("%s-%sx%s", imageUrl.replaceAll("/", "").toLowerCase(), imageWidth,
-				imageHeight);
-		String backgroundImageStyle = String.format(".v-app .v-absolutelayout-%s { background-image: url(%s); "
-				+ "background-size: %spx %spx; background-repeat: no-repeat; " + "background-position: center;}",
-				backgroundStyleName, imageUrl, imageWidth, imageHeight);
-		Styles styles = Page.getCurrent().getStyles();
-		styles.add(backgroundImageStyle);
-		return backgroundStyleName;
-	}
-
-	/**
-	 * creates dinamically css style for label with color and font size
-	 * 
-	 * @param id
-	 * @param color
-	 * @param fontSize px
-	 * @return
-	 */
-	public static String addLabelStyle(String id, String color, String fontSize, String extraStyle) {
-		String colorStyle = "";
-		String fontStyle = "";
-
-		if (extraStyle == null)
-			extraStyle = "";
-
-		if (fontSize != null) {
-			fontStyle = String.format("font-size: %s;", fontSize);
-		} else {
-			fontStyle = "";
-		}
-
-		if (color != null && !color.isEmpty()) {
-			colorStyle = String.format("color:%s ;", color);
-		}
-
-		String styleName = String.format("%s%s", id, fontSize);
-		String labelStyle = String.format(".v-app .v-label-%s { %s %s %s "
-				// + "line-height: 1; letter-spacing: -0.05em; "
-				// + "font-weight: 300; -webkit-font-smoothing: antialiased; "
-				+ " } ", styleName, colorStyle, fontStyle, extraStyle);
-		Styles styles = Page.getCurrent().getStyles();
-
-		styles.add(labelStyle);
-		return styleName;
-	}
-
-	/**
-	 * Vaadin 7 will support Internet Explorer 8 and newer. Vaadin 7 will support
-	 * the latest Firefox, Chrome, Safari and Opera major version available at the
-	 * time of release. From that point on all new major versions of the browsers
-	 * will additionally be supported.
-	 * 
-	 * 
-	 * Supported Web Browsers Google Chrome 23 or newer Safari 6 or newer Internet
-	 * Explorer 8 or newer Mozilla Firefox 17 or newer Opera 15 or newer
-	 * 
-	 * @param ua
-	 * @return
-	 */
-	public static UAgent checkSupportedBrowser(String header) {
-		int supportedVersion = 0;
-		int majorVersion = -1;
-
-		UserAgent userAgent = UserAgent.parseUserAgentString(header);
-		UAgent agent = new UAgent(header);
-		agent.setMobile(false);
-		agent.setFamily("Unknown");
-		agent.setVersion(String.valueOf(supportedVersion));
-
-		try {
-			if (userAgent.getBrowser() != null) {
-				agent.setFamily(userAgent.getBrowser().getGroup().getName());
-				switch (userAgent.getBrowser().getBrowserType()) {
-				case MOBILE_BROWSER:
-					agent.setMobile(true);
-					break;
-				default:
-					agent.setMobile(false);
-					break;
-				}
-			}
-
-			if (userAgent.getBrowserVersion() != null) {
-				agent.setVersion(userAgent.getBrowserVersion().getMajorVersion());
-			}
-
-			switch (userAgent.getBrowser().getGroup()) {
-			case OPERA:
-			case OPERA_MINI:
-			case OPERA_MOBILE:
-				// October 2014, 25
-				supportedVersion = 15;
-				break;
-			case IE:
-				supportedVersion = 8;
-				break;
-			case EDGE:
-			case EDGE_MOBILE:
-				// return false;
-				supportedVersion = 99999;
-				break;
-			case SAFARI:
-				// October 2014, 8
-				supportedVersion = 6;
-				break;
-			case CHROME:
-			case CHROME_MOBILE:
-				// October 2014, 38
-				supportedVersion = 23;
-				break;
-			case FIREFOX:
-				// October 2014, 36
-				supportedVersion = 17;
-				break;
-			default:
-				// return false;
-				supportedVersion = 9999;
-			}
-
-			majorVersion = Integer.parseInt(agent.getVersion());
-		} catch (Exception e) {
-			logger.error(header, e);
-		}
-
-		boolean supported = (majorVersion >= supportedVersion);
-
-		if (!supported) {
-			String msg = "This application is not optimized for your browser:<br/>"
-					// + agent.getFamily() + " " //
-					// + agent.getVersion() //
-					// + "<br/>" //
-					+ "If you wish, you can load it anyway." //
-					+ "<p>Supported Web Browsers<p/>" //
-					+ "Google Chrome 23 or newer</br>" //
-					+ "Safari 6 or newer</br>" //
-					+ "Internet Explorer 8 or newer</br>" //
-					+ "Mozilla Firefox 17 or newer</br>" //
-					+ "Opera 15 or newer</br>"; //
-
-			Notification n = new Notification("WARNING", msg);
-			n.setHtmlContentAllowed(true);
-			n.setDelayMsec(-1);
-			n.setPosition(Position.TOP_CENTER);
-			n.setStyleName("system closable");
-			n.show(UI.getCurrent().getPage());
-		}
-		// agent.setMobile(true);
-
-		return agent;
-	}
 
 	public static String getActivationURL(String action, String user, String token) {
 		return getActivationURL(((IMainUI) UI.getCurrent()).getServerUrl(), action, user, token);
@@ -577,26 +335,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		((IMainUI) UI.getCurrent()).startWidgetRefresher();
 	}
 
-	public static void checkSupportedBrowser() {
-		WebBrowser browser = Page.getCurrent().getWebBrowser();
-		if (browser.isTooOldToFunctionProperly()) {
-			String msg = "This application is not optimized for your browser !<br/>"
-					+ "If you wish, you can load it anyway." //
-					+ "<p>Supported Web Browsers<p/>" //
-					+ "Google Chrome 23 or newer</br>" //
-					+ "Safari 6 or newer</br>" //
-					+ "Internet Explorer 8 or newer</br>" //
-					+ "Mozilla Firefox 17 or newer</br>" //
-					+ "Opera 15 or newer</br>"; //
-			Notification n = new Notification("WARNING", msg);
-			n.setHtmlContentAllowed(true);
-			n.setDelayMsec(-1);
-			n.setPosition(Position.TOP_CENTER);
-			n.setStyleName("system closable");
-			n.show(UI.getCurrent().getPage());
-		}
 
-	}
 
 	public static String getMeasureUnitPattern() {
 		List<MeasureUnitType> units = getServiceFactory().getMeasureUnitTypeService().findAll();
@@ -638,14 +377,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return sb.toString();
 	}
 
-	public static void push() {
-		try {
-			if (UI.getCurrent().getPushConfiguration().getPushMode().equals(PushMode.MANUAL)) {
-				UI.getCurrent().push();
-			}
-		} finally {
-		}
-	}
+
 
 	/**
 	 * Utility method to convert java.util.Date to LocalDate using the configured timezone

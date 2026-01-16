@@ -165,4 +165,40 @@ Guidance:
 ```
 
 
+button.setDescription()
+button.getElement().setProperty("title", "..."); // tooltip HTML nativo
 
+button.setLabel(
+button.setText(
+
+setItemLabelGenerator -> setItemLabelGenerator
+
+
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.component.html.Span;
+
+        setRenderer(new ComponentRenderer<>(value ->
+                new Span( UIUtils.localize(value.getI18nKey()) )
+        ));
+
+
+public class BooleanOptionGroup extends RadioButtonGroup<Boolean> {
+
+    private static final long serialVersionUID = 1L;
+
+    public BooleanOptionGroup() {
+        super();
+
+        // Ordered labels: false first, then true
+        Map<Boolean, String> labels = new LinkedHashMap<>();
+        labels.put(false, UIUtils.localize("enum.boolean.false"));
+        labels.put(true, UIUtils.localize("enum.boolean.true"));
+
+        setItems(labels.keySet());
+
+        // Vaadin 14-compatible label rendering
+        setRenderer(new ComponentRenderer<>(value ->
+                new Span(labels.get(value))
+        ));
+    }
+}

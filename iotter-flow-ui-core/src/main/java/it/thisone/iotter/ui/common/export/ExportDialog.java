@@ -8,8 +8,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.vaadin.gridutil.cell.CellFilterComponent;
-import org.vaadin.gridutil.cell.GridCellFilter;
+//import org.vaadin.gridutil.cell.CellFilterComponent;
+//import org.vaadin.gridutil.cell.GridCellFilter;
 
 import com.google.common.collect.Range;
 import com.vaadin.flow.data.binder.Binder;
@@ -17,31 +17,25 @@ import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.provider.ListDataProvider;
-import com.vaadin.flow.data.binder.Validator.AbstractValidator;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.Responsive;
-import com.vaadin.shared.ui.grid.HeightMode;
-import com.vaadin.flow.component.Alignment;
+import com.vaadin.flow.data.validator.AbstractValidator;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.Button.ClickEvent;
-import com.vaadin.flow.component.button.Button.ClickListener;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.DateField;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.MenuBar;
-import com.vaadin.flow.component.MenuBar.Command;
-import com.vaadin.flow.component.MenuBar.MenuItem;
+import com.vaadin.flow.component.menubar.*;
 import org.vaadin.flow.components.PanelFlow;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.themes.ValoTheme;
 
 import it.thisone.iotter.cassandra.model.CassandraExportFeed;
 import it.thisone.iotter.cassandra.model.Interpolation;
@@ -58,7 +52,7 @@ import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 import it.thisone.iotter.ui.eventbus.ExportStartEvent;
 import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
-import it.thisone.iotter.ui.main.IMainUI;
+
 import it.thisone.iotter.util.PopupNotification;
 
 /*
@@ -83,17 +77,15 @@ public class ExportDialog extends Dialog {
 	private ComboBox<String> columnSeparatorField;
 	private TextField customSeparatorField;
 	private Binder<ExportFormBean> binder;
-	private ClickListener exportListener;
 	private TimeIntervalHelper helper;
-	private DateField fromDateField;
-	private DateField toDateField;
+	private DatePicker fromDateField;
+	private DatePicker toDateField;
 
 	private Date lowerBound;
 	private Date upperBound;
 
 	private final Grid<CassandraExportFeed> grid = new Grid<>();
 
-	private org.vaadin.gridutil.cell.GridCellFilter<CassandraExportFeed> filter;
 	private Button export;
 	private Button cancel;
 
@@ -102,7 +94,7 @@ public class ExportDialog extends Dialog {
 	@SuppressWarnings("serial")
 	public ExportDialog(IExportConfig config, ExportProperties properties, Device device) {
 		super();
-		setHeaderTitle(getI18nLabel("single_csv_export") + " " + config.getName());
+		//setHeaderTitle(getI18nLabel("single_csv_export") + " " + config.getName());
 		setDraggable(false);
 		// setImmediate(true);
 
@@ -111,12 +103,11 @@ public class ExportDialog extends Dialog {
 
 		initGrid(config);
 
-		BaseComponent.makeResponsiveDialog(this, UIUtils.M_DIMENSION, "export-dialog");
 		helper = new TimeIntervalHelper(properties.getTimeZone());
 
 		fromDateField = helper.createDateField();
-		fromDateField.setRangeStart(helper.toLocalDate(config.getInterval().lowerEndpoint()));
-		fromDateField.setRangeEnd(helper.toLocalDate(config.getInterval().upperEndpoint()));
+//		fromDateField.setRangeStart(helper.toLocalDate(config.getInterval().lowerEndpoint()));
+//		fromDateField.setRangeEnd(helper.toLocalDate(config.getInterval().upperEndpoint()));
 		// fromDateField.setDateOutOfRangeMessage(getI18nLabel("date_out_of_range")); // Not available in V8
 		// fromDateField.setValidationVisible(true); // Not available in V8
 
@@ -128,8 +119,8 @@ public class ExportDialog extends Dialog {
 
 		// toDateField.setValidationVisible(true); // Not available in V8
 		toDateField.setValue(helper.toLocalDate(config.getInterval().upperEndpoint()));
-		toDateField.setRangeStart(helper.toLocalDate(config.getInterval().lowerEndpoint()));
-		toDateField.setRangeEnd(helper.toLocalDate(config.getInterval().upperEndpoint()));
+//		toDateField.setRangeStart(helper.toLocalDate(config.getInterval().lowerEndpoint()));
+//		toDateField.setRangeEnd(helper.toLocalDate(config.getInterval().upperEndpoint()));
 		// toDateField.setDateOutOfRangeMessage(getI18nLabel("date_out_of_range")); // Not available in V8
 
 		String[] separators = new String[] { ",", ";", "\t" };
@@ -137,15 +128,15 @@ public class ExportDialog extends Dialog {
 
 		columnSeparatorField = new ComboBox<>();
 		columnSeparatorField.setItems(separators);
-		columnSeparatorField.setLabelCaptionGenerator(item -> {
-			switch (item) {
-				case ",": return ",";
-				case ";": return ";";
-				case "\t": return "tab";
-				default: return item;
-			}
-		});
-		columnSeparatorField.setEmptySelectionAllowed(false);
+//		columnSeparatorField.setItemLabelGenerator(item -> {
+//			switch (item) {
+//				case ",": return ",";
+//				case ";": return ";";
+//				case "\t": return "tab";
+//				default: return item;
+//			}
+//		});
+		//columnSeparatorField.setEmptySelectionAllowed(false);
 		columnSeparatorField.setValue(separators[0]);
 		columnSeparatorField.setLabel(getI18nLabel("column_separator"));
 
@@ -155,7 +146,7 @@ public class ExportDialog extends Dialog {
 		String[] decimals = new String[] { ".", "," };
 		decimalSeparatorField = new ComboBox<>();
 		decimalSeparatorField.setItems(decimals);
-		decimalSeparatorField.setEmptySelectionAllowed(false);
+		//decimalSeparatorField.setEmptySelectionAllowed(false);
 		decimalSeparatorField.setValue(dec);
 		decimalSeparatorField.setLabel(getI18nLabel("decimal_separator"));
 
@@ -163,20 +154,19 @@ public class ExportDialog extends Dialog {
 		interpolationField.setLabel(getI18nLabel("interpolation"));
 
 		fileModeField = createFileModeRadioButtonGroup();
-		fileModeField.setStyleName(ValoTheme.OPTIONGROUP_HORIZONTAL);
+//		fileModeField.setStyleName(ValoTheme.OPTIONGROUP_HORIZONTAL);
 		fileModeField.setLabel(getI18nLabel("file_mode"));
 		fileModeField.setValue(properties.getFileMode());
 		// fileModeField.setVisible(false);
 
 		orderField = createOrderRadioButtonGroup();
-		orderField.setStyleName(ValoTheme.OPTIONGROUP_HORIZONTAL);
+//		orderField.setStyleName(ValoTheme.OPTIONGROUP_HORIZONTAL);
 		orderField.setLabel(getI18nLabel("export_order"));
 		orderField.setValue(properties.getOrder());
 
 		emailField = new TextField(getI18nLabel("export_email"));
 
 		formatField = createFormatRadioButtonGroup();
-		formatField.setStyleName(ValoTheme.OPTIONGROUP_HORIZONTAL);
 		formatField.setLabel(getI18nLabel("format"));
 		formatField.addValueChangeListener(event -> {
 			ExportFormat value = event.getValue();
@@ -226,8 +216,8 @@ public class ExportDialog extends Dialog {
 		decimalSeparatorField.setWidth(100, Unit.PERCENTAGE);
 		emailField.setWidth(100, Unit.PERCENTAGE);
 		interpolationField.setWidth(100, Unit.PERCENTAGE);
-		fileModeField.setWidth(100, Unit.PERCENTAGE);
-		formatField.setWidth(100, Unit.PERCENTAGE);
+//		fileModeField.setWidth(100, Unit.PERCENTAGE);
+//		formatField.setWidth(100, Unit.PERCENTAGE);
 		fromDateField.setWidth(100, Unit.PERCENTAGE);
 		toDateField.setWidth(100, Unit.PERCENTAGE);
 
@@ -296,83 +286,74 @@ public class ExportDialog extends Dialog {
 		}
 
 		FormLayout fieldLayout = new FormLayout();
-		fieldLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-		fieldLayout.setSpacing(true);
-		fieldLayout.setPadding(true);
+
 
 		if (config instanceof ExportGroupConfig) {
-			fieldLayout.addComponent(fileModeField);
+			fieldLayout.add(fileModeField);
 		}
 
-		fieldLayout.addComponent(fromDateField);
-		fieldLayout.addComponent(toDateField);
-		fieldLayout.addComponent(interpolationField);
+		fieldLayout.add(fromDateField);
+		fieldLayout.add(toDateField);
+		fieldLayout.add(interpolationField);
 
-		fieldLayout.addComponent(orderField);
-		fieldLayout.addComponent(formatField);
-		fieldLayout.addComponent(columnSeparatorField);
-		fieldLayout.addComponent(customSeparatorField);
-		fieldLayout.addComponent(decimalSeparatorField);
-		fieldLayout.addComponent(emailField);
+		fieldLayout.add(orderField);
+		fieldLayout.add(formatField);
+		fieldLayout.add(columnSeparatorField);
+		fieldLayout.add(customSeparatorField);
+		fieldLayout.add(decimalSeparatorField);
+		fieldLayout.add(emailField);
 
         PanelFlow panel = new PanelFlow();
 		panel.setContent(fieldLayout);
 		panel.setSizeFull();
 
 		HorizontalLayout content = new HorizontalLayout();
-		content.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 		content.setSizeFull();
-		content.addComponent(panel);
+		content.add(panel);
 		content.setPadding(true);
 
-		exportListener = createExportListener(config, properties, helper);
-		export = new Button(getI18nLabel("export"));
-		export.setIcon(UIUtils.ICON_START);
-		export.addClickListener(exportListener);
-		enableExport(true);
+//		exportListener = createExportListener(config, properties, helper);
+//		export = new Button(getI18nLabel("export"));
+//		export.setIcon(UIUtils.ICON_START);
+//		export.addClickListener(exportListener);
+//		enableExport(true);
 
 		cancel = new Button(getI18nLabel("cancel"));
-		cancel.addClickListener(new ClickListener() {
-			@Override
-			public void buttonClick(ClickEvent event) {
+		cancel.addClickListener( event-> {
 				close();
 			}
-		});
+		);
 
-		// export.setImmediate(true);
-		// cancel.setImmediate(true);
-		export.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
-		cancel.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
+
 
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
 		buttonLayout.setPadding(true);
-		buttonLayout.addComponent(export);
-		buttonLayout.addComponent(cancel);
+		buttonLayout.add(export);
+		buttonLayout.add(cancel);
 
 		HorizontalLayout footer = new HorizontalLayout();
 		footer.setWidth(100.0f, Unit.PERCENTAGE);
-		footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
-		footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-		footer.addComponent(buttonLayout);
+//		footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+//		footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		footer.add(buttonLayout);
 
 		VerticalLayout verticalLayout = new VerticalLayout();
-		verticalLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+//		verticalLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 		verticalLayout.setSizeFull();
 		verticalLayout.setSpacing(true);
-		verticalLayout.addComponent(grid);
-		verticalLayout.setExpandRatio(grid, 1f);
-		verticalLayout.addComponent(fieldLayout);
-		verticalLayout.setExpandRatio(fieldLayout, 1f);
-		verticalLayout.addComponent(footer);
+		verticalLayout.add(grid);
+//		verticalLayout.setExpandRatio(grid, 1f);
+		verticalLayout.add(fieldLayout);
+//		verticalLayout.setExpandRatio(fieldLayout, 1f);
+		verticalLayout.add(footer);
 		add(verticalLayout);
 
-		Responsive.makeResponsive(this);
 	}
 
 	private void initGrid(IExportConfig config) {
 		grid.addClassName("smallgrid");
-		grid.setHeightMode(HeightMode.CSS);
+//		grid.setHeightMode(HeightMode.CSS);
 		grid.setSelectionMode(SelectionMode.SINGLE);
 		grid.setSizeFull();
 		List<CassandraExportFeed> feeds = new ArrayList<>();
@@ -386,161 +367,161 @@ public class ExportDialog extends Dialog {
 		ListDataProvider<CassandraExportFeed> dataProvider = new ListDataProvider<>(feeds);
 		grid.setDataProvider(dataProvider);
 
-		grid.removeAllColumns();
-		grid.addComponentColumn(feed -> {
-			Checkbox checkBox = new Checkbox();
-			checkBox.setValue(feed.isSelected());
-			checkBox.addValueChangeListener(event -> {
-				feed.setSelected(event.getValue());
-				boolean enabled = false;
-				for (CassandraExportFeed f : dataProvider.getItems()) {
-					if (f.isSelected()) {
-						enabled = true;
-						break;
-					}
-				}
-				enableExport(enabled);
-			});
-			return checkBox;
-		}).setId(SELECTED).setLabel("").setWidth(100);
-
-		grid.addColumn(CassandraExportFeed::getLabel).setId(LABEL).setLabel(getI18nLabel("export_label")).setExpandRatio(1);
-
-		filter = new GridCellFilter<CassandraExportFeed>(grid);
-		boolean ignoreCase = true;
-		boolean onlyMatchPrefix = false;
-		CellFilterComponent<TextField> displayNameFilter = filter.setTextFilter(LABEL, ignoreCase, onlyMatchPrefix, "");
-		TextField displayName = displayNameFilter.getComponent();
-		displayName.setStyleName(ValoTheme.TEXTFIELD_TINY);
-
+//		grid.removeAllColumns();
+//		grid.addComponentColumn(feed -> {
+//			Checkbox checkBox = new Checkbox();
+//			checkBox.setValue(feed.isSelected());
+//			checkBox.addValueChangeListener(event -> {
+//				feed.setSelected(event.getValue());
+//				boolean enabled = false;
+//				for (CassandraExportFeed f : dataProvider.getItems()) {
+//					if (f.isSelected()) {
+//						enabled = true;
+//						break;
+//					}
+//				}
+//				enableExport(enabled);
+//			});
+//			return checkBox;
+//		}).setId(SELECTED).setLabel("").setWidth(100);
+//
+//		grid.addColumn(CassandraExportFeed::getLabel).setId(LABEL).setLabel(getI18nLabel("export_label")).setExpandRatio(1);
+//
+//		filter = new GridCellFilter<CassandraExportFeed>(grid);
+//		boolean ignoreCase = true;
+//		boolean onlyMatchPrefix = false;
+//		CellFilterComponent<TextField> displayNameFilter = filter.setTextFilter(LABEL, ignoreCase, onlyMatchPrefix, "");
+//		TextField displayName = displayNameFilter.getComponent();
+//		displayName.setStyleName(ValoTheme.TEXTFIELD_TINY);
+//		grid.getHeaderRow(0).getCell(SELECTED).setComponent(root);
 
 		MenuBar root = filterSelectedMenuBar((ListDataProvider<CassandraExportFeed>) grid.getDataProvider());
-		grid.getHeaderRow(0).getCell(SELECTED).setComponent(root);
+		
 	}
 
 	@SuppressWarnings("serial")
 	protected MenuBar filterSelectedMenuBar(ListDataProvider<CassandraExportFeed> dataProvider) {
 		MenuBar root = new MenuBar();
-		root.addClassName(ValoTheme.BUTTON_BORDERLESS);
-		final MenuItem select = root.addItem("", VaadinIcons.EYE_SLASH, null);
-		String select_all = getI18nLabel("grid.select_all");
-		select.addItem(select_all, null, new Command() {
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				dataProvider.clearFilters();
-				select.setIcon(VaadinIcons.CHECK_SQUARE_O);
-				for (CassandraExportFeed item : dataProvider.getItems()) {
-					item.setSelected(true);
-				}
-				grid.getDataProvider().refreshAll();
-				enableExport(dataProvider.getItems().size() > 0);
-			}
-		});
-
-		String select_none = getI18nLabel("grid.select_none");
-		select.addItem(select_none, null, new Command() {
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				filter.clearAllFilters();
-				select.setIcon(VaadinIcons.CIRCLE_THIN);
-				dataProvider.clearFilters();
-				for (CassandraExportFeed item : dataProvider.getItems()) {
-					item.setSelected(false);
-				}
-				grid.getDataProvider().refreshAll();
-				enableExport(false);
-			}
-		});
-
-		String show_selected = getI18nLabel("grid.show_selected");
-		select.addItem(show_selected, null, new Command() {
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				filter.clearAllFilters();
-				select.setIcon(VaadinIcons.EYE);
-				dataProvider.setFilter(feed -> feed.isSelected());
-			}
-		});
-
-		String show_all = getI18nLabel("grid.show_all");
-		select.addItem(show_all, null, new Command() {
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				filter.clearAllFilters();
-				select.setIcon(VaadinIcons.EYE_SLASH);
-				dataProvider.clearFilters();
-			}
-		});
+		//root.addClassName(ValoTheme.BUTTON_BORDERLESS);
+//		final MenuItem select = root.addItem("", VaadinIcon.EYE_SLASH, null);
+//		String select_all = getI18nLabel("grid.select_all");
+//		select.addItem(select_all, null, new Command() {
+//			@Override
+//			public void menuSelected(MenuItem selectedItem) {
+//				dataProvider.clearFilters();
+//				select.setIcon(VaadinIcon.CHECK_SQUARE_O);
+//				for (CassandraExportFeed item : dataProvider.getItems()) {
+//					item.setSelected(true);
+//				}
+//				grid.getDataProvider().refreshAll();
+//				enableExport(dataProvider.getItems().size() > 0);
+//			}
+//		});
+//
+//		String select_none = getI18nLabel("grid.select_none");
+//		select.addItem(select_none, null, new Command() {
+//			@Override
+//			public void menuSelected(MenuItem selectedItem) {
+//				filter.clearAllFilters();
+//				select.setIcon(VaadinIcon.CIRCLE_THIN);
+//				dataProvider.clearFilters();
+//				for (CassandraExportFeed item : dataProvider.getItems()) {
+//					item.setSelected(false);
+//				}
+//				grid.getDataProvider().refreshAll();
+//				enableExport(false);
+//			}
+//		});
+//
+//		String show_selected = getI18nLabel("grid.show_selected");
+//		select.addItem(show_selected, null, new Command() {
+//			@Override
+//			public void menuSelected(MenuItem selectedItem) {
+//				filter.clearAllFilters();
+//				select.setIcon(VaadinIcon.EYE);
+//				dataProvider.setFilter(feed -> feed.isSelected());
+//			}
+//		});
+//
+//		String show_all = getI18nLabel("grid.show_all");
+//		select.addItem(show_all, null, new Command() {
+//			@Override
+//			public void menuSelected(MenuItem selectedItem) {
+//				filter.clearAllFilters();
+//				select.setIcon(VaadinIcon.EYE_SLASH);
+//				dataProvider.clearFilters();
+//			}
+//		});
 		return root;
 	}
 
-	private ClickListener createExportListener(final IExportConfig config,
-			final ExportProperties properties, final TimeIntervalHelper helper) {
-		return new ClickListener() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void buttonClick(ClickEvent event) {
-
-				try {
-					if (binder.validate().isOk()) {
-						ExportFormBean formBean = binder.getBean();
-						properties.setFormat(formBean.getFormat());
-					properties.setDecimalSeparator(getDecimalSeparator());
-					properties.setColumnSeparator(getColumnSeparator());
-						properties.setFileMode(formBean.getFileMode());
-						properties.setOrder(formBean.getExportOrder());
-						config.setInterpolation(formBean.getInterpolation());
-						String email = formBean.getExportEmail();
-					String owner = UIUtils.getUserDetails().getUsername();
-					if (config.getLockId() == null) {
-						config.setLockId(config.getName() + owner);
-					}
-						Date lower = helper.toDate(formBean.getFromDate());
-						Date upper = helper.toDate(formBean.getToDate());
-
-					Range<Date> interval = Range.closedOpen(lower, upper);
-					config.setInterval(interval);
-
-					ExportStartEvent start = new ExportStartEvent(owner, email, config, properties);
-					ExportUIRunnable exporter = new ExportUIRunnable(start);
-					// eventually future can be cancelled
-					((IMainUI) UI.getCurrent())
-							.getUIExecutor().executeAndAccess(exporter);
-
-					PopupNotification.show(getI18nLabel("export_started"));
-					close();
-
-				} else {
-					PopupNotification.show(getI18nLabel("invalid_data"));
-				}
-			} catch (Exception e) {
-				PopupNotification.show(getI18nLabel("invalid_data"));
-			}
-			}
-
-			private char getColumnSeparator() {
-				if (customSeparatorField.getValue() == null
-						|| customSeparatorField.getValue().isEmpty()) {
-					return columnSeparatorField.getValue().charAt(0);
-				}
-				return customSeparatorField.getValue().charAt(0);
-			}
-
-			private char getDecimalSeparator() {
-				return decimalSeparatorField.getValue().charAt(0);
-			}
-
-		};
-	}
+//	private ClickListener createExportListener(final IExportConfig config,
+//			final ExportProperties properties, final TimeIntervalHelper helper) {
+//		return new ClickListener() {
+//			/**
+//			 * 
+//			 */
+//			private static final long serialVersionUID = 1L;
+//
+//			@Override
+//			public void buttonClick(ClickEvent event) {
+//
+//				try {
+//					if (binder.validate().isOk()) {
+//						ExportFormBean formBean = binder.getBean();
+//						properties.setFormat(formBean.getFormat());
+//					properties.setDecimalSeparator(getDecimalSeparator());
+//					properties.setColumnSeparator(getColumnSeparator());
+//						properties.setFileMode(formBean.getFileMode());
+//						properties.setOrder(formBean.getExportOrder());
+//						config.setInterpolation(formBean.getInterpolation());
+//						String email = formBean.getExportEmail();
+//					String owner = UIUtils.getUserDetails().getUsername();
+//					if (config.getLockId() == null) {
+//						config.setLockId(config.getName() + owner);
+//					}
+//						Date lower = helper.toDate(formBean.getFromDate());
+//						Date upper = helper.toDate(formBean.getToDate());
+//
+//					Range<Date> interval = Range.closedOpen(lower, upper);
+//					config.setInterval(interval);
+//
+//					ExportStartEvent start = new ExportStartEvent(owner, email, config, properties);
+//					ExportUIRunnable exporter = new ExportUIRunnable(start);
+//					// eventually future can be cancelled
+//					((IMainUI) UI.getCurrent())
+//							.getUIExecutor().executeAndAccess(exporter);
+//
+//					PopupNotification.show(getI18nLabel("export_started"));
+//					close();
+//
+//				} else {
+//					PopupNotification.show(getI18nLabel("invalid_data"));
+//				}
+//			} catch (Exception e) {
+//				PopupNotification.show(getI18nLabel("invalid_data"));
+//			}
+//			}
+//
+//			private char getColumnSeparator() {
+//				if (customSeparatorField.getValue() == null
+//						|| customSeparatorField.getValue().isEmpty()) {
+//					return columnSeparatorField.getValue().charAt(0);
+//				}
+//				return customSeparatorField.getValue().charAt(0);
+//			}
+//
+//			private char getDecimalSeparator() {
+//				return decimalSeparatorField.getValue().charAt(0);
+//			}
+//
+//		};
+//	}
 
 	private RadioButtonGroup<Order> createOrderRadioButtonGroup() {
 		RadioButtonGroup<Order> optionGroup = new RadioButtonGroup<>();
 		optionGroup.setItems(Order.values());
-		optionGroup.setLabelCaptionGenerator(literal -> UIUtils.localize(literal.getI18nKey()));
+		//optionGroup.setItemLabelGenerator(literal -> UIUtils.localize(literal.getI18nKey()));
 
 		return optionGroup;
 	}
@@ -548,14 +529,14 @@ public class ExportDialog extends Dialog {
 	private RadioButtonGroup<ExportFileMode> createFileModeRadioButtonGroup() {
 		RadioButtonGroup<ExportFileMode> optionGroup = new RadioButtonGroup<>();
 		optionGroup.setItems(ExportFileMode.values());
-		optionGroup.setLabelCaptionGenerator(literal -> UIUtils.localize(literal.getI18nKey()));
+		//optionGroup.setItemLabelGenerator(literal -> UIUtils.localize(literal.getI18nKey()));
 		return optionGroup;
 	}
 
 	private RadioButtonGroup<ExportFormat> createFormatRadioButtonGroup() {
 		RadioButtonGroup<ExportFormat> optionGroup = new RadioButtonGroup<>();
 		optionGroup.setItems(ExportFormat.values());
-		optionGroup.setLabelCaptionGenerator(literal -> literal.toString());
+		//optionGroup.setItemLabelGenerator(literal -> literal.toString());
 
 		return optionGroup;
 	}
@@ -601,11 +582,11 @@ public class ExportDialog extends Dialog {
 					}
 
 					TimeIntervalHelper helperLocal = new TimeIntervalHelper(TimeZone.getTimeZone("UTC"));
-					fromDateField.setRangeStart(helperLocal.toLocalDate(lowerBound));
-					fromDateField.setRangeEnd(helperLocal.toLocalDate(upperBound));
-
-					toDateField.setRangeStart(helperLocal.toLocalDate(lowerBound));
-					toDateField.setRangeEnd(helperLocal.toLocalDate(upperBound));
+//					fromDateField.setRangeStart(helperLocal.toLocalDate(lowerBound));
+//					fromDateField.setRangeEnd(helperLocal.toLocalDate(upperBound));
+//
+//					toDateField.setRangeStart(helperLocal.toLocalDate(lowerBound));
+//					toDateField.setRangeEnd(helperLocal.toLocalDate(upperBound));
 
 					fromDateField.setValue(helperLocal.toLocalDate(lowerBound));
 					toDateField.setValue(helperLocal.toLocalDate(upperBound));
@@ -615,8 +596,8 @@ public class ExportDialog extends Dialog {
 		}
 
 		combo.setItems(items);
-		combo.setLabelCaptionGenerator(type -> UIUtils.localize(type.getI18nKey()));
-		combo.setEmptySelectionAllowed(false);
+//		combo.setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+//		combo.setEmptySelectionAllowed(false);
 		if (!items.isEmpty()) {
 			combo.setValue(items.get(0));
 		}
@@ -634,10 +615,10 @@ public class ExportDialog extends Dialog {
 	}
 
 	public void resize(float[] dimension) {
-		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
-		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
-		setWidth(width * dimension[0], Unit.PIXELS);
-		setHeight(height * dimension[1], Unit.PIXELS);
+//		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
+//		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
+//		setWidth(width * dimension[0], Unit.PIXELS);
+//		setHeight(height * dimension[1], Unit.PIXELS);
 	}
 
 	public String getI18nLabel(String key) {

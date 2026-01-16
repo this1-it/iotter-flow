@@ -1,18 +1,48 @@
 package it.thisone.iotter.util;
 
-import com.vaadin.server.Page;
+import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 
 public class PopupNotification {
-	
-	public static void show(String message, Notification.Type type) {		
-		message = String.format("%s&nbsp;&nbsp;&nbsp;&times;", message);		
-		Notification notification = new Notification(message, type);
-		notification.setHtmlContentAllowed(true);
-		notification.show(Page.getCurrent());
-	}
-	
-	public static void show(String message) {
-		show(message, Notification.Type.HUMANIZED_MESSAGE);
-	}
+
+    public enum Type {
+        HUMANIZED,
+        WARNING,
+        ERROR,
+        SUCCESS
+    }
+
+    public static void show(String message, Type type) {
+
+        Html content = new Html(
+            "<span>" + message + "&nbsp;&nbsp;&nbsp;&times;</span>"
+        );
+
+        Notification notification = new Notification(content);
+        notification.setDuration(3000);
+        notification.setPosition(Notification.Position.MIDDLE);
+
+        switch (type) {
+            case WARNING:
+                notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+                break;
+            case ERROR:
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                break;
+            case SUCCESS:
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                break;
+            case HUMANIZED:
+            default:
+                // default theme
+                break;
+        }
+
+        notification.open();
+    }
+
+    public static void show(String message) {
+        show(message, Type.HUMANIZED);
+    }
 }

@@ -27,9 +27,9 @@ public class DeviceSerialSelect extends ComboBox<String> {
 	}
 
 	private void initialize() {
-		setEmptySelectionAllowed(false);
-		setTextInputAllowed(false);
-		setLabelCaptionGenerator(serial -> deviceLabels.getOrDefault(serial, serial));
+//		setEmptySelectionAllowed(false);
+//		setTextInputAllowed(false);
+		setItemLabelGenerator(serial -> deviceLabels.getOrDefault(serial, serial));
 	}
 
 

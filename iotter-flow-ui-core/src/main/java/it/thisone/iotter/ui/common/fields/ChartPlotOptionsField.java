@@ -8,7 +8,6 @@ import com.vaadin.addon.charts.model.ChartType;
 import com.vaadin.addon.charts.model.DashStyle;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.flow.component.Alignment;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.AbstractCompositeField;
@@ -82,6 +81,7 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 	private ColorField colorPicker;
 	private MeasureRangeField extremesField;
 	private GridLayout gridLayout;
+	private static final int GRID_COLUMNS = 3;
 
 
 	public ChartPlotOptionsField() {
@@ -173,33 +173,20 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 
 	}
 
-	@Override
-	public void setWidth(float width, Unit unit) {
-		if (gridLayout != null) {
-			axis.setWidth(width, unit);
-			colorPicker.setWidth(width, unit);
-			dashStyle.setWidth(width, unit);
-			markerSymbol.setWidth(width, unit);
-			chartType.setWidth(width, unit);
-			extremesField.setWidth(width, unit);
-			markerReference.setWidth(width, unit);
-			gridLayout.setWidth(width, unit);
-		}
 
-		super.setWidth(width, unit);
-	}
 
 	public void buildContent() {
+		gridLayout.removeAll();
 		switch (type) {
 		case LAST_MEASURE_TABLE:
 			break;
 		case EMBEDDED:
 		case LAST_MEASURE:
-			gridLayout.setRows(1);
-			gridLayout.setColumns(1);
+			configureColumns(1);
 			gridLayout.setSpacing(true);
 			gridLayout.setPadding(true);
-			gridLayout.addComponent(colorPicker, 0, 0);
+			gridLayout.add(colorPicker, 0, 0);
+			gridLayout.spanColumns(colorPicker, GRID_COLUMNS);
 			break;
 		case WIND_ROSE:
 			/**
@@ -208,11 +195,11 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 			chartType.setValue(ChartType.COLUMN.toString());
 			// markerSymbol.setValue(CustomMarkerSymbolEnum.ARROW.name());
 			markerReference.setEnabled(true);
-			gridLayout.setRows(1);
-			gridLayout.setColumns(1);
+			configureColumns(1);
 			gridLayout.setSpacing(true);
 			gridLayout.setPadding(true);
-			gridLayout.addComponent(markerReference, 0, 0);
+			gridLayout.add(markerReference, 0, 0);
+			gridLayout.spanColumns(markerReference, GRID_COLUMNS);
 			break;
 
 		case HISTOGRAM:
@@ -220,38 +207,35 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 			 * preset compatible values
 			 */
 			chartType.setValue(ChartType.COLUMN.toString());
-			gridLayout.setRows(1);
-			gridLayout.setColumns(1);
+			configureColumns(1);
 			gridLayout.setPadding(true);
 			gridLayout.setSpacing(true);
-			gridLayout.addComponent(colorPicker, 0, 0);
+			gridLayout.add(colorPicker, 0, 0);
+			gridLayout.spanColumns(colorPicker, GRID_COLUMNS);
 			break;
 
 		case CUSTOM:
 		case MULTI_TRACE:
-			gridLayout.setRows(3);
-			gridLayout.setColumns(3);
-			gridLayout.setColumnExpandRatio(0, 0.33f);
-			gridLayout.setColumnExpandRatio(1, 0.33f);
-			gridLayout.setColumnExpandRatio(2, 0.33f);
+			configureColumns(GRID_COLUMNS);
 			gridLayout.setPadding(true);
 			gridLayout.setSpacing(true);
 
-			gridLayout.addComponent(chartType, 0, 0);
-			gridLayout.addComponent(dashStyle, 1, 0);
-			gridLayout.addComponent(colorPicker, 2, 0);
+			gridLayout.add(chartType, 0, 0);
+			gridLayout.add(dashStyle, 1, 0);
+			gridLayout.add(colorPicker, 2, 0);
 
-			gridLayout.addComponent(markerSymbol, 0, 1);
-			gridLayout.addComponent(markerReference, 1, 1);
+			gridLayout.add(markerSymbol, 0, 1);
+			gridLayout.add(markerReference, 1, 1);
 
-			gridLayout.addComponent(autoscale, 0, 2);
-			gridLayout.addComponent(extremesField, 1, 2, 2, 2);
+			gridLayout.add(autoscale, 0, 2);
+			gridLayout.add(extremesField, 1, 2, 2, 2);
 
-			gridLayout.setComponentAlignment(autoscale, Alignment.MIDDLE_LEFT);
+			autoscale.getElement().getStyle().set("align-self", "center");
+			autoscale.getElement().getStyle().set("justify-self", "start");
 
 			break;
 		default:
-			gridLayout = new GridLayout(1, 1);
+			configureColumns(1);
 			break;
 		}
 
@@ -397,8 +381,7 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 
 	@SuppressWarnings("serial")
 	private ColorField createColorPicker() {
-		ColorField colorPicker = new ColorField();
-		colorPicker.setLabel(getI18nLabel("colorpicker"));
+		ColorField colorPicker = new ColorField(getI18nLabel("colorpicker"));
 		return colorPicker;
 	}
 
@@ -407,9 +390,8 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 		ComboBox<String> combo = new ComboBox<>();
 		combo.setItems(DASH_STYLES);
 		combo.setLabel(getI18nLabel("dashstyle"));
-		combo.setEmptySelectionAllowed(false);
-		combo.setTextInputAllowed(false);
-		combo.setLabelCaptionGenerator(item -> getI18nLabel(item));
+
+		combo.setItemLabelGenerator(item -> getI18nLabel(item));
 		return combo;
 	}
 
@@ -417,9 +399,8 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 		ComboBox<String> combo = new ComboBox<>();
 		combo.setItems(MARKER_SYMBOLS);
 		combo.setLabel(getI18nLabel("markersymbol"));
-		combo.setEmptySelectionAllowed(false);
-		combo.setTextInputAllowed(false);
-		combo.setLabelCaptionGenerator(item -> getI18nLabel(item));
+
+		combo.setItemLabelGenerator(item -> getI18nLabel(item));
 		return combo;
 	}
 
@@ -428,9 +409,8 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 		ComboBox<String> combo = new ComboBox<>();
 		combo.setItems(CHART_TYPES);
 		combo.setLabel(getI18nLabel("charttype"));
-		combo.setEmptySelectionAllowed(false);
-		combo.setTextInputAllowed(false);
-		combo.setLabelCaptionGenerator(item -> getI18nLabel(item));
+
+		combo.setItemLabelGenerator(item -> getI18nLabel(item));
 		return combo;
 	}
 
@@ -439,17 +419,13 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 		ComboBox<String> combo = new ComboBox<>();
 		combo.setItems(AXIS);
 		combo.setLabel(getI18nLabel("axis"));
-		combo.setEmptySelectionAllowed(false);
-		combo.setTextInputAllowed(false);
 		return combo;
 	}
 
 	@SuppressWarnings("serial")
 	private ComboBox<String> createMarkerReference() {
 		ComboBox<String> combo = new ComboBox<>();
-		combo.setEmptySelectionAllowed(true);
 		combo.setLabel(getI18nLabel("markerreference"));
-		combo.setTextInputAllowed(false);
 		return combo;
 	}
 
@@ -497,7 +473,7 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 		names.toArray(_names);
 
 		markerReference.setItems(_ids);
-		markerReference.setLabelCaptionGenerator(id -> {
+		markerReference.setItemLabelGenerator(id -> {
 			for (int i = 0; i < _ids.length; i++) {
 				if (_ids[i].equals(id)) {
 					return _names[i];
@@ -506,7 +482,6 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 			return id;
 		});
 
-		markerReference.setEmptySelectionAllowed(false);
 
 		if (_ids.length > 0)
 			markerReference.setValue(_ids[0]);
@@ -521,7 +496,13 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 
 	@Override
 	protected GridLayout initContent() {
-		return new GridLayout();
+		return new GridLayout(GRID_COLUMNS);
+	}
+
+	private void configureColumns(int columns) {
+		gridLayout.setColumnExpandRatio(0, 1);
+		gridLayout.setColumnExpandRatio(1, columns > 1 ? 1 : 0);
+		gridLayout.setColumnExpandRatio(2, columns > 2 ? 1 : 0);
 	}
 
 	public String getI18nLabel(String key) {

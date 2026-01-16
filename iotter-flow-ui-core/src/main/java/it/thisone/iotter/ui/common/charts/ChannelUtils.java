@@ -137,10 +137,10 @@ public class ChannelUtils {
         // Create and configure the Vaadin 8 ComboBox.
         com.vaadin.flow.component.combobox.ComboBox<Double> combo = new ComboBox<>();
         combo.setItems(items);
-        combo.setEmptySelectionAllowed(false);
+        //combo.setEmptySelectionAllowed(false);
 
         // Use a caption generator to display the format string for each limit.
-        combo.setLabelCaptionGenerator(item -> captions.get(item));
+        combo.setItemLabelGenerator(item -> captions.get(item));
         return combo;
     }
 

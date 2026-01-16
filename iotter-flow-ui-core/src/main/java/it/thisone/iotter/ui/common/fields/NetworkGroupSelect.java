@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.vaadin.flow.data.provider.ListDataProvider;
-import com.vaadin.shared.ui.grid.HeightMode;
 import com.vaadin.flow.component.grid.Grid;
 
 import it.thisone.iotter.persistence.model.Network;
@@ -37,8 +36,8 @@ public class NetworkGroupSelect extends Grid<NetworkGroup> {
 		setDataProvider(dataProvider);
 		
 		removeAllColumns();
-		addColumn(NetworkGroup::getName).setLabel("Name");
-		setHeaderVisible(false);
+		addColumn(NetworkGroup::getName);
+		//setHeaderVisible(false);
 		
 		if (multi) {
 			setSelectionMode(SelectionMode.MULTI);
@@ -47,8 +46,8 @@ public class NetworkGroupSelect extends Grid<NetworkGroup> {
 			// TODO: Add validator for single selection
 		}
 		
-		setHeightMode(HeightMode.ROW);
-		setHeightByRows(3);
+//		setHeightMode(HeightMode.ROW);
+//		setHeightByRows(3);
 		setWidth("100%");
 	}
 
@@ -123,7 +122,7 @@ public class NetworkGroupSelect extends Grid<NetworkGroup> {
 		            .filter(NetworkGroup::isDefaultGroup)
 		            .findFirst()
 		            .ifPresent(grid::select);
-		        grid.setHeightByRows(3);
+		        //grid.setHeightByRows(3);
 		    }
 		});
 	}

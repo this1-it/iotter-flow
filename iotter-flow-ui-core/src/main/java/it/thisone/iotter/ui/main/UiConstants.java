@@ -1,8 +1,8 @@
 package it.thisone.iotter.ui.main;
 
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.FontIcon;
-import com.vaadin.flow.component.themes.ValoTheme;
+// import com.vaadin.icons.VaadinIcons;
+// import com.vaadin.server.FontIcon;
+// import com.vaadin.flow.component.themes.ValoTheme;
 
 public interface UiConstants {
 
@@ -31,46 +31,48 @@ public interface UiConstants {
 
 	public static final String MAPS_DEVICES_GOOGLE = "maps.devices.google";
 
-	public static final FontIcon ICON_HOME = VaadinIcons.HOME;
-	public static final FontIcon ICON_USERS = VaadinIcons.USERS;
-	public static final FontIcon ICON_DEVICES = VaadinIcons.DASHBOARD;
-	public static final FontIcon ICON_DEVICECONFIGURATIONS = VaadinIcons.WRENCH;
-	public static final FontIcon ICON_NETWORKS = VaadinIcons.SITEMAP;
-	public static final FontIcon ICON_TRACING = VaadinIcons.EYE;
-	public static final FontIcon ICON_GROUPWIDGETS = VaadinIcons.BAR_CHART;
+	// public static final FontIcon ICON_HOME = VaadinIcons.HOME;
+	// public static final FontIcon ICON_USERS = VaadinIcons.USERS;
+	// public static final FontIcon ICON_DEVICES = VaadinIcons.DASHBOARD;
+	// public static final FontIcon ICON_DEVICECONFIGURATIONS = VaadinIcons.WRENCH;
+	// public static final FontIcon ICON_NETWORKS = VaadinIcons.SITEMAP;
+	// public static final FontIcon ICON_TRACING = VaadinIcons.EYE;
+	// public static final FontIcon ICON_GROUPWIDGETS = VaadinIcons.BAR_CHART;
 
-	public static final FontIcon ICON_QUESTION = VaadinIcons.QUESTION;
-	public static final FontIcon ICON_OK = VaadinIcons.CHECK_SQUARE_O;
-	public static final FontIcon ICON_CLOCK = VaadinIcons.CLOCK;
-	public static final FontIcon ICON_UPLOAD = VaadinIcons.UPLOAD;
-	public static final FontIcon ICON_DOWNLOAD = VaadinIcons.DOWNLOAD;
-	public static final FontIcon ICON_PLUS = VaadinIcons.ARROW_RIGHT;
-	public static final FontIcon ICON_MINUS = VaadinIcons.ARROW_LEFT;
-	public static final FontIcon ICON_CONFIRM = VaadinIcons.CHECK;
-	public static final FontIcon ICON_SAVE = VaadinIcons.FILE_TEXT;
-	public static final FontIcon ICON_CANCEL = VaadinIcons.CLOSE;
-	public static final FontIcon ICON_REMOVE = VaadinIcons.TRASH;
-	public static final FontIcon ICON_MODIFY = VaadinIcons.EDIT;
-	public static final FontIcon ICON_DETAILS = VaadinIcons.INFO;
-	public static final FontIcon ICON_COPY = VaadinIcons.COPY;
+	// public static final FontIcon ICON_QUESTION = VaadinIcons.QUESTION;
+	// public static final FontIcon ICON_OK = VaadinIcons.CHECK_SQUARE_O;
+	// public static final FontIcon ICON_CLOCK = VaadinIcons.CLOCK;
+	// public static final FontIcon ICON_UPLOAD = VaadinIcons.UPLOAD;
+	// public static final FontIcon ICON_DOWNLOAD = VaadinIcons.DOWNLOAD;
+	// public static final FontIcon ICON_PLUS = VaadinIcons.ARROW_RIGHT;
+	// public static final FontIcon ICON_MINUS = VaadinIcons.ARROW_LEFT;
+	// public static final FontIcon ICON_CONFIRM = VaadinIcons.CHECK;
+	// public static final FontIcon ICON_SAVE = VaadinIcons.FILE_TEXT;
+	// public static final FontIcon ICON_CANCEL = VaadinIcons.CLOSE;
+	// public static final FontIcon ICON_REMOVE = VaadinIcons.TRASH;
+	// public static final FontIcon ICON_MODIFY = VaadinIcons.EDIT;
+	// public static final FontIcon ICON_DETAILS = VaadinIcons.INFO;
+	// public static final FontIcon ICON_COPY = VaadinIcons.COPY;
 
-	public static final FontIcon ICON_ADD = VaadinIcons.PLUS;
-	public static final FontIcon ICON_MOVE = VaadinIcons.ARROWS;
-	public static final FontIcon ICON_CONTROL = VaadinIcons.COG;
-	public static final FontIcon ICON_GRAPHS = VaadinIcons.BAR_CHART;
-	public static final FontIcon ICON_ACTIVATE = VaadinIcons.BOLT;
-	public static final FontIcon ICON_MAP = VaadinIcons.MAP_MARKER;
-	public static final FontIcon ICON_CONFIGURATION = VaadinIcons.WRENCH;
-	public static final FontIcon ICON_EDIT = VaadinIcons.EDIT;
-	public static final FontIcon ICON_LINK = VaadinIcons.LINK;
-	public static final FontIcon ICON_MENU = VaadinIcons.LIST;
-	public static final FontIcon ICON_EYE = VaadinIcons.EYE;
-	public static final FontIcon ICON_WARNING = VaadinIcons.WARNING;
-	public static final FontIcon ICON_START = VaadinIcons.FLAG;
-	public static final FontIcon ICON_RESET = VaadinIcons.ERASER;
-	public static final FontIcon ICON_MIGRATION = VaadinIcons.RECYCLE;
-
-	public static final String BUTTON_DEFAULT_STYLE = ValoTheme.BUTTON_PRIMARY;
+	// public static final FontIcon ICON_ADD = VaadinIcons.PLUS;
+	// public static final FontIcon ICON_MOVE = VaadinIcons.ARROWS;
+	// public static final FontIcon ICON_CONTROL = VaadinIcons.COG;
+	// public static final FontIcon ICON_GRAPHS = VaadinIcons.BAR_CHART;
+	// public static final FontIcon ICON_ACTIVATE = VaadinIcons.BOLT;
+	// public static final FontIcon ICON_MAP = VaadinIcons.MAP_MARKER;
+	// public static final FontIcon ICON_CONFIGURATION = VaadinIcons.WRENCH;
+	// public static final FontIcon ICON_EDIT = VaadinIcons.EDIT;
+	// public static final FontIcon ICON_LINK = VaadinIcons.LINK;
+	// public static final FontIcon ICON_MENU = VaadinIcons.LIST;
+	// public static final FontIcon ICON_EYE = VaadinIcons.EYE;
+	// public static final FontIcon ICON_WARNING = VaadinIcons.WARNING;
+	// public static final FontIcon ICON_START = VaadinIcons.FLAG;
+	// public static final FontIcon ICON_RESET = VaadinIcons.ERASER;
+	// public static final FontIcon ICON_MIGRATION = VaadinIcons.RECYCLE;
+	// public static final String ACTIVE_PARAM_STYLE = ValoTheme.LABEL_BOLD;
+	// public static final String TABLE_STYLE = ValoTheme.TABLE_SMALL;
+	//public static final String BUTTON_DEFAULT_STYLE = ValoTheme.BUTTON_PRIMARY;
+	
 	public static final String BASIC_VIEW_STYLE = "basic-view";
 	public static final String FOCUSED_STYLE = "focused";
 	public static final String INVALID_STYLE = "invalid";
@@ -83,7 +85,8 @@ public interface UiConstants {
 	public static final String MODAL_DIALOG_STYLE = "modal-dialog";
 	public static final String S_WINDOW_STYLE = "common-details";
 	public static final String ANONYMOUS_STYLE = "anonymous";
-	public static final String ACTIVE_PARAM_STYLE = ValoTheme.LABEL_BOLD;
+
+
 	public static final String RESPONSIVE_TEXT_STYLE = "responsive-text";
 
 	public static final float[] S_DIMENSION = new float[] { 0.4f, 0.4f };
@@ -91,7 +94,7 @@ public interface UiConstants {
 	public static final float[] L_DIMENSION = new float[] { 0.8f, 0.8f };
 	public static final float[] XL_DIMENSION = new float[] { 0.9f, 0.9f };
 
-	public static final String TABLE_STYLE = ValoTheme.TABLE_SMALL;
+	
 	public static final String FIELD_STYLE = "small";
 
 	public static final String DISPLAY_1024PX_STYLE = "display-1024px";

@@ -25,7 +25,7 @@ public class AreasOfInterestOptionGroup extends CheckboxGroup<AreasOfInterest> {
 			.collect(Collectors.toList()));
 		
 		// Set caption generator to use i18n keys
-		setLabelCaptionGenerator(area -> UIUtils.localize(area.getI18nKey()));
+		setItemLabelGenerator(area -> UIUtils.localize(area.getI18nKey()));
 	}
 	
 

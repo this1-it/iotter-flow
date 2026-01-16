@@ -1,15 +1,14 @@
 package it.thisone.iotter.ui.common.export;
 
-import java.io.IOException;
+import java.io.Serializable;
 
-import com.vaadin.server.ConnectorResource;
-import com.vaadin.server.DownloadStream;
-import com.vaadin.server.FileDownloader;
-import com.vaadin.server.Resource;
-import com.vaadin.server.VaadinRequest;
-import com.vaadin.server.VaadinResponse;
+import com.vaadin.flow.component.ClickNotifier;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.server.AbstractStreamResource;
+import com.vaadin.flow.server.StreamRegistration;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
-import com.vaadin.flow.component.AbstractComponent;
 
 /**
  * an advanced file downloader
@@ -17,33 +16,38 @@ import com.vaadin.flow.component.AbstractComponent;
  * 
  * 
  */
-public class EnhancedFileDownloader extends FileDownloader {
+public class EnhancedFileDownloader implements Serializable {
 
-	public EnhancedFileDownloader(Resource resource) {
-		super(resource);
-	}
-
-	@Override
-    public void extend(AbstractComponent target) {
-		extendedComponent = target;
-        super.extend(target);
-    }
-	
 	/**
      *
      */
 	private static final long serialVersionUID = 7914516170514586601L;
-	private AbstractComponent extendedComponent;
+	private Component extendedComponent;
 	private EnhancedDownloaderListener downloaderListener;
 	private DownloaderEvent downloadEvent;
+	private AbstractStreamResource resource;
+	private StreamRegistration registration;
+	private boolean overrideContentType;
+
+	public EnhancedFileDownloader(AbstractStreamResource resource) {
+		this.resource = resource;
+	}
+
+    public void extend(Component target) {
+		extendedComponent = target;
+		if (downloadEvent != null) {
+			downloadEvent.setExtendedComponent(target);
+		}
+		registerClickListener(target);
+    }
 	
 	public abstract class DownloaderEvent {
 		/**
 		 * 
 		 * @return
 		 */
-		public abstract AbstractComponent getExtendedComponent();
-		public abstract void setExtendedComponent(AbstractComponent extendedComponet);
+		public abstract Component getExtendedComponent();
+		public abstract void setExtendedComponent(Component extendedComponet);
 	}
 
 	public interface EnhancedDownloaderListener {
@@ -80,13 +84,13 @@ public class EnhancedFileDownloader extends FileDownloader {
 	public void addAdvancedDownloaderListener(EnhancedDownloaderListener listener) {
 		if (listener != null) {
 			DownloaderEvent downloadEvent = new DownloaderEvent() {
-				private AbstractComponent extendedComponent;
+				private Component extendedComponent;
 				@Override
-				public void setExtendedComponent(AbstractComponent extendedComponet) {
+				public void setExtendedComponent(Component extendedComponet) {
 					this.extendedComponent = extendedComponet;
 				}
 				@Override
-				public AbstractComponent getExtendedComponent() {
+				public Component getExtendedComponent() {
 					return this.extendedComponent;
 				}
 			};
@@ -96,40 +100,54 @@ public class EnhancedFileDownloader extends FileDownloader {
 		}
 	}
 
+	public AbstractStreamResource getFileDownloadResource() {
+		return resource;
+	}
 
+	public void setFileDownloadResource(AbstractStreamResource resource) {
+		this.resource = resource;
+	}
 
+	public void setOverrideContentType(boolean overrideContentType) {
+		this.overrideContentType = overrideContentType;
+	}
 
-	@Override
-	public boolean handleConnectorRequest(VaadinRequest request, VaadinResponse response, String path) throws IOException {
-		if (!path.matches("dl(/.*)?")) {
-			// Ignore if it isn't for us
-			return false;
+	private void registerClickListener(Component target) {
+		if (target instanceof ClickNotifier) {
+			@SuppressWarnings("unchecked")
+			ClickNotifier<Component> notifier = (ClickNotifier<Component>) target;
+			notifier.addClickListener(event -> triggerDownload());
+			return;
 		}
-		VaadinSession session = getSession();
+		target.getElement().addEventListener("click", event -> triggerDownload());
+	}
+
+	private void triggerDownload() {
+		if (resource == null) {
+			return;
+		}
+		fireBeforeEvent();
+		if (resource instanceof StreamResource) {
+			StreamResource streamResource = (StreamResource) resource;
+			streamResource.setHeader("Content-Disposition",
+					"attachment; filename=\"" + streamResource.getName() + "\"");
+			if (overrideContentType) {
+				streamResource.setContentType("application/octet-stream;charset=UTF-8");
+			}
+		}
+
+		VaadinSession session = VaadinSession.getCurrent();
 		session.lock();
-		// create resource dinamically
-		EnhancedFileDownloader.this.fireBeforeEvent();
-		DownloadStream stream;
 		try {
-			Resource resource = getFileDownloadResource();
-			if (!(resource instanceof ConnectorResource)) {
-				return false;
+			if (registration != null) {
+				registration.unregister();
 			}
-			stream = ((ConnectorResource) resource).getStream();
-			if (stream.getParameter("Content-Disposition") == null) {
-				// Content-Disposition: attachment generally forces download
-				stream.setParameter("Content-Disposition", "attachment; filename=\"" + stream.getFileName() + "\"");
-			}
-			// Content-Type to block eager browser plug-ins from hijacking
-			// the file
-			if (isOverrideContentType()) {
-				stream.setContentType("application/octet-stream;charset=UTF-8");
-			}
+			registration = session.getResourceRegistry().registerResource(resource);
 		} finally {
 			session.unlock();
 		}
-		stream.writeResponse(request, response);
-		EnhancedFileDownloader.this.fireAfterEvent();
-		return true;
+
+		UI.getCurrent().getPage().open(registration.getResourceUri().toString(), "_blank");
+		fireAfterEvent();
 	}
 }

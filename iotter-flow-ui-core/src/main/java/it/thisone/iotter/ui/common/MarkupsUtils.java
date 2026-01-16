@@ -205,7 +205,7 @@ public class MarkupsUtils {
 		Html markup = new Html(writer);
 		// markup.br();
 		for (MeasureUnit u : list) {
-			markup.text(UIUtils.getServiceFactory().getDeviceService().getUnitOfMeasureName(u.getType()));
+			//markup.text(UIUtils.getServiceFactory().getDeviceService().getUnitOfMeasureName(u.getType()));
 			markup.br();
 		}
 		markup.end();
@@ -248,7 +248,7 @@ public class MarkupsUtils {
 		markup.tbody();
 		for (MeasureUnit u : list) {
 			markup.tr();
-			markup.td().text(UIUtils.getServiceFactory().getDeviceService().getUnitOfMeasureName(u.getType())).end();
+			//markup.td().text(UIUtils.getServiceFactory().getDeviceService().getUnitOfMeasureName(u.getType())).end();
 			markup.td().text(u.getScale().toString()).end();
 			markup.td().text(u.getOffset().toString()).end();
 			markup.td().text(u.getFormat()).end();

@@ -1,14 +1,14 @@
 package it.thisone.iotter.ui.common;
 
-import com.vaadin.server.FontIcon;
+import com.vaadin.flow.component.icon.Icon;
 
 import it.thisone.iotter.enums.GraphicWidgetType;
 
 public class WidgetTypeInstance {
 	private GraphicWidgetType type;
 	private String provider;
-	private FontIcon icon;
-	public WidgetTypeInstance(GraphicWidgetType type, String provider, FontIcon icon) {
+	private Icon icon;
+	public WidgetTypeInstance(GraphicWidgetType type, String provider, Icon icon) {
 		super();
 		this.type = type;
 		this.provider = provider;
@@ -26,10 +26,10 @@ public class WidgetTypeInstance {
 	public void setProvider(String provider) {
 		this.provider = provider;
 	}
-	public FontIcon getIcon() {
+	public Icon getIcon() {
 		return icon;
 	}
-	public void setIcon(FontIcon icon) {
+	public void setIcon(Icon icon) {
 		this.icon = icon;
 	}
 }

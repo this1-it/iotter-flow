@@ -1,61 +1,43 @@
 package it.thisone.iotter.ui.common;
 
-import com.vaadin.event.MouseEvents.ClickListener;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Embedded;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import org.vaadin.flow.components.PanelFlow;
-import com.vaadin.flow.component.PopupView;
 
 public class ControlsPopup extends PanelFlow {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3868360389375898886L;
-	private PopupView popview;
-	private Component content;
 
-	@SuppressWarnings("serial")
-	public ControlsPopup(Component component) {
-		super();
-		content = component;
-		popview = new PopupView(new PopupContent());
-		popview.setHideOnMouseOut(false);
-		// setImmediate(true);
-		HorizontalLayout hl = new HorizontalLayout();
-		Embedded icon = new Embedded();
-		icon.setSource(new ThemeResource("img/cog.png"));
-		icon.addClickListener(new ClickListener() {
-		    @Override
-		    public void click(com.vaadin.event.MouseEvents.ClickEvent event) {
-		    	popview.setPopupVisible(true);
-		    }
-		});
-		hl.addComponent(icon);
-		hl.addComponent(popview);		
-		
-		setWidth("40px");
-		setHeight("40px");
-		setContent(hl);
-	}
+    private static final long serialVersionUID = -3868360389375898886L;
 
-	class PopupContent implements PopupView.Content {
-		private static final long serialVersionUID = 1634116040954182604L;
+    private final Component content;
 
-		@Override
-		public final Component getPopupComponent() {
-			return buildPopup();
-		}
+    public ControlsPopup(Component component) {
+        super();
+        this.content = component;
 
-		@Override
-		public final String getMinimizedValueAsHTML() {
-			return ""; // show nothing
-		}
-	}
+        // Trigger icon (COG)
+        Icon cog = VaadinIcon.COG.create();
+        cog.getStyle()
+            .set("cursor", "pointer")
+            .set("font-size", "20px");
 
-	public Component buildPopup() {
-		return content;
-	};
+        // Popup replacement
+        ContextMenu popup = new ContextMenu(cog);
+        popup.setOpenOnClick(true);
+        popup.add(buildPopup());
 
+        HorizontalLayout layout = new HorizontalLayout(cog);
+        layout.setPadding(false);
+        layout.setSpacing(false);
+
+        setWidth("40px");
+        setHeight("40px");
+        setContent(layout);
+    }
+
+    private Component buildPopup() {
+        return content;
+    }
 }

@@ -18,7 +18,7 @@ public class DeviceModelSelect extends ComboBox<DeviceModel> {
      */
     public DeviceModelSelect(Collection<DeviceModel> options) {
         super("", options);
-        this.setLabelCaptionGenerator(DeviceModel::getName);
+        this.setItemLabelGenerator(DeviceModel::getName);
     }
     
   	

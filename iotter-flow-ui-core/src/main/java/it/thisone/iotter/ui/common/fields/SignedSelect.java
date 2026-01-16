@@ -1,5 +1,6 @@
 package it.thisone.iotter.ui.common.fields;
 
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 
 import it.thisone.iotter.enums.modbus.Signed;
@@ -11,13 +12,13 @@ public class SignedSelect extends ComboBox<Signed> {
 
 	public SignedSelect() {
 		super();
-		setCaption(UIUtils.localize("basic.combobox.signed"));
+		setLabel(UIUtils.localize("basic.combobox.signed"));
 		setItems(Signed.values());
-		setLabelCaptionGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
 		setWidth(16, Unit.EM);
-		setEmptySelectionAllowed(false);
-		setTextInputAllowed(true);
-		setPageLength(10);
+//		setEmptySelectionAllowed(false);
+//		setTextInputAllowed(true);
+//		setPageLength(10);
 	}
 
 }

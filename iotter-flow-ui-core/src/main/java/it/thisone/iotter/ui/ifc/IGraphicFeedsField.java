@@ -7,7 +7,7 @@ import com.vaadin.flow.component.Component;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 
-public interface IGraphicFeedsField extends Component {
+public interface IGraphicFeedsField  {
 	public void setGraphicWidget(GraphicWidget graph);
 	public int getMaxParameters();
 	public List<GraphicFeed> getValue();

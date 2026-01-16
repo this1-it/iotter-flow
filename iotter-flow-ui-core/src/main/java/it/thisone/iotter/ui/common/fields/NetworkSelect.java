@@ -17,8 +17,8 @@ public class NetworkSelect  extends ComboBox<Network> {
 	 */
 	public NetworkSelect(Collection<Network> options) {
 		super("",options);
-		this.setEmptySelectionAllowed(false);
-		this.setLabelCaptionGenerator(Network::getName);
+		//this.setEmptySelectionAllowed(false);
+		this.setItemLabelGenerator(Network::getName);
 	}
 
 }

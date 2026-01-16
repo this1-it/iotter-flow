@@ -1,5 +1,6 @@
 package it.thisone.iotter.ui.common.fields;
 
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 
 import it.thisone.iotter.enums.modbus.Qualifier;
@@ -11,13 +12,13 @@ public class QualifierSelect extends ComboBox<Qualifier> {
 	
 	public QualifierSelect() {
 		super();
-		setCaption(UIUtils.localize("basic.combobox.qualifier"));
+		setLabel(UIUtils.localize("basic.combobox.qualifier"));
 		setItems(Qualifier.values());
-		setLabelCaptionGenerator(type -> type.getDisplayName());
+		setItemLabelGenerator(type -> type.getDisplayName());
 		setWidth(16, Unit.EM);
-		setEmptySelectionAllowed(false);
-		setTextInputAllowed(true);
-		setPageLength(10);
+//		setEmptySelectionAllowed(false);
+//		setTextInputAllowed(true);
+//		setPageLength(10);
 	}
 
 }
