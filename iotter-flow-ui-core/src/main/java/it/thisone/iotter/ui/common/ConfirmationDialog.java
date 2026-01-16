@@ -79,7 +79,7 @@ public class ConfirmationDialog extends Dialog {
 				}
 			);
 			// confirm.setImmediate(true);
-			confirm.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
+			//confirm.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
 			buttonLayout.add(confirm);
 		}
 
@@ -90,7 +90,7 @@ public class ConfirmationDialog extends Dialog {
 		);
 
 		// cancel.setImmediate(true);
-		cancel.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
+		//cancel.addClassName(UIUtils.BUTTON_DEFAULT_STYLE);
 
 		buttonLayout.add(cancel);
 

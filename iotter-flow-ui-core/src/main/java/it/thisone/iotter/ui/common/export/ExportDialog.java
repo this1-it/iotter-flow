@@ -6,7 +6,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 //import org.vaadin.gridutil.cell.CellFilterComponent;
 //import org.vaadin.gridutil.cell.GridCellFilter;
@@ -19,6 +25,8 @@ import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.validator.AbstractValidator;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -27,6 +35,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.menubar.*;
 import org.vaadin.flow.components.PanelFlow;
@@ -36,6 +45,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.server.StreamResource;
 
 import it.thisone.iotter.cassandra.model.CassandraExportFeed;
 import it.thisone.iotter.cassandra.model.Interpolation;
@@ -46,6 +56,7 @@ import it.thisone.iotter.exporter.ExportConfig;
 import it.thisone.iotter.exporter.ExportGroupConfig;
 import it.thisone.iotter.exporter.ExportProperties;
 import it.thisone.iotter.exporter.IExportConfig;
+import it.thisone.iotter.exporter.IExportProvider;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -90,10 +101,15 @@ public class ExportDialog extends Dialog {
 	private Button cancel;
 
 	protected IGroupWidgetUiFactory config;
+	private final Executor executor;
 
 	@SuppressWarnings("serial")
-	public ExportDialog(IExportConfig config, ExportProperties properties, Device device) {
+	public ExportDialog(IExportConfig config, ExportProperties properties, Device device, Executor executor) {
 		super();
+		if (executor == null) {
+			throw new IllegalArgumentException("Executor is required");
+		}
+		this.executor = executor;
 		//setHeaderTitle(getI18nLabel("single_csv_export") + " " + config.getName());
 		setDraggable(false);
 		// setImmediate(true);
@@ -455,68 +471,160 @@ public class ExportDialog extends Dialog {
 		return root;
 	}
 
-//	private ClickListener createExportListener(final IExportConfig config,
-//			final ExportProperties properties, final TimeIntervalHelper helper) {
-//		return new ClickListener() {
-//			/**
-//			 * 
-//			 */
-//			private static final long serialVersionUID = 1L;
-//
-//			@Override
-//			public void buttonClick(ClickEvent event) {
-//
-//				try {
-//					if (binder.validate().isOk()) {
-//						ExportFormBean formBean = binder.getBean();
-//						properties.setFormat(formBean.getFormat());
-//					properties.setDecimalSeparator(getDecimalSeparator());
-//					properties.setColumnSeparator(getColumnSeparator());
-//						properties.setFileMode(formBean.getFileMode());
-//						properties.setOrder(formBean.getExportOrder());
-//						config.setInterpolation(formBean.getInterpolation());
-//						String email = formBean.getExportEmail();
-//					String owner = UIUtils.getUserDetails().getUsername();
-//					if (config.getLockId() == null) {
-//						config.setLockId(config.getName() + owner);
-//					}
-//						Date lower = helper.toDate(formBean.getFromDate());
-//						Date upper = helper.toDate(formBean.getToDate());
-//
-//					Range<Date> interval = Range.closedOpen(lower, upper);
-//					config.setInterval(interval);
-//
-//					ExportStartEvent start = new ExportStartEvent(owner, email, config, properties);
-//					ExportUIRunnable exporter = new ExportUIRunnable(start);
-//					// eventually future can be cancelled
-//					((IMainUI) UI.getCurrent())
-//							.getUIExecutor().executeAndAccess(exporter);
-//
-//					PopupNotification.show(getI18nLabel("export_started"));
-//					close();
-//
-//				} else {
-//					PopupNotification.show(getI18nLabel("invalid_data"));
-//				}
-//			} catch (Exception e) {
-//				PopupNotification.show(getI18nLabel("invalid_data"));
-//			}
-//			}
-//
-//			private char getColumnSeparator() {
-//				if (customSeparatorField.getValue() == null
-//						|| customSeparatorField.getValue().isEmpty()) {
-//					return columnSeparatorField.getValue().charAt(0);
-//				}
-//				return customSeparatorField.getValue().charAt(0);
-//			}
-//
-//			private char getDecimalSeparator() {
-//				return decimalSeparatorField.getValue().charAt(0);
-//			}
-//
-//		};
-//	}
+	private ComponentEventListener<ClickEvent<Button>> createExportListener(final IExportConfig config,
+			final ExportProperties properties, final TimeIntervalHelper helper) {
+		return event -> {
+			try {
+				if (binder.validate().isOk()) {
+					ExportFormBean formBean = binder.getBean();
+					properties.setFormat(formBean.getFormat());
+					properties.setDecimalSeparator(getDecimalSeparator());
+					properties.setColumnSeparator(getColumnSeparator());
+					properties.setFileMode(formBean.getFileMode());
+					properties.setOrder(formBean.getExportOrder());
+					config.setInterpolation(formBean.getInterpolation());
+					String email = formBean.getExportEmail();
+					String owner = UIUtils.getUserDetails().getUsername();
+					if (config.getLockId() == null) {
+						config.setLockId(config.getName() + owner);
+					}
+					Date lower = helper.toDate(formBean.getFromDate());
+					Date upper = helper.toDate(formBean.getToDate());
+
+					Range<Date> interval = Range.closedOpen(lower, upper);
+					config.setInterval(interval);
+
+					ExportStartEvent start = new ExportStartEvent(owner, email, config, properties);
+					UI ui = UI.getCurrent();
+					Locale locale = ui == null ? UIUtils.getLocale() : ui.getLocale();
+					if (ui == null) {
+						PopupNotification.show(getI18nLabel("invalid_data"));
+						return;
+					}
+
+					CompletableFuture
+							.supplyAsync(() -> runExport(start, locale), executor)
+							.whenComplete((result, ex) -> ui.access(() -> handleExportResult(result, ex, start)));
+
+					PopupNotification.show(getI18nLabel("export_started"));
+					close();
+
+				} else {
+					PopupNotification.show(getI18nLabel("invalid_data"));
+				}
+			} catch (Exception e) {
+				PopupNotification.show(getI18nLabel("invalid_data"));
+			}
+		};
+	}
+
+	private char getColumnSeparator() {
+		if (customSeparatorField.getValue() == null
+				|| customSeparatorField.getValue().isEmpty()) {
+			return columnSeparatorField.getValue().charAt(0);
+		}
+		return customSeparatorField.getValue().charAt(0);
+	}
+
+	private char getDecimalSeparator() {
+		return decimalSeparatorField.getValue().charAt(0);
+	}
+
+	private ExportResult runExport(ExportStartEvent event, Locale locale) {
+		boolean lockAcquired = false;
+		try {
+			if (event.getConfig().getLockId() != null) {
+				if (!UIUtils.getCassandraService().getRollup()
+						.lockSink(event.getConfig().getLockId(), 15 * 3600)) {
+					return ExportResult.locked();
+				}
+				lockAcquired = true;
+			}
+			IExportProvider provider = UIUtils.getServiceFactory().getExportService();
+			File exported = provider.createExportDataFile(event.getConfig(), event.getProperties());
+			if (exported != null && event.getEmail() != null && !event.getEmail().trim().isEmpty()) {
+				UIUtils.getServiceFactory().getNotificationService()
+						.forwardVisualization(event.getEmail(), locale, exported, event.getConfig().getName());
+			}
+			return ExportResult.success(exported);
+		} catch (Exception ex) {
+			return ExportResult.failure();
+		} finally {
+			if (lockAcquired) {
+				UIUtils.getCassandraService().getRollup().unlockSink(event.getConfig().getLockId());
+			}
+		}
+	}
+
+	private void handleExportResult(ExportResult result, Throwable ex, ExportStartEvent event) {
+		if (ex != null || result == null) {
+			PopupNotification.show(UIUtils.localize("export.failed_export") + " " + event.getConfig().getName(),
+					PopupNotification.Type.ERROR);
+			return;
+		}
+		if (result.alreadyLocked) {
+			PopupNotification.show(UIUtils.localize("export.already_running_export") + " " + event.getConfig().getName(),
+					PopupNotification.Type.ERROR);
+			return;
+		}
+		if (result.exported == null) {
+			PopupNotification.show(UIUtils.localize("export.failed_export") + " " + event.getConfig().getName(),
+					PopupNotification.Type.ERROR);
+			return;
+		}
+
+		showExportDialog(event, result.exported);
+	}
+
+	private void showExportDialog(ExportStartEvent event, File exported) {
+		String fileName = event.getConfig().uniqueFileName(event.getProperties().getFileExtension());
+		Button lnkFile = new Button(fileName);
+		lnkFile.setIcon(VaadinIcon.DOWNLOAD.create());
+		lnkFile.addClassName("link");
+
+		StreamResource stream = createStreamResource(exported, fileName);
+		EnhancedFileDownloader downloader = new EnhancedFileDownloader(stream);
+		downloader.setOverrideContentType(true);
+		downloader.extend(lnkFile);
+
+		Dialog dialog = new Dialog();
+		dialog.add(new Span(UIUtils.localize("export.export_finished")));
+		dialog.add(lnkFile);
+		dialog.setDraggable(false);
+		dialog.open();
+	}
+
+	private StreamResource createStreamResource(final File file, String fileName) {
+		return new StreamResource(fileName, () -> {
+			try {
+				return new FileInputStream(file);
+			} catch (FileNotFoundException e) {
+				return null;
+			}
+		});
+	}
+
+	private static final class ExportResult {
+		private final File exported;
+		private final boolean alreadyLocked;
+
+		private ExportResult(File exported, boolean alreadyLocked) {
+			this.exported = exported;
+			this.alreadyLocked = alreadyLocked;
+		}
+
+		private static ExportResult success(File exported) {
+			return new ExportResult(exported, false);
+		}
+
+		private static ExportResult locked() {
+			return new ExportResult(null, true);
+		}
+
+		private static ExportResult failure() {
+			return new ExportResult(null, false);
+		}
+	}
 
 	private RadioButtonGroup<Order> createOrderRadioButtonGroup() {
 		RadioButtonGroup<Order> optionGroup = new RadioButtonGroup<>();

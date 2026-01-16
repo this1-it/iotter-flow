@@ -24,7 +24,7 @@ public class NetworkTypeOptionGroup extends RadioButtonGroup<NetworkType> {
 		// Set enum values as items, excluding LIST and sorted by enum ordinal
 		setItems(Arrays.stream(NetworkType.values())
 			.filter(type -> type != NetworkType.LIST)
-			.sorted(Comparator.comparing(Enum::ordinal))
+			.sorted(Comparator.comparingInt(Enum::ordinal))
 			.collect(Collectors.toList()));
 		
 			
