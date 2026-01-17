@@ -1,3 +1,6 @@
+docker compose -f ~/docker/docker-iotter/docker-compose.yml up -d
+
+
 nvm alias default 14
 
 npm install --save-dev @babel/plugin-proposal-object-rest-spread
