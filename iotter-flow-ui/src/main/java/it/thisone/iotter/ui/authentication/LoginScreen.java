@@ -1,6 +1,16 @@
 package it.thisone.iotter.ui.authentication;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AccountExpiredException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
@@ -10,6 +20,11 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
+
+import it.thisone.iotter.integration.AuthManager;
+import it.thisone.iotter.security.MaximumNumberSimultaneousLoginsException;
+import it.thisone.iotter.ui.MainView;
 
 /**
  * UI content when the user is not logged in yet.
@@ -19,10 +34,11 @@ import com.vaadin.flow.router.Route;
 @CssImport("./styles/shared-styles.css")
 public class LoginScreen extends FlexLayout {
 
-    private AccessControl accessControl;
+    private final AuthenticationManager authManager;
 
-    public LoginScreen() {
-        accessControl = AccessControlFactory.getInstance().createAccessControl();
+    @Autowired
+    public LoginScreen(AuthManager authManager) {
+        this.authManager = authManager;
         buildUI();
     }
 
@@ -68,11 +84,38 @@ public class LoginScreen extends FlexLayout {
     }
 
     private void login(LoginForm.LoginEvent event) {
-        if (accessControl.signIn(event.getUsername(), event.getPassword())) {
-            getUI().get().navigate("About");
-        } else {
+        try {
+            Authentication authentication = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            event.getUsername(), event.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            navigateAfterLogin();
+        } catch (AuthenticationException e) {
             event.getSource().setError(true);
+            Notification.show(buildFailureMessage(e));
         }
     }
 
+    private void navigateAfterLogin() {
+        String target = (String) VaadinSession.getCurrent().getAttribute("POST_LOGIN_ROUTE");
+        VaadinSession.getCurrent().setAttribute("POST_LOGIN_ROUTE", null);
+        if (target != null) {
+            UI.getCurrent().navigate(target);
+        } else {
+            UI.getCurrent().navigate(MainView.class);
+        }
+    }
+
+    private String buildFailureMessage(AuthenticationException e) {
+        if (e instanceof AccountExpiredException) {
+            return "Account expired";
+        }
+        if (e instanceof LockedException) {
+            return "Account locked";
+        }
+        if (e instanceof MaximumNumberSimultaneousLoginsException) {
+            return "Too many concurrent logins";
+        }
+        return "Bad credentials";
+    }
 }
