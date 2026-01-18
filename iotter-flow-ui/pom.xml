@@ -25,6 +25,13 @@
     </dependencyManagement>
 
     <dependencies>
+    
+       	<dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>iotter-flow-ui-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>iotter-flow-backend</artifactId>

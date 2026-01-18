@@ -8,7 +8,6 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.component.combobox.ComboBox;
 
 import it.thisone.iotter.enums.AccountStatus;
-import it.thisone.iotter.ui.common.UIUtils;
 
 public class AccountStatusSelect extends ComboBox<AccountStatus> {
 
@@ -19,7 +18,7 @@ public class AccountStatusSelect extends ComboBox<AccountStatus> {
 		List<AccountStatus> items = new ArrayList<>(
 				Arrays.asList(AccountStatus.NEED_ACTIVATION, AccountStatus.ACTIVE, AccountStatus.SUSPENDED));
 		setItems(items);
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 	}
 
 		@SuppressWarnings("unchecked")

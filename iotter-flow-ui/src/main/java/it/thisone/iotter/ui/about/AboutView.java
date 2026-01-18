@@ -17,8 +17,8 @@ public class AboutView extends HorizontalLayout {
 
     public AboutView() {
         add(VaadinIcon.INFO_CIRCLE.create());
-        add(new Span(" This application is using Vaadin Flow "
-                + Version.getFullVersion() + "."));
+        add(new Span(getTranslation("about.view.version",
+                Version.getFullVersion())));
 
         setSizeFull();
         setJustifyContentMode(JustifyContentMode.CENTER);

@@ -208,18 +208,22 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return ((IMainUI) UI.getCurrent()).getEntityManager();
 	}
 
+	@Deprecated
 	public static ServiceFactory getServiceFactory() {
 		return ((IMainUI) UI.getCurrent()).getServiceFactory();
 	}
 
+	@Deprecated
 	public static CassandraService getCassandraService() {
 		return ((IMainUI) UI.getCurrent()).getCassandraService();
 	}
 
+	@Deprecated
 	public static EventBusWrapper getUIEventBus() {
 		return ((IMainUI) UI.getCurrent()).getUIEventBus();
 	}
 
+	@Deprecated
 	public static void trace(TracingAction action, String message) {
 		String username = getUserDetails().getUsername();
 		String administrator = getUserDetails().getTenant();
@@ -227,6 +231,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		trace(action, username, administrator, network, null, message);
 	}
 
+	@Deprecated
 	public static void trace(TracingAction action, String username, String administrator, String network, String device,
 			String message) {
 		logger.debug("{} {} {} {} {}", action, username, administrator, network, message);
@@ -239,6 +244,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return UI.getCurrent().getLocale();
 	}
 
+	@Deprecated
 	public static String googleMapApiKey() {
 		if (((IMainUI) UI.getCurrent()).getServerName().equals("localhost")) {
 			return "AIzaSyCeFtOnsiE1OMOy7gTTQ6Leoip4IXh4lX8";
@@ -253,6 +259,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return apiKey;
 	}
 
+	@Deprecated
 	public static String portalName() {
 		String value = "";
 		Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
@@ -319,18 +326,22 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return properties;
 	}
 
+	@Deprecated
 	public static TimeZone getBrowserTimeZone() {
 		return ((IMainUI) UI.getCurrent()).getTimeZone();
 	}
 
+	@Deprecated
 	public static GeoLocation getGeoLocation() {
 		return ((IMainUI) UI.getCurrent()).getGeoLocation();
 	}
 
+	@Deprecated
 	public static IUiFactory getUiFactory() {
 		return ((IMainUI) UI.getCurrent()).getUiFactory();
 	}
 
+	@Deprecated
 	public static void startWidgetRefresher() {
 		((IMainUI) UI.getCurrent()).startWidgetRefresher();
 	}

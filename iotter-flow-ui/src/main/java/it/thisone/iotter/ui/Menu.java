@@ -27,7 +27,7 @@ public class Menu extends FlexLayout {
         setClassName("menu-bar");
 
         // Button for toggling the menu visibility on small screens
-        final Button showMenu = new Button("Menu", event -> {
+        final Button showMenu = new Button(getTranslation("menu.button.label"), event -> {
             if (tabs.getClassNames().contains(SHOW_TABS)) {
                 tabs.removeClassName(SHOW_TABS);
             } else {
@@ -44,7 +44,7 @@ public class Menu extends FlexLayout {
         top.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         top.setClassName("menu-header");
 
-        Label title = new Label("Iotter Flow");
+        Label title = new Label(getTranslation("menu.title"));
 
         // Note! Image resource url is resolved here as it is dependent on the
         // execution mode (development or production) and browser ES level support
@@ -64,7 +64,7 @@ public class Menu extends FlexLayout {
         add(tabs);
 
         // logout menu item
-        Button logoutButton = new Button("Logout",
+        Button logoutButton = new Button(getTranslation("menu.logout"),
                 VaadinIcon.SIGN_OUT.create());
         logoutButton.addClickListener(event -> AccessControlFactory
                 .getInstance().createAccessControl().signOut());

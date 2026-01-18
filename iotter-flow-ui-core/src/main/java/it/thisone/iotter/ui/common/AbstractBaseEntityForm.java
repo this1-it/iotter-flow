@@ -29,6 +29,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import it.thisone.iotter.enums.TracingAction;
 import it.thisone.iotter.persistence.model.BaseEntity;
 import it.thisone.iotter.persistence.model.Network;
+import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.util.PopupNotification;
 import it.thisone.iotter.util.Utils;
@@ -96,7 +97,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         HorizontalLayout footer = new HorizontalLayout();
         //footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
         footer.setWidth(100, Unit.PERCENTAGE);
-        footer.setHeight(UIUtils.TOOLBAR_HEIGHT, Unit.PIXELS);
+        footer.setHeight(UiConstants.TOOLBAR_HEIGHT, Unit.PIXELS);
         footer.setPadding(false);
         footer.setSpacing(false);
         footer.setAlignItems(Alignment.CENTER);
@@ -195,13 +196,13 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
                 ((Dialog) parent).close();
                 return;
             }
-            //parent = parent.getParent();
+            parent = parent.getParent().orElse(null);
         }
     }
 
     private com.vaadin.flow.component.button.Button getCancelButton() {
         if (cancelButton == null) {
-            cancelButton = new com.vaadin.flow.component.button.Button(UIUtils.localize("basic.editor.cancel"));
+            cancelButton = new com.vaadin.flow.component.button.Button(getTranslation("basic.editor.cancel"));
             cancelButton.addClickListener(event -> closeParentWindow());
         }
         return cancelButton;
@@ -232,7 +233,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
             }
 
             PopupNotification.show(
-                    UIUtils.localize("validators.fieldgroup_errors") + " \n " + message,
+                    getTranslation("validators.fieldgroup_errors") + " \n " + message,
                     PopupNotification.Type.ERROR);
         } catch (EditorConstraintException e) {
             PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
@@ -318,7 +319,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
     protected abstract void beforeCommit() throws EditorConstraintException;
 
     public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey()  + "." + key);
+        return getTranslation(getI18nKey() + "." + key);
     }
 
 	private String getI18nKey() {

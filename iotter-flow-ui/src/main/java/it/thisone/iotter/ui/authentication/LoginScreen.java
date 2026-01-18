@@ -24,7 +24,9 @@ import com.vaadin.flow.server.VaadinSession;
 
 import it.thisone.iotter.integration.AuthManager;
 import it.thisone.iotter.security.MaximumNumberSimultaneousLoginsException;
-import it.thisone.iotter.ui.MainView;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.UserSession;
+import it.thisone.iotter.ui.main.MainView;
 
 /**
  * UI content when the user is not logged in yet.
@@ -50,7 +52,7 @@ public class LoginScreen extends FlexLayout {
         LoginForm loginForm = new LoginForm();
         loginForm.addLoginListener(this::login);
         loginForm.addForgotPasswordListener(
-                event -> Notification.show("Hint: same as username"));
+                event -> Notification.show(getTranslation("login.forgot_password_hint")));
 
         // layout to center login form when there is sufficient screen space
         FlexLayout centeringLayout = new FlexLayout();
@@ -70,12 +72,9 @@ public class LoginScreen extends FlexLayout {
         VerticalLayout loginInformation = new VerticalLayout();
         loginInformation.setClassName("login-information");
 
-        H1 loginInfoHeader = new H1("Login Information");
+        H1 loginInfoHeader = new H1(getTranslation("login.info.header"));
         loginInfoHeader.setWidth("100%");
-        Span loginInfoText = new Span(
-                "Log in as \"admin\" to have full access. Log in with any " +
-                        "other username to have read-only access. For all " +
-                        "users, the password is same as the username.");
+        Span loginInfoText = new Span(getTranslation("login.info.text"));
         loginInfoText.setWidth("100%");
         loginInformation.add(loginInfoHeader);
         loginInformation.add(loginInfoText);
@@ -89,6 +88,9 @@ public class LoginScreen extends FlexLayout {
                     new UsernamePasswordAuthenticationToken(
                             event.getUsername(), event.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (authentication.getPrincipal() instanceof UserDetailsAdapter) {
+                UserSession.setUserDetails((UserDetailsAdapter) authentication.getPrincipal());
+            }
             navigateAfterLogin();
         } catch (AuthenticationException e) {
             event.getSource().setError(true);
@@ -108,14 +110,14 @@ public class LoginScreen extends FlexLayout {
 
     private String buildFailureMessage(AuthenticationException e) {
         if (e instanceof AccountExpiredException) {
-            return "Account expired";
+            return getTranslation("login.account_expired");
         }
         if (e instanceof LockedException) {
-            return "Account locked";
+            return getTranslation("login.account_locked");
         }
         if (e instanceof MaximumNumberSimultaneousLoginsException) {
-            return "Too many concurrent logins";
+            return getTranslation("login.too_many_logins");
         }
-        return "Bad credentials";
+        return getTranslation("login.bad_credentials");
     }
 }

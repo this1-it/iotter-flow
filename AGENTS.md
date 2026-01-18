@@ -1,4 +1,42 @@
+# Development Guidelines
+
+This is a Vaadin Flow project that rewrites a Vaadin 8 application.
+Many of the patterns used in Vaadin 8 are no longer compatible with Vaadin Flow.
+
+In particular, Vaadin Flow introduces a clear and fundamental change in the programming model compared to Vaadin 8:
+
+Components must no longer access the Spring context manually.
+
+Replicating the old pattern of an interface that pulls services from the Spring context is no longer meaningful nor supported.
+
+It is no longer possible to use com.vaadin.flow.component.UI in the same way as com.vaadin.ui.UI was used in Vaadin 8 (for example, as a global access point to application or Spring resources).
+
+Vaadin Flow is based on dependency injection, UI-scoped state, and explicit service wiring, and existing Vaadin 8 patterns must be refactored accordingly.
+
+When migrating the code, if you encounter a reference to it.thisone.iotter.ui.main.IMainUI, that interface was used to pull services from the Spring context.
+
+Likewise, some methods from it.thisone.iotter.ui.common.UIUtils are no longer available. They were intentionally removed because they relied on patterns such as:
+
+```
+((IMainUI) UI.getCurrent())
+```
+
+These patterns are not compatible with Vaadin Flow and have therefore been deliberately eliminated during the migration.
+
+
+## i18n support using iotter-flow-ui/src/main/java/it/thisone/iotter/i18n/FlowI18NProvider.java
+
+ getTranslation() is a method provided by com.vaadin.flow.component.Component. It's available in any class that extends a Vaadin Flow component: 
+                                                                                                                                                  
+  ✓ Works in these classes:                                                                                                                       
+  - Classes extending VerticalLayout, HorizontalLayout, FlexLayout                                                                                
+  - Classes extending Div, Span, Button                                                                                                           
+  - Any custom component extending Component                                                                                                      
+ 
+
+
 # Repository Guidelines
+
 
 ## Project Structure & Module Organization
 - `iotter-flow-ui/` is the Vaadin Flow UI module (Java views, resources, and web assets). Java lives in `iotter-flow-ui/src/main/java`, static assets in `iotter-flow-ui/src/main/webapp`, and frontend resources in `iotter-flow-ui/frontend`.

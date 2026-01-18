@@ -2,7 +2,6 @@ package it.thisone.iotter.ui.common;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -16,15 +15,12 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 import com.vaadin.flow.component.Unit;
-import com.vaadin.flow.component.notification.Notification;
 import org.vaadin.flow.components.PanelFlow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.theme.Theme;
-import com.vaadin.flow.theme.lumo.Lumo;
+import com.vaadin.flow.shared.Registration;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
-import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.util.PopupNotification;
 
 @SuppressWarnings("serial")
@@ -37,6 +33,7 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Co
 	private final Button selectButton;
 	private final Button removeButton;
 	private final Button cancelButton;
+	private boolean removeMode;
 	private FormLayout fieldsLayout;
 
 	public AbstractBaseEntityDetails(String name, T bean, Class<T> beanType) {
@@ -44,23 +41,46 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Co
 		this.name = name;
 		this.bean = bean;
 		this.beanType = beanType;
-		selectButton = new Button(UIUtils.localize("basic.editor.select"), this);
-		removeButton = new Button(UIUtils.localize("basic.editor.remove"), this);
-		cancelButton = new Button(UIUtils.localize("basic.editor.close"), this);
-
-
+		selectButton = new Button(getTranslation("basic.editor.select"), this);
+		removeButton = new Button(getTranslation("basic.editor.remove"), this);
+		cancelButton = new Button(getTranslation("basic.editor.close"), this);
+		registerButtonListeners();
 	}
 
 	public AbstractBaseEntityDetails(T item, Class<T> itemType, String name, String[] fieldIds, boolean remove) {
 		this(name, item, itemType);
+		this.removeMode = remove;
 		details = initDetails(fieldIds);
 		removeButton.setVisible(remove);
 		selectButton.setVisible(false);
 		if (remove) {
-			removeButton.setText(UIUtils.localize("basic.editor.yes"));
-			cancelButton.setText(UIUtils.localize("basic.editor.no"));
+			removeButton.setText(getTranslation("basic.editor.yes"));
+			cancelButton.setText(getTranslation("basic.editor.no"));
 		}
 		buildLayout(details);
+	}
+
+	private void registerButtonListeners() {
+		removeButton.addClickListener(event -> handleRemove());
+		selectButton.addClickListener(event -> fireEvent(new EntitySelectedEvent<>(this, bean)));
+		cancelButton.addClickListener(event -> handleCancel());
+	}
+
+	private void handleRemove() {
+		try {
+			onRemove();
+			fireEvent(new EntityRemovedEvent<>(this, bean));
+		} catch (EditorConstraintException e) {
+			PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+		}
+	}
+
+	private void handleCancel() {
+		if (removeMode) {
+			fireEvent(new EntityRemovedEvent<>(this, null));
+		} else {
+			fireEvent(new EntitySelectedEvent<>(this, null));
+		}
 	}
 
 	protected void buildLayout(Component content) {
@@ -85,8 +105,8 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Co
 
 		verticalLayout.add(footer);
 
-//		setCompositionRoot(verticalLayout);
-//		setSizeFull();
+		getContent().removeAll();
+		getContent().add(verticalLayout);
 	}
 
 	private HorizontalLayout initDetails(String[] fieldIds) {
@@ -181,7 +201,15 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Co
 //	}
 
 	public String getI18nLabel(String key) {
-		return UIUtils.localize(name + "." + key);
+		return getTranslation(name + "." + key);
+	}
+
+	public Registration addListener(EntityRemovedListener listener) {
+		return addListener(EntityRemovedEvent.class, event -> listener.entityRemoved(event));
+	}
+
+	public Registration addListener(EntitySelectedListener listener) {
+		return addListener(EntitySelectedEvent.class, event -> listener.entitySelected(event));
 	}
 
 	public T getBean() {

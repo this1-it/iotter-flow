@@ -1,0 +1,31 @@
+:host([theme~="side-drawer"]) {
+    align-items: stretch;
+    justify-content: flex-end;
+}
+
+:host([theme~="side-drawer"]) [part="overlay"] {
+    margin: 0;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(100%);
+    transition: transform 220ms ease;
+}
+
+:host([opened][theme~="side-drawer"]) [part="overlay"] {
+    transform: translateX(0);
+}
+
+:host([theme~="side-drawer"]) [part="content"] {
+    padding: 0;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.side-drawer-content {
+    height: 100%;
+}

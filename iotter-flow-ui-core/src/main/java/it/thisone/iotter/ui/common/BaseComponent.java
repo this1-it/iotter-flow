@@ -6,10 +6,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.HasComponents;
-
-import org.vaadin.flow.components.TabSheet;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 
@@ -63,7 +59,7 @@ public abstract class BaseComponent extends Composite<Div> implements UiConstant
 	}
 	
     public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey()  + "." + key);
+        return getTranslation(getI18nKey() + "." + key);
     }
 
 	public String getI18nKey() {
@@ -79,24 +75,13 @@ public abstract class BaseComponent extends Composite<Div> implements UiConstant
 	 * @return
 	 */
 	public static Dialog createDialog(String label, Component content, float[] dimension, String style) {
-		Dialog dialog = new Dialog();
-
-		dialog.setDraggable(false);
-		String headerTitle = label;
-//		if (content instanceof HasLabel) {
-//			String contentLabel = ((HasLabel) content).getLabel();
-//			if (contentLabel != null) {
-//				headerTitle = contentLabel;
-//				((HasLabel) content).setLabel(null);
-//			}
-//		}
-		//dialog.setHeaderTitle(headerTitle);
-		// dialog.setImmediate(true);
-		//content.setSizeFull();
-		dialog.add(content);
-		makeResponsiveDialog(dialog, dimension, style);
-		
-		return dialog;
+		SideDrawer drawer = new SideDrawer();
+		drawer.setDrawerContent(content);
+		drawer.applyDimension(dimension);
+		if (style != null && !style.trim().isEmpty()) {
+			//drawer.addClassName(style);
+		}
+		return drawer;
 	}
 	
 	/*
