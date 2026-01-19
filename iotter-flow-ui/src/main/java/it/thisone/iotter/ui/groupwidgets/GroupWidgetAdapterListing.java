@@ -8,12 +8,12 @@ import java.util.Set;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
-import com.vaadin.flow.component.grid.Grid.ColumnTextAlign;
+
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.menubar.MenuItem;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
@@ -72,7 +72,7 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 			});
 			return checkBox;
 		}).setKey(SELECTED_KEY).setHeader("");
-		selectedColumn.setTextAlign(ColumnTextAlign.CENTER);
+		//selectedColumn.setTextAlign(ColumnTextAlign.CENTER);
 
 		grid.addColumn(GroupWidgetAdapter::getVisualization)
 			.setKey(VISUALIZATION_KEY)
@@ -113,7 +113,7 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 
 		select.getSubMenu().addItem(getI18nLabel("visualizations.select_all"), event -> {
 			clearFilters();
-			select.setIcon(VaadinIcon.CHECK.create());
+			//select.setIcon(VaadinIcon.CHECK.create());
 			for (GroupWidgetAdapter item : dataProvider.getItems()) {
 				item.setSelected(true);
 			}
@@ -122,7 +122,7 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 		});
 		select.getSubMenu().addItem(getI18nLabel("visualizations.select_none"), event -> {
 			clearFilters();
-			select.setIcon(VaadinIcon.CLOSE_SMALL.create());
+			//select.setIcon(VaadinIcon.CLOSE_SMALL.create());
 			for (GroupWidgetAdapter item : dataProvider.getItems()) {
 				item.setSelected(false);
 			}
@@ -131,12 +131,12 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 		});
 		select.getSubMenu().addItem(getI18nLabel("visualizations.show_selected"), event -> {
 			selectedOnly = true;
-			select.setIcon(VaadinIcon.EYE.create());
+			//select.setIcon(VaadinIcon.EYE.create());
 			applyFilters();
 		});
 		select.getSubMenu().addItem(getI18nLabel("visualizations.show_all"), event -> {
 			selectedOnly = false;
-			select.setIcon(VaadinIcon.EYE_SLASH.create());
+			//select.setIcon(VaadinIcon.EYE_SLASH.create());
 			applyFilters();
 		});
 		return root;

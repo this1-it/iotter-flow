@@ -2,6 +2,7 @@ package it.thisone.iotter.ui.common;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -9,6 +10,7 @@ import java.util.Collection;
 import com.vaadin.flow.component.button.Button;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
@@ -41,9 +43,9 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Co
 		this.name = name;
 		this.bean = bean;
 		this.beanType = beanType;
-		selectButton = new Button(getTranslation("basic.editor.select"), this);
-		removeButton = new Button(getTranslation("basic.editor.remove"), this);
-		cancelButton = new Button(getTranslation("basic.editor.close"), this);
+		selectButton = new Button(getTranslation("basic.editor.select"));
+		removeButton = new Button(getTranslation("basic.editor.remove"));
+		cancelButton = new Button(getTranslation("basic.editor.close"));
 		registerButtonListeners();
 	}
 
@@ -205,11 +207,21 @@ public abstract class AbstractBaseEntityDetails<T extends BaseEntity> extends Co
 	}
 
 	public Registration addListener(EntityRemovedListener listener) {
-		return addListener(EntityRemovedEvent.class, event -> listener.entityRemoved(event));
+		return addListener((Class) EntityRemovedEvent.class, (ComponentEventListener) new ComponentEventListener<EntityRemovedEvent<?>>() {
+			@Override
+			public void onComponentEvent(EntityRemovedEvent<?> event) {
+				listener.entityRemoved(event);
+			}
+		});
 	}
 
 	public Registration addListener(EntitySelectedListener listener) {
-		return addListener(EntitySelectedEvent.class, event -> listener.entitySelected(event));
+		return addListener((Class) EntitySelectedEvent.class, (ComponentEventListener) new ComponentEventListener<EntitySelectedEvent<?>>() {
+			@Override
+			public void onComponentEvent(EntitySelectedEvent<?> event) {
+				listener.entitySelected(event);
+			}
+		});
 	}
 
 	public T getBean() {

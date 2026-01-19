@@ -148,7 +148,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return sb.toString();
 	}
 
-	
+	@Deprecated
 	public static String localize(String key, String defaultValue) {
 
 		if (UI.getCurrent() == null) {
@@ -157,22 +157,26 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return ((IMainUI) UI.getCurrent()).localize(key);
 	}
 	
+	@Deprecated
 	public static String localize(String key) {
-
-		if (UI.getCurrent() == null) {
-			return key;
-		}
-		return ((IMainUI) UI.getCurrent()).localize(key);
+		return key;
+		// if (UI.getCurrent() == null) {
+		// 	return key;
+		// }
+		// return ((IMainUI) UI.getCurrent()).localize(key);
 	}
 
+	@Deprecated
 	public static String localize(String code, Object[] args, String defaultMessage) {
 		return ((IMainUI) UI.getCurrent()).localize(code, args, defaultMessage);
 	}
 
+	@Deprecated
 	public static String messageBundle(String code) {
 		return messageBundle(code, null, UI.getCurrent().getLocale());
 	}
 
+	@Deprecated
 	public static String messageBundle(String code, String defaultMessage, Locale locale) {
 		if (UI.getCurrent() == null) {
 			return defaultMessage;
@@ -185,16 +189,22 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return messageSource.getDatabaseMessage(code, defaultMessage, locale);
 	}
 
+	@Deprecated
 	public static boolean hasRole(String role) {
-		return ((IMainUI) UI.getCurrent()).hasRole(role);
+		return true;
+		//return ((IMainUI) UI.getCurrent()).hasRole(role);
 	}
 
+	@Deprecated
 	public static boolean hasPermission(EntityPermission permission) {
-		return ((IMainUI) UI.getCurrent()).hasPermission(permission);
+		return true;
+		//return ((IMainUI) UI.getCurrent()).hasPermission(permission);
 	}
 
+	@Deprecated
 	public static UserDetailsAdapter getUserDetails() {
-		UserDetailsAdapter details = ((IMainUI) UI.getCurrent()).getUserDetails();
+		//UserDetailsAdapter details = ((IMainUI) UI.getCurrent()).getUserDetails();
+		UserDetailsAdapter details = null;
 		if (details == null) {
 			User anonymous = new User();
 			anonymous.setUsername("anonymous");
@@ -204,6 +214,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 		return details;
 	}
 
+	@Deprecated
 	public static EntityManager getEntityManager() {
 		return ((IMainUI) UI.getCurrent()).getEntityManager();
 	}

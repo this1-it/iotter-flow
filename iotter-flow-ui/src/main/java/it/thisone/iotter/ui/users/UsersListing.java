@@ -604,8 +604,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		@Override
 		public java.util.stream.Stream<User> loadItems(QueryDefinition<User, UsersFilter> queryDefinition, int offset,
 				int limit) {
-			int page = offset / this.queryDefinition.getPageSize();
-			int size = this.queryDefinition.getPageSize();
+			int size = limit > 0 ? limit : this.queryDefinition.getPageSize();
+			int page = size > 0 ? offset / size : 0;
 			System.out.println("UsersQuery.loadItems() - offset: " + offset + ", limit: " + limit +
 					", calculated page: " + page + ", using pageSize: " + size);
 			Page<User> users = findPage(page, size);

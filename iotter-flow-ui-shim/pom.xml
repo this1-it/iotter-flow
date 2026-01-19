@@ -25,13 +25,6 @@
             <artifactId>flow-server</artifactId>
         </dependency>
 
-        <!-- Logger -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-        </dependency>
-
-
     </dependencies>
 
 

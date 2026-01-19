@@ -194,11 +194,11 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         List<NetworkGroup> availableGroups = loadNetworkGroups();
         groups = new NetworkGroupSelect(availableGroups, true);
         groups.setWidthFull();
-        groups.setLabel(getI18nLabel("groups"));
+        //groups.setLabel(getI18nLabel("groups"));
 
         exclusiveGroups = new NetworkGroupSelect(availableGroups, true);
         exclusiveGroups.setWidthFull();
-        exclusiveGroups.setLabel(getI18nLabel("exclusive_groups"));
+        //exclusiveGroups.setLabel(getI18nLabel("exclusive_groups"));
 
         groups.setVisible(Constants.USE_GROUPS);
         exclusiveGroups.setVisible(Constants.USE_GROUPS);
@@ -354,33 +354,33 @@ public class UserForm extends AbstractBaseEntityForm<User> {
 
     private FormLayout buildLoginForm() {
         FormLayout layout = createFormLayout();
-        layout.addComponent(username);
-        layout.addComponent(accountStatus);
-        layout.addComponent(originalPassword);
-        layout.addComponent(verifiedPassword);
+        layout.add(username);
+        layout.add(accountStatus);
+        layout.add(originalPassword);
+        layout.add(verifiedPassword);
         return layout;
     }
 
     private FormLayout buildUserForm() {
         FormLayout layout = createFormLayout();
-        layout.addComponent(email);
-        layout.addComponent(firstName);
-        layout.addComponent(lastName);
-        layout.addComponent(company);
-        layout.addComponent(phone);
-        layout.addComponent(street);
-        layout.addComponent(city);
-        layout.addComponent(zip);
-        layout.addComponent(country);
+        layout.add(email);
+        layout.add(firstName);
+        layout.add(lastName);
+        layout.add(company);
+        layout.add(phone);
+        layout.add(street);
+        layout.add(city);
+        layout.add(zip);
+        layout.add(country);
         return layout;
     }
 
     private FormLayout buildAuthForm() {
         FormLayout layout = createFormLayout();
-        layout.addComponent(role);
-        layout.addComponent(networkSelect);
-        layout.addComponent(groups);
-        layout.addComponent(exclusiveGroups);
+        layout.add(role);
+        layout.add(networkSelect);
+        layout.add(groups);
+        layout.add(exclusiveGroups);
         return layout;
     }
 
@@ -435,7 +435,7 @@ public class UserForm extends AbstractBaseEntityForm<User> {
                     .collect(Collectors.toSet());
         }
         visualizations = new GroupWidgetAdapterListing(items, selectedGroups);
-        visualizations.setSizeFull();
+        //visualizations.setSizeFull();
         Tab visualizationsTab = new Tab(getI18nLabel("visualizations_tab"));
         tabContents.put(visualizationsTab, visualizations);
         visualizations.setVisible(false);
