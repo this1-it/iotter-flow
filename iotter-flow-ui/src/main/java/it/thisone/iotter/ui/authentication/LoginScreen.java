@@ -24,8 +24,6 @@ import com.vaadin.flow.server.VaadinSession;
 
 import it.thisone.iotter.integration.AuthManager;
 import it.thisone.iotter.security.MaximumNumberSimultaneousLoginsException;
-import it.thisone.iotter.security.UserDetailsAdapter;
-import it.thisone.iotter.ui.common.UserSession;
 import it.thisone.iotter.ui.main.MainView;
 
 /**
@@ -88,9 +86,6 @@ public class LoginScreen extends FlexLayout {
                     new UsernamePasswordAuthenticationToken(
                             event.getUsername(), event.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            if (authentication.getPrincipal() instanceof UserDetailsAdapter) {
-                UserSession.setUserDetails((UserDetailsAdapter) authentication.getPrincipal());
-            }
             navigateAfterLogin();
         } catch (AuthenticationException e) {
             event.getSource().setError(true);

@@ -11,8 +11,8 @@ import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.MainLayout;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseView;
-import it.thisone.iotter.ui.common.UserSession;
 
 @Route(value = "users", layout = MainLayout.class)
 @PageTitle("Users")
@@ -24,11 +24,14 @@ public class UsersView extends BaseView {
 
 	private final ObjectProvider<UsersListing> listingProvider;
 	private final NetworkService networkService;
+	private final AuthenticatedUser authenticatedUser;
 	private boolean initialized;
 
-	public UsersView(ObjectProvider<UsersListing> listingProvider, NetworkService networkService) {
+	public UsersView(ObjectProvider<UsersListing> listingProvider, NetworkService networkService,
+			AuthenticatedUser authenticatedUser) {
 		this.listingProvider = listingProvider;
 		this.networkService = networkService;
+		this.authenticatedUser = authenticatedUser;
 		setSizeFull();
 		addClassName(NAME);
 	}
@@ -41,7 +44,7 @@ public class UsersView extends BaseView {
 		}
 		initialized = true;
 		Network network = null;
-		UserDetailsAdapter details = UserSession.getUserDetails();
+		UserDetailsAdapter details = authenticatedUser.get().orElse(null);
 		if (details != null && details.hasRole(Constants.ROLE_SUPERUSER)) {
 			network = networkService.findOne(details.getNetworkId());
 		}

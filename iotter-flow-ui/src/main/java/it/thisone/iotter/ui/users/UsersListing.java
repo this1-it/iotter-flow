@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -42,10 +43,8 @@ import it.thisone.iotter.persistence.model.Role;
 import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.persistence.repository.UserRepository;
 import it.thisone.iotter.persistence.service.DeviceService;
-import it.thisone.iotter.persistence.service.GroupWidgetService;
-import it.thisone.iotter.persistence.service.NetworkGroupService;
-import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.persistence.service.UserService;
+
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityDetails;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
@@ -56,7 +55,7 @@ import it.thisone.iotter.ui.common.EntitySelectedEvent;
 import it.thisone.iotter.ui.common.EntitySelectedListener;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
-import it.thisone.iotter.ui.common.UserSession;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.util.PopupNotification;
 
 @Component
@@ -72,18 +71,17 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	
 	private Network network;
 	private final Permissions permissions;
+
+	@Autowired
+	private AuthenticatedUser authenticatedUser;
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
 	private UserService userService;
 	@Autowired
-	private NetworkService networkService;
-	@Autowired
-	private NetworkGroupService networkGroupService;
-	@Autowired
-	private GroupWidgetService groupWidgetService;
-	@Autowired
 	private DeviceService deviceService;
+	@Autowired
+	private ObjectProvider<UserForm> userFormProvider;
 
 	private Grid<User> grid;
 	private LazyQueryDataProvider<User, UsersFilter> dataProvider;
@@ -118,7 +116,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 		queryDefinition = new UsersQueryDefinition(User.class, currentLimit, permissions);
 		queryDefinition.setNetwork(network);
-		queryDefinition.setOwner(UserSession.getUserDetails().getTenant());
+		queryDefinition.setOwner(authenticatedUser.getTenant().orElse(null));
 		queryDefinition.setPage(0, currentLimit);
 		queryDefinition.setQueryFilter(currentFilter);
 		dataProvider = new LazyQueryDataProvider<>(queryDefinition, new UsersQueryFactory(userRepository));
@@ -145,7 +143,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 	@Override
 	public AbstractBaseEntityForm<User> getEditor(User item) {
-		return new UserForm(item, network, networkService, networkGroupService, groupWidgetService, UserSession.getUserDetails());
+		return userFormProvider.getObject(item, network);
 	}
 
 	@Override

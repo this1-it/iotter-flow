@@ -5,6 +5,13 @@ import com.vaadin.flow.server.VaadinSession;
 import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.security.UserDetailsAdapter;
 
+/**
+ * @deprecated Use {@link AuthenticatedUser} instead. This class relies on static
+ * access patterns that are not compatible with Vaadin Flow's dependency injection model.
+ * Inject {@link AuthenticatedUser} into your components and use {@code authenticatedUser.get()}
+ * to obtain the current user.
+ */
+@Deprecated
 public final class UserSession {
 
     public static final String USER_DETAILS_KEY = UserDetailsAdapter.class.getName();

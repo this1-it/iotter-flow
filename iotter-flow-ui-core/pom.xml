@@ -8,8 +8,12 @@
 	<artifactId>iotter-flow-ui-core</artifactId>
 
 	<dependencies>
-	
-	
+
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-spring</artifactId>
+		</dependency>
+
 		<dependency>
 		   <groupId>com.github.juchar</groupId>
 		   <artifactId>color-picker-field-flow</artifactId>
