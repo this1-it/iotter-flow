@@ -18,21 +18,17 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.HasComponents;
-import com.vaadin.flow.component.HasOrderedComponents;
 import com.vaadin.flow.component.Unit;
-import com.vaadin.flow.component.notification.Notification;
 import org.vaadin.flow.components.PanelFlow;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.dialog.Dialog;
 
-import it.thisone.iotter.enums.TracingAction;
 import it.thisone.iotter.persistence.model.BaseEntity;
 import it.thisone.iotter.persistence.model.Network;
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.util.PopupNotification;
-import it.thisone.iotter.util.Utils;
 
 
 public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends AbstractForm<T> {
@@ -40,23 +36,32 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
     private static final long serialVersionUID = -6063387822417475910L;
     private static final float ACTION_BUTTON_WIDTH = 120f;
 	private String name;
-    //private BeanBinderFacade<T> binderFacade;
+    private UserDetailsAdapter currentUser;
     private Network network;
     private FormLayout formLayout;
 	private Map<String, Component> fields = new HashMap<>(); 
 	private List<String> properties = new ArrayList<>();
 	private com.vaadin.flow.component.button.Button cancelButton;
 
-    /**
+    public UserDetailsAdapter getCurrentUser() {
+		return currentUser;
+	}
+
+	public void setCurrentUser(UserDetailsAdapter currentUser) {
+		this.currentUser = currentUser;
+	}
+
+	/**
      * A generic entity form using Vaadin 8 Binder and AbstractForm
      * 
      * @param facade contains entity to be edited and binder
      * @param network used for editing relations, it may be null
      */
-    public AbstractBaseEntityForm(T entity, Class<T> entityType, String name, Network network) {
+    public AbstractBaseEntityForm(T entity, Class<T> entityType, String name, Network network, UserDetailsAdapter currentUser) {
         super(entityType);
         this.name = name;
         this.network = network;
+        this.currentUser = currentUser;
         this.setBinder(new Binder<>(entityType));
         setEntity(entity);
         
@@ -95,7 +100,6 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         buttonLayout.add(getDeleteButton());
 
         HorizontalLayout footer = new HorizontalLayout();
-        //footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
         footer.setWidth(100, Unit.PERCENTAGE);
         footer.setHeight(UiConstants.TOOLBAR_HEIGHT, Unit.PIXELS);
         footer.setPadding(false);

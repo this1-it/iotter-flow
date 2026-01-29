@@ -5,7 +5,6 @@ import java.util.Properties;
 import java.util.jar.Manifest;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -28,8 +29,8 @@ import it.thisone.iotter.util.Utils;
 public class AppConfig {
     private final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 	
-    @Autowired 
-    ServletContext servletContext;    
+    @Autowired(required = false)
+    private javax.servlet.ServletContext servletContext;
     
 	@PostConstruct
 	public void init() {
@@ -39,14 +40,15 @@ public class AppConfig {
 //		PermissionsToRole.remove(Constants.ROLE_SUPERVISOR, EntityPermission.DEVICE.REMOVE);
 	}
 
-	@Bean
-	public ReloadableResourceBundleMessageSource reloadableResourceBundleMessageSource() {
-		MessageSourceWithFallback messageSource = new MessageSourceWithFallback();
-		messageSource.setBasename("classpath:messages");
-		messageSource.setDefaultEncoding("UTF-8");
-		messageSource.setFallbackToSystemLocale(false);
-		return messageSource;
-	}
+    @Bean(name = "messageSource")
+    @Primary
+    public MessageSource messageSource() {
+        MessageSourceWithFallback messageSource = new MessageSourceWithFallback();
+        messageSource.setBasename("classpath:messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setFallbackToSystemLocale(false);
+        return messageSource;
+    }
 	
     @Bean
     @Qualifier("appProperties")
@@ -61,11 +63,13 @@ public class AppConfig {
 				resource = new ClassPathResource("app.default.properties");
 			}
 			properties.putAll(PropertiesLoaderUtils.loadProperties(resource));
-			InputStream inputStream = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF");
-			if (inputStream != null) {
-				Manifest manifest = new Manifest(inputStream);
-				properties.putAll(Utils.loadProperties(manifest));
-			}
+            if (servletContext != null) {
+                InputStream inputStream = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF");
+                if (inputStream != null) {
+                    Manifest manifest = new Manifest(inputStream);
+                    properties.putAll(Utils.loadProperties(manifest));
+                }
+            }
 			
 		} catch (Exception e) {
 			logger.error("unable to retrieve app.properties", e);

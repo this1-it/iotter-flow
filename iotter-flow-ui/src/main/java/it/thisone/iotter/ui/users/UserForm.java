@@ -15,7 +15,6 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.data.binder.PropertyId;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -41,7 +40,6 @@ import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.persistence.service.RoleService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.EditorConstraintException;
 import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.ui.common.fields.AccountStatusSelect;
@@ -58,16 +56,11 @@ public class UserForm extends AbstractBaseEntityForm<User> {
 
     private static final long serialVersionUID = 1L;
 
-    @Autowired
-    private AuthenticatedUser authenticatedUser;
-    @Autowired
-    private RoleService roleService;
-    @Autowired
-    private NetworkService networkService;
-    @Autowired
-    private NetworkGroupService networkGroupService;
-    @Autowired
-    private GroupWidgetService groupWidgetService;
+
+    private final RoleService roleService;
+    private final NetworkService networkService;
+    private final NetworkGroupService networkGroupService;
+    private final GroupWidgetService groupWidgetService;
 
     @PropertyId("username")
     private TextField username;
@@ -119,34 +112,33 @@ public class UserForm extends AbstractBaseEntityForm<User> {
     private Map<Tab, com.vaadin.flow.component.Component> tabContents;
     private Div pages;
 
-    private boolean attached = false;
 
-    public UserForm(User entity, Network network) {
-        super(entity, User.class, "user.editor", network);
-        // Services are NOT available here yet - they are injected AFTER constructor
-        // initializeBasicFields() is called from getFieldsLayout() during super() constructor
-        // Service-dependent initialization is deferred to onAttach()
+    @Autowired
+    public UserForm(User entity, Network network, UserDetailsAdapter currentUser, RoleService roleService,
+            NetworkService networkService, NetworkGroupService networkGroupService,
+            GroupWidgetService groupWidgetService) {
+        super(entity, User.class, "user.editor", network, currentUser);
+        this.roleService = roleService;
+        this.networkService = networkService;
+        this.networkGroupService = networkGroupService;
+        this.groupWidgetService = groupWidgetService;
 
         if (isCreateBean()) {
             getEntity().setAccountStatus(AccountStatus.ACTIVE);
         }
-    }
 
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        super.onAttach(attachEvent);
+        populateFields();
+
+        bindFields();
 
 
-      if (!attached) {                                                                                                  
-                 attached = true;                                                                                              
-               populateFromServices();                                                                                       
-            bindFields();                                                                                                 
-}  
+        //applyVisibilityRules(tabs, tabContents, pages);
 
     }
+
+
 
     /**
-     * Initialize basic UI fields that don't require services.
      * Called during constructor via getFieldsLayout().
      */
     private void initializeFields() {
@@ -232,19 +224,21 @@ public class UserForm extends AbstractBaseEntityForm<User> {
 
         groups.setVisible(Constants.USE_GROUPS);
         exclusiveGroups.setVisible(Constants.USE_GROUPS);
+
+
+
     }
 
     /**
-     * Initialize fields that require services (roles, networks, groups).
-     * Called in onAttach() when services are guaranteed to be available.
+     * Initialized fields that require services (roles, networks, groups).
+     * 
      */
-    private void populateFromServices() {
-        UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
-                () -> new IllegalStateException("User must be authenticated to edit users"));
+    private void populateFields() {
 
+ 
         // Populate role select based on current user's permissions
         List<Role> roles = new ArrayList<>();
-        if (currentUser.hasRole(Constants.ROLE_SUPERVISOR)) {
+        if (getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR)) {
             roles = roleService.findAll();
         } else {
             roles.add(roleService.findByName(Constants.ROLE_ADMINISTRATOR));
@@ -264,10 +258,19 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         // Configure network selection and groups
         configureNetworkSelection();
         preselectGroups(getEntity().getGroups());
-        configureExclusiveGroups(details().hasRole(Constants.ROLE_SUPERUSER));
+        //configureExclusiveGroups(details().hasRole(Constants.ROLE_SUPERUSER));
 
-        // Apply visibility rules that depend on current user
-        applyVisibilityRules(tabs, tabContents, pages);
+        
+        List<GroupWidget> items = groupWidgetService.findByOwner(getEntity().getOwner());
+        Set<NetworkGroup> selectedGroups = getEntity().getGroups();
+        if (isCreateBean()) {
+            selectedGroups = items.stream().map(GroupWidget::getGroup).filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        }
+        if (visualizations!= null) {
+            visualizations.addItems(items, selectedGroups);
+        }
+        
     }
 
     private void bindFields() {
@@ -359,9 +362,6 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         getBinder().validate();
     }
 
-    private UserDetailsAdapter details() {
-        return new UserDetailsAdapter(getEntity());
-    }
 
     @Override
     public VerticalLayout getFieldsLayout() {
@@ -389,6 +389,8 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         tabContents.put(loginTab, login);
         tabContents.put(userTab, user);
         tabContents.put(authTab, auth);
+        
+        
 
         tabs.add(loginTab, userTab, authTab);
         tabContents.values().forEach(component -> {
@@ -405,12 +407,53 @@ public class UserForm extends AbstractBaseEntityForm<User> {
             }
         });
 
+
+ 
+        
+        boolean supervisor = getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR);
+        boolean hasVisualization = !supervisor;
+
+        if (isCreateBean()) {
+            accountStatus.setVisible(false);
+
+            if (supervisor) {
+                networkSelect.setVisible(false);
+            }
+        } else {
+            hasVisualization = getEntity().hasRole(Constants.ROLE_SUPERUSER)
+                    || getEntity().hasRole(Constants.ROLE_USER);
+
+            exclusiveGroups.setVisible(false);
+
+            boolean hasNetwork = getEntity().hasRole(Constants.ROLE_SUPERUSER) || getEntity().hasRole(Constants.ROLE_USER);
+
+            if (!hasNetwork) {
+                networkSelect.setVisible(false);
+                groups.setVisible(false);
+                exclusiveGroups.setVisible(false);
+            }
+
+            accountStatus.setReadOnly(getEntity().hasRole(Constants.ROLE_SUPERVISOR));
+
+            if (getEntity().getAccountStatus() != null
+                    && !AccountStatus.NEED_ACTIVATION.equals(getEntity().getAccountStatus())) {
+                accountStatus.removeItem(AccountStatus.NEED_ACTIVATION);
+            }
+        }
+
+        if (hasVisualization) {
+            visualizations = new GroupWidgetAdapterListing();
+            Tab visualizationsTab = new Tab(getI18nLabel("visualizations_tab"));
+            tabContents.put(visualizationsTab, visualizations);
+            visualizations.setVisible(false);
+            tabs.add(visualizationsTab);
+            pages.add(visualizations);
+
+        }        
+        
         mainLayout.add(tabs, pages);
         mainLayout.setFlexGrow(1f, pages);
-
-        // Don't call applyVisibilityRules here - services not available yet
-        // It will be called in initializeServiceDependentFields() via onAttach()
-
+        
         return mainLayout;
     }
 
@@ -452,59 +495,7 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         return formLayout;
     }
 
-    private void applyVisibilityRules(Tabs tabs, Map<Tab, com.vaadin.flow.component.Component> tabContents, Div pages) {
-        UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
-                () -> new IllegalStateException("User must be authenticated"));
-        boolean supervisor = currentUser.hasRole(Constants.ROLE_SUPERVISOR);
-        boolean hasVisualization = !supervisor;
 
-        if (isCreateBean()) {
-            accountStatus.setVisible(false);
-
-            if (supervisor) {
-                networkSelect.setVisible(false);
-            }
-        } else {
-            hasVisualization = details().hasRole(Constants.ROLE_SUPERUSER)
-                    || details().hasRole(Constants.ROLE_USER);
-
-            exclusiveGroups.setVisible(false);
-
-            boolean hasNetwork = details().hasRole(Constants.ROLE_SUPERUSER) || details().hasRole(Constants.ROLE_USER);
-
-            if (!hasNetwork) {
-                networkSelect.setVisible(false);
-                groups.setVisible(false);
-                exclusiveGroups.setVisible(false);
-            }
-
-            accountStatus.setReadOnly(details().hasRole(Constants.ROLE_SUPERVISOR));
-
-            if (getEntity().getAccountStatus() != null
-                    && !AccountStatus.NEED_ACTIVATION.equals(getEntity().getAccountStatus())) {
-                accountStatus.removeItem(AccountStatus.NEED_ACTIVATION);
-            }
-        }
-
-        if (hasVisualization) {
-            addVisualizationsTab(tabs, tabContents, pages);
-        }
-    }
-
-    private void addVisualizationsTab(Tabs tabs, Map<Tab, com.vaadin.flow.component.Component> tabContents, Div pages) {
-        List<GroupWidget> items = groupWidgetService.findByOwner(getEntity().getOwner());
-        Set<NetworkGroup> selectedGroups = getEntity().getGroups();
-        if (isCreateBean()) {
-            selectedGroups = items.stream().map(GroupWidget::getGroup).filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-        }
-        visualizations = new GroupWidgetAdapterListing(items, selectedGroups);
-        Tab visualizationsTab = new Tab(getI18nLabel("visualizations_tab"));
-        tabContents.put(visualizationsTab, visualizations);
-        visualizations.setVisible(false);
-        tabs.add(visualizationsTab);
-        pages.add(visualizations);
-    }
 
     private void configureNetworkSelection() {
         Network selectedNetwork = networkSelect.getValue();
@@ -584,11 +575,11 @@ public class UserForm extends AbstractBaseEntityForm<User> {
             getEntity().setGroups(selected);
         }
 
-        if (details().isEnabled()) {
+        if (getEntity().getAccountStatus().equals(AccountStatus.ACTIVE)) {
             getEntity().setExpiryDate(null);
         }
 
-        if (details().hasRole(Constants.ROLE_ADMINISTRATOR)) {
+        if (getEntity().hasRole(Constants.ROLE_ADMINISTRATOR)) {
             getEntity().getGroups().clear();
         } else {
             Set<NetworkGroup> currentGroups = new HashSet<>(getEntity().getGroups());
@@ -602,11 +593,11 @@ public class UserForm extends AbstractBaseEntityForm<User> {
             }
         }
 
-        if (details().hasRole(Constants.ROLE_ADMINISTRATOR)) {
+        if (getEntity().hasRole(Constants.ROLE_ADMINISTRATOR)) {
             getEntity().setOwner(getEntity().getUsername());
         }
 
-        if (details().hasRole(Constants.ROLE_ADMINISTRATOR)) {
+        if (getEntity().hasRole(Constants.ROLE_ADMINISTRATOR)) {
             try {
                 networkService.createDefaultNetwork(getEntity());
             } catch (BackendServiceException e) {

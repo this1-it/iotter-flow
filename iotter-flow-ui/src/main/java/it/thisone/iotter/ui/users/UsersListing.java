@@ -3,6 +3,7 @@ package it.thisone.iotter.ui.users;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,9 +44,14 @@ import it.thisone.iotter.persistence.model.Role;
 import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.persistence.repository.UserRepository;
 import it.thisone.iotter.persistence.service.DeviceService;
+import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.persistence.service.NetworkGroupService;
+import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.persistence.service.RoleService;
 import it.thisone.iotter.persistence.service.UserService;
 
 import it.thisone.iotter.security.Permissions;
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityDetails;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
@@ -80,6 +86,14 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private UserService userService;
 	@Autowired
 	private DeviceService deviceService;
+	@Autowired
+	private RoleService roleService;
+	@Autowired
+	private NetworkService networkService;
+	@Autowired
+	private NetworkGroupService networkGroupService;
+	@Autowired
+	private GroupWidgetService groupWidgetService;
 	@Autowired
 	private ObjectProvider<UserForm> userFormProvider;
 
@@ -143,7 +157,19 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 	@Override
 	public AbstractBaseEntityForm<User> getEditor(User item) {
-		return userFormProvider.getObject(item, network);
+       /*
+	 Spring 4.3+ automatically autowires a single constructor without needing @Autowired. Vaadin/Spring's ObjectProvider uses this constructor injection implicitly without
+  annotations. If multiple constructors exist, @Autowired is required to specify which one to use.
+
+  
+	   */
+
+                 UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
+                () -> new IllegalStateException("User must be authenticated to edit users"));
+
+
+		return userFormProvider.getObject(item, network, currentUser, roleService, networkService,
+				networkGroupService, groupWidgetService);
 	}
 
 	@Override
@@ -334,8 +360,10 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			return "";
 		}
 		return roles.stream()
+				.filter(Objects::nonNull)
 				.sorted(Comparator.comparing(Role::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
 				.map(Role::getName)
+				.filter(Objects::nonNull)
 				.collect(Collectors.joining(", "));
 	}
 
@@ -345,8 +373,10 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			return "";
 		}
 		return groups.stream()
+				.filter(Objects::nonNull)
 				.sorted(Comparator.comparing(NetworkGroup::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
 				.map(NetworkGroup::getName)
+				.filter(Objects::nonNull)
 				.collect(Collectors.joining(", "));
 	}
 

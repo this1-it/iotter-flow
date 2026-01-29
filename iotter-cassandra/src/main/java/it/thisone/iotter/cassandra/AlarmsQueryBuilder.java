@@ -71,12 +71,36 @@ public class AlarmsQueryBuilder extends CassandraQueryBuilder {
 	}
 
 	public static Statement<?> prepareUpdateAlarm(FeedAlarm item) {
-		String query = String.format(
-				"UPDATE %s.%s SET %s = ?, %s = ?, %s = ?, %s = ?, %s = ?, %s = ?, %s = ?, %s = ? WHERE %s = ? AND %s = ?",
-				CassandraClient.getKeySpace(), FEEDALARMS_CF_NAME, ACTIVE, TS, UPDATED, STATUS, VAL, THRESHOLD,
-				DELAY, REPEAT, SN, KEY);
-		return simpleStatement(query, null, item.isActive(), item.getTimestamp(), item.getUpdated(), item.getStatus(),
-				item.getValue(), item.getThreshold(), item.isDelayed(), item.isRepeated(), item.getSerial(), item.getKey());
+		StringBuilder query = new StringBuilder();
+		List<Object> values = new ArrayList<Object>();
+		query.append("UPDATE ").append(CassandraClient.getKeySpace()).append('.').append(FEEDALARMS_CF_NAME)
+				.append(" SET ").append(ACTIVE).append(" = ?, ").append(STATUS).append(" = ?, ").append(VAL)
+				.append(" = ?, ").append(THRESHOLD).append(" = ?, ").append(DELAY).append(" = ?, ").append(REPEAT)
+				.append(" = ?");
+		values.add(item.isActive());
+		values.add(item.getStatus());
+		values.add(item.getValue());
+		values.add(item.getThreshold());
+		values.add(item.isDelayed());
+		values.add(item.isRepeated());
+
+		if (item.getTimestamp() != null) {
+			query.append(", ").append(TS).append(" = ?");
+			values.add(item.getTimestamp());
+		} else {
+			query.append(", ").append(TS).append(" = null");
+		}
+		if (item.getUpdated() != null) {
+			query.append(", ").append(UPDATED).append(" = ?");
+			values.add(item.getUpdated());
+		} else {
+			query.append(", ").append(UPDATED).append(" = null");
+		}
+
+		query.append(" WHERE ").append(SN).append(" = ? AND ").append(KEY).append(" = ?");
+		values.add(item.getSerial());
+		values.add(item.getKey());
+		return simpleStatement(query.toString(), null, values.toArray());
 	}
 
 	public static Statement<?> prepareSelectDelayedAlarms() {

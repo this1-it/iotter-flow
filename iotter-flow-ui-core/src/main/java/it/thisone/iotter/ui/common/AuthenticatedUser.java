@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
+import com.vaadin.flow.server.VaadinSession;
 
 import it.thisone.iotter.security.UserDetailsAdapter;
 
@@ -23,6 +24,12 @@ public class AuthenticatedUser implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Vaadin session key used to persist the authenticated {@link Authentication}
+     * across Vaadin requests.
+     */
+    public static final String SESSION_AUTHENTICATION_KEY = Authentication.class.getName();
+
+    /**
      * Gets the current authenticated user from the security context.
      *
      * @return Optional containing the UserDetailsAdapter if authenticated,
@@ -30,10 +37,29 @@ public class AuthenticatedUser implements Serializable {
      */
     public Optional<UserDetailsAdapter> get() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (!isUserDetailsAuthentication(auth)) {
+            auth = getAuthenticationFromVaadinSession();
+            if (isUserDetailsAuthentication(auth)) {
+                // Re-hydrate the Spring Security context for the current thread.
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+        }
         if (auth != null && auth.getPrincipal() instanceof UserDetailsAdapter) {
             return Optional.of((UserDetailsAdapter) auth.getPrincipal());
         }
         return Optional.empty();
+    }
+
+    private Authentication getAuthenticationFromVaadinSession() {
+        VaadinSession session = VaadinSession.getCurrent();
+        if (session == null) {
+            return null;
+        }
+        return (Authentication) session.getAttribute(SESSION_AUTHENTICATION_KEY);
+    }
+
+    private boolean isUserDetailsAuthentication(Authentication auth) {
+        return auth != null && auth.getPrincipal() instanceof UserDetailsAdapter;
     }
 
     /**

@@ -3,17 +3,18 @@ package it.thisone.iotter.ui.groupwidgets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.Column;
-
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
@@ -41,13 +42,13 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 	private boolean selectedOnly;
 	private String visualizationFilterText = "";
 
-	private Collection<GroupWidget> items;
+	private Collection<GroupWidget> groupWidgets;
 
 	public String getI18nLabel(String key) {
 		return getTranslation("user.editor" + "." + key);
 	}
 
-	public GroupWidgetAdapterListing(Collection<GroupWidget> collection, Set<NetworkGroup> groups) {
+	public GroupWidgetAdapterListing() {
 		super();
 
 		grid = new Grid<>();
@@ -56,10 +57,6 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 		grid.setSizeFull();
 		grid.setHeight("400px");
 
-		GroupWidgetContainer container = new GroupWidgetContainer();
-		container.addItems(collection, groups);
-		dataProvider = container.asDataProvider();
-		grid.setDataProvider(dataProvider);
 
 		grid.removeAllColumns();
 
@@ -184,11 +181,40 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 
 	@Override
 	public void setValue(Collection<GroupWidget> collection) {
-		items = collection;
+		groupWidgets = collection;
 	}
 
 	@Override
 	public Collection<GroupWidget> getValue() {
-		return items;
+		return groupWidgets;
 	}
+	
+
+	public void addItems(Collection<GroupWidget> items, Set<NetworkGroup> groups) {
+		
+		List<GroupWidgetAdapter> data = new ArrayList<>();
+		for (GroupWidget item : items) {
+			GroupWidgetAdapter adapter = new GroupWidgetAdapter(item);
+			adapter.setId(item.getId());
+			adapter.setVisualization(item.getName());
+			if (item.getGroup() != null && item.getGroup().getNetwork() != null) {
+				adapter.setNetwork(item.getGroup().getNetwork().getName());
+				adapter.setNetworkId(item.getGroup().getNetwork().getId());
+				if (groups != null) {
+					adapter.setSelected(groups.contains(item.getGroup()));
+				}
+				data.add(adapter);
+			}
+			
+		}
+		
+		data.sort(Comparator.comparing(GroupWidgetAdapter::getNetwork, Comparator.nullsLast(String::compareToIgnoreCase)));
+
+		dataProvider = new ListDataProvider<>(data);
+		grid.setDataProvider(dataProvider);
+
+		
+	}
+
+	
 }
