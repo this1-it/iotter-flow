@@ -1,7 +1,8 @@
 package it.thisone.iotter.ui.common;
 
+import java.util.function.Consumer;
+
 import com.google.common.eventbus.Subscribe;
-//import com.vaadin.flow.component.AbsoluteLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
@@ -29,6 +30,21 @@ public abstract class AbstractWidgetVisualizer extends BaseComponent {
 	// a delay has been used to avoid concurrency on cassandra
 	// such delay is calculated on graphwidget position in page
 	private int position;
+
+	private Consumer<Object> eventBusRegister;
+	private Consumer<Object> eventBusUnregister;
+
+	/**
+	 * Set the event bus registration functions.
+	 * This should be called by subclasses that inject UIEventBus.
+	 *
+	 * @param register consumer to register a subscriber
+	 * @param unregister consumer to unregister a subscriber
+	 */
+	public void setEventBusFunctions(Consumer<Object> register, Consumer<Object> unregister) {
+		this.eventBusRegister = register;
+		this.eventBusUnregister = unregister;
+	}
 	
 	public int getPosition() {
 		return position;
@@ -159,11 +175,15 @@ public abstract class AbstractWidgetVisualizer extends BaseComponent {
 //	}
 	
 	public void register() {
-		UIUtils.getUIEventBus().register(this);
+		if (eventBusRegister != null) {
+			eventBusRegister.accept(this);
+		}
 	}
 
 	public void unregister() {
-		UIUtils.getUIEventBus().unregister(this);
+		if (eventBusUnregister != null) {
+			eventBusUnregister.accept(this);
+		}
 	}
 	
 }

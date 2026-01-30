@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -39,9 +40,10 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
     private UserDetailsAdapter currentUser;
     private Network network;
     private FormLayout formLayout;
-	private Map<String, Component> fields = new HashMap<>(); 
+	private Map<String, Component> fields = new HashMap<>();
 	private List<String> properties = new ArrayList<>();
 	private com.vaadin.flow.component.button.Button cancelButton;
+	private Consumer<Object> eventPoster;
 
     public UserDetailsAdapter getCurrentUser() {
 		return currentUser;
@@ -49,6 +51,16 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 
 	public void setCurrentUser(UserDetailsAdapter currentUser) {
 		this.currentUser = currentUser;
+	}
+
+	/**
+	 * Set the event poster for publishing UI events (e.g., PendingChangesEvent).
+	 * This should be called by subclasses that inject UIEventBus.
+	 *
+	 * @param eventPoster a consumer that posts events to the UI event bus
+	 */
+	public void setEventPoster(Consumer<Object> eventPoster) {
+		this.eventPoster = eventPoster;
 	}
 
 	/**
@@ -217,8 +229,12 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
             beforeCommit();
             getBinder().writeBean(entity);
             afterCommit();
-            UIUtils.getUIEventBus().post(new PendingChangesEvent());
-            
+
+            // Post PendingChangesEvent via injected event poster
+            if (eventPoster != null) {
+                eventPoster.accept(new PendingChangesEvent());
+            }
+
             // Call the saved handler if set
             if (getSavedHandler() != null) {
                 getSavedHandler().onSave(entity);

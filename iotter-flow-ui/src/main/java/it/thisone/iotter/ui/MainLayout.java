@@ -14,6 +14,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 
 import it.thisone.iotter.ui.about.AboutView;
 import it.thisone.iotter.ui.authentication.AccessControlFactory;
+import it.thisone.iotter.ui.users.UsersView;
 
 /**
  * The main layout. Contains the navigation menu.
@@ -32,6 +33,8 @@ public class MainLayout extends FlexLayout implements RouterLayout {
         menu = new Menu();
         menu.addView(AboutView.class, AboutView.VIEW_NAME,
                 VaadinIcon.INFO_CIRCLE.create());
+        menu.addView(UsersView.class, UsersView.VIEW_NAME,
+                VaadinIcon.USERS.create());
 
         add(menu);
     }

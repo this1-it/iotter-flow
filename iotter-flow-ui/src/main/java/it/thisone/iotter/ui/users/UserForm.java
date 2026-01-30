@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.vaadin.flow.components.TabSheet;
 
 import com.vaadin.flow.data.binder.PropertyId;
 import com.vaadin.flow.component.html.Div;
@@ -47,6 +48,7 @@ import it.thisone.iotter.ui.common.fields.CountrySelect;
 import it.thisone.iotter.ui.common.fields.NetworkGroupSelect;
 import it.thisone.iotter.ui.common.fields.NetworkSelect;
 import it.thisone.iotter.ui.common.fields.RoleSelect;
+import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetAdapterListing;
 import it.thisone.iotter.ui.validators.AntiReDoSEmailValidator;
 
@@ -107,21 +109,18 @@ public class UserForm extends AbstractBaseEntityForm<User> {
 
     private GroupWidgetAdapterListing visualizations;
 
-    // Track tabs and pages for deferred initialization
-    private Tabs tabs;
-    private Map<Tab, com.vaadin.flow.component.Component> tabContents;
-    private Div pages;
-
-
     @Autowired
     public UserForm(User entity, Network network, UserDetailsAdapter currentUser, RoleService roleService,
             NetworkService networkService, NetworkGroupService networkGroupService,
-            GroupWidgetService groupWidgetService) {
+            GroupWidgetService groupWidgetService, UIEventBus eventBus) {
         super(entity, User.class, "user.editor", network, currentUser);
         this.roleService = roleService;
         this.networkService = networkService;
         this.networkGroupService = networkGroupService;
         this.groupWidgetService = groupWidgetService;
+
+        // Wire up event bus for PendingChangesEvent
+        setEventPoster(eventBus::post);
 
         if (isCreateBean()) {
             getEntity().setAccountStatus(AccountStatus.ACTIVE);
@@ -130,10 +129,6 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         populateFields();
 
         bindFields();
-
-
-        //applyVisibilityRules(tabs, tabContents, pages);
-
     }
 
 
@@ -239,7 +234,15 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         // Populate role select based on current user's permissions
         List<Role> roles = new ArrayList<>();
         if (getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR)) {
-            roles = roleService.findAll();
+            //roles = roleService.findAll();
+
+            roles.add(roleService.findByName(Constants.ROLE_ADMINISTRATOR));
+            roles.add(roleService.findByName(Constants.ROLE_SUPERUSER));
+            roles.add(roleService.findByName(Constants.ROLE_USER));
+            roles.add(roleService.findByName(Constants.ROLE_PRODUCTION));
+            roles.add(roleService.findByName(Constants.ROLE_FINANCE));
+
+
         } else {
             roles.add(roleService.findByName(Constants.ROLE_ADMINISTRATOR));
             roles.add(roleService.findByName(Constants.ROLE_SUPERUSER));
@@ -371,46 +374,7 @@ public class UserForm extends AbstractBaseEntityForm<User> {
             initializeFields();
         }
 
-        VerticalLayout mainLayout = buildMainLayout();
-
-        tabs = new Tabs();
-        tabs.setWidthFull();
-        pages = new Div();
-        pages.setSizeFull();
-
-        com.vaadin.flow.component.Component login = buildPanel(buildLoginForm());
-        com.vaadin.flow.component.Component user = buildPanel(buildUserForm());
-        com.vaadin.flow.component.Component auth = buildPanel(buildAuthForm());
-
-        tabContents = new LinkedHashMap<>();
-        Tab loginTab = new Tab(getI18nLabel("login_info"));
-        Tab userTab = new Tab(getI18nLabel("user_info"));
-        Tab authTab = new Tab(getI18nLabel("auth_info"));
-        tabContents.put(loginTab, login);
-        tabContents.put(userTab, user);
-        tabContents.put(authTab, auth);
-        
-        
-
-        tabs.add(loginTab, userTab, authTab);
-        tabContents.values().forEach(component -> {
-            component.setVisible(false);
-            pages.add(component);
-        });
-        login.setVisible(true);
-
-        tabs.addSelectedChangeListener(event -> {
-            tabContents.values().forEach(component -> component.setVisible(false));
-            com.vaadin.flow.component.Component selected = tabContents.get(event.getSelectedTab());
-            if (selected != null) {
-                selected.setVisible(true);
-            }
-        });
-
-
- 
-        
-        boolean supervisor = getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR);
+    boolean supervisor = getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR);
         boolean hasVisualization = !supervisor;
 
         if (isCreateBean()) {
@@ -441,18 +405,25 @@ public class UserForm extends AbstractBaseEntityForm<User> {
             }
         }
 
+        VerticalLayout mainLayout = buildMainLayout();
+        com.vaadin.flow.component.Component login = buildPanel(buildLoginForm());
+        com.vaadin.flow.component.Component user = buildPanel(buildUserForm());
+        com.vaadin.flow.component.Component auth = buildPanel(buildAuthForm());
+
+
+ 
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.addTab(getI18nLabel("login_info"),login);
+        tabSheet.addTab(getI18nLabel("user_info"),user);
+        tabSheet.addTab(getI18nLabel("auth_info"),auth);
         if (hasVisualization) {
             visualizations = new GroupWidgetAdapterListing();
-            Tab visualizationsTab = new Tab(getI18nLabel("visualizations_tab"));
-            tabContents.put(visualizationsTab, visualizations);
-            visualizations.setVisible(false);
-            tabs.add(visualizationsTab);
-            pages.add(visualizations);
-
-        }        
+            tabSheet.addTab(getI18nLabel("visualizations_tab"),visualizations);
+        }
         
-        mainLayout.add(tabs, pages);
-        mainLayout.setFlexGrow(1f, pages);
+        mainLayout.add(tabSheet);
+
+ 
         
         return mainLayout;
     }

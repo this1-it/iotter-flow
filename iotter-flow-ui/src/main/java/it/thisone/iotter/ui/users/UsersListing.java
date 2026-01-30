@@ -62,6 +62,7 @@ import it.thisone.iotter.ui.common.EntitySelectedListener;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
+import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.util.PopupNotification;
 
 @Component
@@ -94,6 +95,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private NetworkGroupService networkGroupService;
 	@Autowired
 	private GroupWidgetService groupWidgetService;
+	@Autowired
+	private UIEventBus eventBus;
 	@Autowired
 	private ObjectProvider<UserForm> userFormProvider;
 
@@ -157,19 +160,11 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 	@Override
 	public AbstractBaseEntityForm<User> getEditor(User item) {
-       /*
-	 Spring 4.3+ automatically autowires a single constructor without needing @Autowired. Vaadin/Spring's ObjectProvider uses this constructor injection implicitly without
-  annotations. If multiple constructors exist, @Autowired is required to specify which one to use.
-
-  
-	   */
-
-                 UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
-                () -> new IllegalStateException("User must be authenticated to edit users"));
-
+		UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
+				() -> new IllegalStateException("User must be authenticated to edit users"));
 
 		return userFormProvider.getObject(item, network, currentUser, roleService, networkService,
-				networkGroupService, groupWidgetService);
+				networkGroupService, groupWidgetService, eventBus);
 	}
 
 	@Override
@@ -258,10 +253,11 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 		// Create username filter TextField
 		TextField username = new TextField();
+		
 		username.setPlaceholder("Filter...");
 		username.setWidthFull();
 		username.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-		username.setValueChangeMode(ValueChangeMode.LAZY);
+
 
 		// Add TextField to the username column header cell
 		filterRow.getCell(grid.getColumnByKey(USERNAME)).setComponent(username);
@@ -273,13 +269,14 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			setFilter(currentFilter);
 			refreshCurrentPage();
 		});
+		username.setValueChangeMode(ValueChangeMode.EAGER);
 
 		// Create email filter TextField
 		TextField email = new TextField();
 		email.setPlaceholder("Filter...");
 		email.setWidthFull();
 		email.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-		email.setValueChangeMode(ValueChangeMode.LAZY);
+
 
 		// Add TextField to the email column header cell
 		filterRow.getCell(grid.getColumnByKey(EMAIL)).setComponent(email);
@@ -291,14 +288,15 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			setFilter(currentFilter);
 			refreshCurrentPage();
 		});
+		email.setValueChangeMode(ValueChangeMode.EAGER);
 
 		// Create owner filter TextField (only if owner column is visible)
 		if (permissions.isViewAllMode()) {
 			TextField owner = new TextField();
+
 			owner.setPlaceholder("Filter...");
 			owner.setWidthFull();
 			owner.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-			owner.setValueChangeMode(ValueChangeMode.LAZY);
 
 			// Add TextField to the owner column header cell
 			filterRow.getCell(grid.getColumnByKey(OWNER)).setComponent(owner);
@@ -310,6 +308,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 				setFilter(currentFilter);
 				refreshCurrentPage();
 			});
+			owner.setValueChangeMode(ValueChangeMode.EAGER);
+
 		}
 
 		// Create AccountStatus ComboBox filter

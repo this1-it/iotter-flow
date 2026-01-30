@@ -1,5 +1,6 @@
 package it.thisone.iotter.ui.common;
 
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
@@ -34,6 +35,17 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 	private Button cancelButton;
 
 	private boolean pendingChanges;
+	private Consumer<Object> eventPoster;
+
+	/**
+	 * Set the event poster for publishing UI events (e.g., PendingChangesEvent).
+	 * This should be called by subclasses that inject UIEventBus.
+	 *
+	 * @param eventPoster a consumer that posts events to the UI event bus
+	 */
+	public void setEventPoster(Consumer<Object> eventPoster) {
+		this.eventPoster = eventPoster;
+	}
 	
 
 	public BaseEditor(String name) {
@@ -96,10 +108,9 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 		button.getElement()
 	      .setProperty("title", getI18nLabel("save_button"));
 		button.addClickListener(event -> {
- {
-				onSave();
-				UIUtils.getUIEventBus().post(new PendingChangesEvent());
-				//fireEvent(new EditorSavedEvent(BaseEditor.this, getItem()));
+			onSave();
+			if (eventPoster != null) {
+				eventPoster.accept(new PendingChangesEvent());
 			}
 		});
 		return button;

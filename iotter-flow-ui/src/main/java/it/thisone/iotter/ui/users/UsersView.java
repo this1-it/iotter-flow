@@ -20,7 +20,7 @@ public class UsersView extends BaseView {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final String NAME = "users";
+	public static final String VIEW_NAME = "users";
 
 	private final ObjectProvider<UsersListing> listingProvider;
 	private final NetworkService networkService;
@@ -33,7 +33,7 @@ public class UsersView extends BaseView {
 		this.networkService = networkService;
 		this.authenticatedUser = authenticatedUser;
 		setSizeFull();
-		addClassName(NAME);
+		addClassName(VIEW_NAME);
 	}
 
 	@Override
@@ -56,6 +56,6 @@ public class UsersView extends BaseView {
 
 	@Override
 	public String getI18nKey() {
-		return NAME;
+		return VIEW_NAME;
 	}
 }

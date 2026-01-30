@@ -64,11 +64,12 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 	 * @param password
 	 */
 	public static UserDetailsAdapter authenticate(Object principal, Object credentials, boolean remember) {
-		UsernamePasswordAuthenticationToken request = new UsernamePasswordAuthenticationToken(principal, credentials);
-		Authentication result = ((IMainUI) UI.getCurrent()).getServiceFactory().getAuthManager().authenticate(request);
-		UserDetailsAdapter user = (UserDetailsAdapter) result.getPrincipal();
+		throw new UnsupportedOperationException("vaadin8 legacy");
+		// UsernamePasswordAuthenticationToken request = new UsernamePasswordAuthenticationToken(principal, credentials);
+		// Authentication result = ((IMainUI) UI.getCurrent()).getServiceFactory().getAuthManager().authenticate(request);
+		// UserDetailsAdapter user = (UserDetailsAdapter) result.getPrincipal();
 
-		return user;
+		// return user;
 	}
 
 
@@ -125,41 +126,44 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 	}
 
 	public static String getDisplayURL(String action, String type, String mode, String id) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(((IMainUI) UI.getCurrent()).getServerUrl());
-		sb.append("#!");
-		sb.append(action);
-		sb.append("/");
-		sb.append(VIEW_TYPE_PARAM);
-		sb.append("=");
-		sb.append(type);
-		if (mode != null) {
-			sb.append(PARAM_SEPARATOR);
-			sb.append(VIEW_MODE_PARAM);
-			sb.append("=");
-			sb.append(mode);
-		}
+throw new UnsupportedOperationException("vaadin8 legacy");
 
-		sb.append(PARAM_SEPARATOR);
-		sb.append(KEY_PARAM);
-		sb.append("=");
-		sb.append(id);
+		// StringBuilder sb = new StringBuilder();
+		// sb.append(((IMainUI) UI.getCurrent()).getServerUrl());
+		// sb.append("#!");
+		// sb.append(action);
+		// sb.append("/");
+		// sb.append(VIEW_TYPE_PARAM);
+		// sb.append("=");
+		// sb.append(type);
+		// if (mode != null) {
+		// 	sb.append(PARAM_SEPARATOR);
+		// 	sb.append(VIEW_MODE_PARAM);
+		// 	sb.append("=");
+		// 	sb.append(mode);
+		// }
 
-		return sb.toString();
+		// sb.append(PARAM_SEPARATOR);
+		// sb.append(KEY_PARAM);
+		// sb.append("=");
+		// sb.append(id);
+
+		// return sb.toString();
 	}
 
 	@Deprecated
 	public static String localize(String key, String defaultValue) {
-
-		if (UI.getCurrent() == null) {
-			return defaultValue;
-		}
-		return ((IMainUI) UI.getCurrent()).localize(key);
+throw new UnsupportedOperationException("vaadin8 legacy");
+		// if (UI.getCurrent() == null) {
+		// 	return defaultValue;
+		// }
+		// return ((IMainUI) UI.getCurrent()).localize(key);
 	}
 	
 	@Deprecated
 	public static String localize(String key) {
-		return key;
+		throw new UnsupportedOperationException("vaadin8 legacy");
+		//return key;
 		// if (UI.getCurrent() == null) {
 		// 	return key;
 		// }
@@ -168,86 +172,102 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 	@Deprecated
 	public static String localize(String code, Object[] args, String defaultMessage) {
-		return ((IMainUI) UI.getCurrent()).localize(code, args, defaultMessage);
+		// return ((IMainUI) UI.getCurrent()).localize(code, args, defaultMessage);
+		throw new UnsupportedOperationException("vaadin8 legacy");
 	}
 
 	@Deprecated
 	public static String messageBundle(String code) {
-		return messageBundle(code, null, UI.getCurrent().getLocale());
+		//return messageBundle(code, null, UI.getCurrent().getLocale());
+		throw new UnsupportedOperationException("vaadin8 legacy");
 	}
 
 	@Deprecated
 	public static String messageBundle(String code, String defaultMessage, Locale locale) {
-		if (UI.getCurrent() == null) {
-			return defaultMessage;
-		}
-		IMainUI ui = (IMainUI) UI.getCurrent();
-		DatabaseMessageSource messageSource = ui.getDatabaseMessageSource();
-		if (messageSource == null) {
-			return defaultMessage != null ? defaultMessage : code;
-		}
-		return messageSource.getDatabaseMessage(code, defaultMessage, locale);
+		throw new UnsupportedOperationException("vaadin8 legacy");
+		// if (UI.getCurrent() == null) {
+		// 	return defaultMessage;
+		// }
+		// IMainUI ui = (IMainUI) UI.getCurrent();
+		// DatabaseMessageSource messageSource = ui.getDatabaseMessageSource();
+		// if (messageSource == null) {
+		// 	return defaultMessage != null ? defaultMessage : code;
+		// }
+		// return messageSource.getDatabaseMessage(code, defaultMessage, locale);
 	}
 
 	@Deprecated
 	public static boolean hasRole(String role) {
-		return true;
-		//return ((IMainUI) UI.getCurrent()).hasRole(role);
+throw new UnsupportedOperationException("vaadin8 legacy");
 	}
 
 	@Deprecated
 	public static boolean hasPermission(EntityPermission permission) {
-		return true;
-		//return ((IMainUI) UI.getCurrent()).hasPermission(permission);
+throw new UnsupportedOperationException("vaadin8 legacy");
 	}
 
 	@Deprecated
 	public static UserDetailsAdapter getUserDetails() {
+		throw new UnsupportedOperationException("vaadin8 legacy");
 		//UserDetailsAdapter details = ((IMainUI) UI.getCurrent()).getUserDetails();
-		UserDetailsAdapter details = null;
-		if (details == null) {
-			User anonymous = new User();
-			anonymous.setUsername("anonymous");
-			anonymous.setOwner("anonymous");
-			details = new UserDetailsAdapter(anonymous);
-		}
-		return details;
+		// UserDetailsAdapter details = null;
+		// if (details == null) {
+		// 	User anonymous = new User();
+		// 	anonymous.setUsername("anonymous");
+		// 	anonymous.setOwner("anonymous");
+		// 	details = new UserDetailsAdapter(anonymous);
+		// }
+		// return details;
 	}
 
 	@Deprecated
 	public static EntityManager getEntityManager() {
-		return ((IMainUI) UI.getCurrent()).getEntityManager();
+		throw new UnsupportedOperationException("vaadin8 legacy");
 	}
 
 	@Deprecated
 	public static ServiceFactory getServiceFactory() {
-		return ((IMainUI) UI.getCurrent()).getServiceFactory();
+		//return ((IMainUI) UI.getCurrent()).getServiceFactory();
+		throw new UnsupportedOperationException("vaadin8 legacy");
 	}
 
 	@Deprecated
 	public static CassandraService getCassandraService() {
-		return ((IMainUI) UI.getCurrent()).getCassandraService();
+		//return ((IMainUI) UI.getCurrent()).getCassandraService();
+		throw new UnsupportedOperationException("vaadin8 legacy");
 	}
 
+	/**
+	 * @deprecated This method is no longer supported in Vaadin Flow.
+	 *             Use @Autowired UIEventBus in Spring components instead.
+	 * @throws UnsupportedOperationException always
+	 */
 	@Deprecated
 	public static EventBusWrapper getUIEventBus() {
-		return ((IMainUI) UI.getCurrent()).getUIEventBus();
+		throw new UnsupportedOperationException(
+				"UIUtils.getUIEventBus() is not supported in Vaadin Flow. " +
+				"Use @Autowired UIEventBus instead.");
 	}
 
 	@Deprecated
 	public static void trace(TracingAction action, String message) {
-		String username = getUserDetails().getUsername();
-		String administrator = getUserDetails().getTenant();
-		String network = getUserDetails().getNetwork();
-		trace(action, username, administrator, network, null, message);
+				throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// String username = getUserDetails().getUsername();
+		// String administrator = getUserDetails().getTenant();
+		// String network = getUserDetails().getNetwork();
+		// trace(action, username, administrator, network, null, message);
 	}
 
 	@Deprecated
 	public static void trace(TracingAction action, String username, String administrator, String network, String device,
 			String message) {
-		logger.debug("{} {} {} {} {}", action, username, administrator, network, message);
-		((IMainUI) UI.getCurrent()).getServiceFactory().getTracingService().trace(action, username, administrator,
-				network, device, message);
+
+								throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// logger.debug("{} {} {} {} {}", action, username, administrator, network, message);
+		// ((IMainUI) UI.getCurrent()).getServiceFactory().getTracingService().trace(action, username, administrator,
+		// 		network, device, message);
 	}
 
 
@@ -257,27 +277,31 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 	@Deprecated
 	public static String googleMapApiKey() {
-		if (((IMainUI) UI.getCurrent()).getServerName().equals("localhost")) {
-			return "AIzaSyCeFtOnsiE1OMOy7gTTQ6Leoip4IXh4lX8";
-		}
-		String apiKey = "";
-		try {
-			Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
-			apiKey = properties.getProperty("googlemap.apikey");
-		} catch (Exception e) {
-			logger.error("unable to retrieve googlemap.apikey", e);
-		}
-		return apiKey;
+						throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// if (((IMainUI) UI.getCurrent()).getServerName().equals("localhost")) {
+		// 	return "AIzaSyCeFtOnsiE1OMOy7gTTQ6Leoip4IXh4lX8";
+		// }
+		// String apiKey = "";
+		// try {
+		// 	Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
+		// 	apiKey = properties.getProperty("googlemap.apikey");
+		// } catch (Exception e) {
+		// 	logger.error("unable to retrieve googlemap.apikey", e);
+		// }
+		// return apiKey;
 	}
 
 	@Deprecated
 	public static String portalName() {
-		String value = "";
-		Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
-		if (properties != null) {
-			value = properties.getProperty("portal_name");
-		}
-		return value;
+						throw new UnsupportedOperationException("vaadin8 legacy");
+
+	// 	String value = "";
+	// 	Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
+	// 	if (properties != null) {
+	// 		value = properties.getProperty("portal_name");
+	// 	}
+	// 	return value;
 	}
 
 
@@ -293,7 +317,9 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 
 	public static String getActivationURL(String action, String user, String token) {
-		return getActivationURL(((IMainUI) UI.getCurrent()).getServerUrl(), action, user, token);
+				throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// return getActivationURL(((IMainUI) UI.getCurrent()).getServerUrl(), action, user, token);
 	}
 
 	public static String getActivationURL(String url, String action, String user, String token) {
@@ -313,48 +339,60 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 	}
 
 	public static String getAutoLoginURL(String action, String user, String token) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(((IMainUI) UI.getCurrent()).getServerUrl());
-		sb.append("#!");
-		sb.append("login");
-		sb.append("/");
-		sb.append(USERNAME_PARAM);
-		sb.append("=");
-		sb.append(EncryptUtils.urlEncode(user));
-		sb.append(PARAM_SEPARATOR);
-		sb.append(TOKEN_PARAM);
-		sb.append("=");
-		sb.append(token);
-		sb.append(PARAM_SEPARATOR);
-		sb.append(ACTION_PARAM);
-		sb.append("=");
-		sb.append(action);
-		return sb.toString();
+				throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// StringBuilder sb = new StringBuilder();
+		// sb.append(((IMainUI) UI.getCurrent()).getServerUrl());
+		// sb.append("#!");
+		// sb.append("login");
+		// sb.append("/");
+		// sb.append(USERNAME_PARAM);
+		// sb.append("=");
+		// sb.append(EncryptUtils.urlEncode(user));
+		// sb.append(PARAM_SEPARATOR);
+		// sb.append(TOKEN_PARAM);
+		// sb.append("=");
+		// sb.append(token);
+		// sb.append(PARAM_SEPARATOR);
+		// sb.append(ACTION_PARAM);
+		// sb.append("=");
+		// sb.append(action);
+		// return sb.toString();
 	}
 
 	public static Properties getAppProperties() {
-		Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
-		return properties;
+				throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// Properties properties = ((IMainUI) UI.getCurrent()).getAppProperties();
+		// return properties;
 	}
 
 	@Deprecated
 	public static TimeZone getBrowserTimeZone() {
-		return ((IMainUI) UI.getCurrent()).getTimeZone();
+						throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// return ((IMainUI) UI.getCurrent()).getTimeZone();
 	}
 
 	@Deprecated
 	public static GeoLocation getGeoLocation() {
-		return ((IMainUI) UI.getCurrent()).getGeoLocation();
+						throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// return ((IMainUI) UI.getCurrent()).getGeoLocation();
 	}
 
 	@Deprecated
 	public static IUiFactory getUiFactory() {
-		return ((IMainUI) UI.getCurrent()).getUiFactory();
+						throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// return ((IMainUI) UI.getCurrent()).getUiFactory();
 	}
 
 	@Deprecated
 	public static void startWidgetRefresher() {
-		((IMainUI) UI.getCurrent()).startWidgetRefresher();
+						throw new UnsupportedOperationException("vaadin8 legacy");
+
+		// ((IMainUI) UI.getCurrent()).startWidgetRefresher();
 	}
 
 

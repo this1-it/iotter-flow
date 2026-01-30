@@ -16,13 +16,7 @@ public class RoleSelect extends ComboBox<Role> {
 	 */
 	private static final long serialVersionUID = 1L;
 
-    /**
-     * Default constructor which populates the select with existing roles.
-     */
-    // public RoleSelect() {
-    //     super("", retrieveAllRoles());
-    //     this.setItemLabelGenerator(Role::getName);
-    // }
+
     
     public RoleSelect(List<Role> roles) {
         super("", roles);
