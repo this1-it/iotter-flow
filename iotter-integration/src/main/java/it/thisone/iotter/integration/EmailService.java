@@ -326,8 +326,8 @@ public class EmailService {
 		// Ensure the message is finalized & Message-ID is set 
 		String messageId = message.getMessageID(); 
 
-		mailSender.send(message);
-		logger.debug("sending Message-ID {}",messageId);
+		// mailSender.send(message);
+		// logger.debug("sending Message-ID {}",messageId);
 		return messageId;
 		
 		

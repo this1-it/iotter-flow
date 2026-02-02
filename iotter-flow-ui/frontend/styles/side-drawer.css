@@ -1,0 +1,58 @@
+/* Target del dialog overlay */
+:host([theme~="side-drawer"])::part(overlay) {
+
+  outline: 4px solid red;  
+  position: fixed;
+  top: 0;
+  right: 0;
+
+  height: 100vh;
+  width: 360px;
+  max-width: 90vw;
+
+  margin: 0;
+  border-radius: 0;
+
+  background: var(--lumo-base-color);
+  box-shadow: var(--lumo-box-shadow-l);
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+:host([theme~="side-drawer"]) .side-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: var(--lumo-space-m);
+  border-bottom: 1px solid var(--lumo-contrast-10pct);
+
+  background-color: var(--lumo-base-color);
+}
+
+:host([theme~="side-drawer"]) .side-drawer-title {
+  font-size: var(--lumo-font-size-m);
+  font-weight: 600;
+  color: var(--lumo-header-text-color);
+}
+
+/* Bottone close */
+:host([theme~="side-drawer"]) .side-drawer-close {
+  background: transparent;
+  box-shadow: none;
+  padding: var(--lumo-space-xs);
+  color: var(--lumo-secondary-text-color);
+}
+
+:host([theme~="side-drawer"]) .side-drawer-close:hover {
+  color: var(--lumo-primary-text-color);
+}
+
+/* CONTENT */
+:host([theme~="side-drawer"]) .side-drawer-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--lumo-space-m);
+}

@@ -96,7 +96,7 @@ public abstract class CassandraQueryBuilder implements CassandraConstants {
 	}
 
 	public static SimpleStatement simpleStatement(String query, ConsistencyLevel consistency, Object... values) {
-		logger.error(query);
+		//logger.error(query);
 		SimpleStatement stmt;
 		if (values == null || values.length == 0) {
 			stmt = SimpleStatement.newInstance(query);

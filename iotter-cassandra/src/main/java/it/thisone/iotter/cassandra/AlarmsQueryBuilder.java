@@ -157,10 +157,10 @@ public class AlarmsQueryBuilder extends CassandraQueryBuilder {
 		values.add(item.getValue());
 		values.add(item.getOperator());
 		values.add(item.getMembers());
-		values.add(item.getTimestamp());
+		values.add(item.getTimestamp().toInstant());
 		values.add(item.getSerial());
 		values.add(item.getKey());
-		values.add(item.getCreated());
+		values.add(item.getCreated().toInstant());
 		if (ttl > 0) {
 			query.append(" USING TTL ?");
 			values.add(ttl);
