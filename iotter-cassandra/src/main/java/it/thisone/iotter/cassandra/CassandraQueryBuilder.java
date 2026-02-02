@@ -96,17 +96,34 @@ public abstract class CassandraQueryBuilder implements CassandraConstants {
 	}
 
 	public static SimpleStatement simpleStatement(String query, ConsistencyLevel consistency, Object... values) {
-		//logger.error(query);
+		// Normalize legacy java.util.Date bindings to Instant for Cassandra timestamp columns.
+		Object[] normalizedValues = normalizeDateValues(values);
 		SimpleStatement stmt;
-		if (values == null || values.length == 0) {
+		if (normalizedValues == null || normalizedValues.length == 0) {
 			stmt = SimpleStatement.newInstance(query);
 		} else {
-			stmt = SimpleStatement.newInstance(query, values);
+			stmt = SimpleStatement.newInstance(query, normalizedValues);
 		}
 		if (consistency == null) {
 			return stmt;
 		}
 		return stmt.setConsistencyLevel(consistency);
+	}
+
+	private static Object[] normalizeDateValues(Object[] values) {
+		if (values == null) {
+			return null;
+		}
+		Object[] normalized = new Object[values.length];
+		for (int i = 0; i < values.length; i++) {
+			Object value = values[i];
+			if (value instanceof Date) {
+				normalized[i] = ((Date) value).toInstant();
+			} else {
+				normalized[i] = value;
+			}
+		}
+		return normalized;
 	}
 
 }

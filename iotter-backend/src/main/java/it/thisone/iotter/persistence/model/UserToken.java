@@ -13,7 +13,7 @@ import javax.persistence.UniqueConstraint;
 
 import org.eclipse.persistence.annotations.Index;
 import org.eclipse.persistence.annotations.Indexes;
-import org.hibernate.validator.constraints.NotEmpty;
+import javax.validation.constraints.NotEmpty;
 
 @Cacheable(false)
 @Entity

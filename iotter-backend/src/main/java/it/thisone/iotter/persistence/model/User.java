@@ -22,7 +22,7 @@ import javax.persistence.TemporalType;
 
 import org.eclipse.persistence.annotations.Index;
 import org.eclipse.persistence.annotations.Indexes;
-import org.hibernate.validator.constraints.NotEmpty;
+import javax.validation.constraints.NotEmpty;
 
 import it.thisone.iotter.enums.AccountStatus;
 import it.thisone.iotter.enums.AreasOfInterest;

@@ -6,7 +6,7 @@ import javax.validation.constraints.Min;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.validator.constraints.NotEmpty;
+import javax.validation.constraints.NotEmpty;
 
 @MappedSuperclass
 public abstract class BaseType extends BaseEntity {
