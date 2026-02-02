@@ -112,8 +112,8 @@ public class UserForm extends AbstractBaseEntityForm<User> {
     @Autowired
     public UserForm(User entity, Network network, UserDetailsAdapter currentUser, RoleService roleService,
             NetworkService networkService, NetworkGroupService networkGroupService,
-            GroupWidgetService groupWidgetService, UIEventBus eventBus) {
-        super(entity, User.class, "user.editor", network, currentUser);
+            GroupWidgetService groupWidgetService, UIEventBus eventBus, boolean readOnly) {
+        super(entity, User.class, "user.editor", network, currentUser, readOnly);
         this.roleService = roleService;
         this.networkService = networkService;
         this.networkGroupService = networkGroupService;
@@ -141,87 +141,95 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         username.setWidthFull();
         username.setRequiredIndicatorVisible(true);
         username.setLabel(getI18nLabel("username"));
-        if (!isCreateBean()) {
-            username.setReadOnly(true);
-        }
- 
+        username.setReadOnly(!isCreateBean() || isReadOnly());
+
         accountStatus = new AccountStatusSelect();
         accountStatus.setWidthFull();
         accountStatus.setRequiredIndicatorVisible(true);
         accountStatus.setLabel(getI18nLabel("accountStatus"));
+        accountStatus.setReadOnly(isReadOnly());
 
         originalPassword = new PasswordField();
         originalPassword.setWidthFull();
         originalPassword.setRequiredIndicatorVisible(isCreateBean());
-        originalPassword.setLabel(getI18nLabel("originalPassword"));
+        originalPassword.setLabel(getI18nLabel("original_password"));
+        originalPassword.setReadOnly(isReadOnly());
 
         verifiedPassword = new PasswordField();
         verifiedPassword.setWidthFull();
         verifiedPassword.setRequiredIndicatorVisible(isCreateBean());
-        verifiedPassword.setLabel(getI18nLabel("verifiedPassword"));
+        verifiedPassword.setLabel(getI18nLabel("verified_password"));
+        verifiedPassword.setReadOnly(isReadOnly());
 
         email = new TextField();
         email.setWidthFull();
         email.setLabel(getI18nLabel("email"));
+        email.setReadOnly(isReadOnly());
 
         firstName = new TextField();
         firstName.setWidthFull();
         firstName.setRequiredIndicatorVisible(true);
         firstName.setLabel(getI18nLabel("firstName"));
+        firstName.setReadOnly(isReadOnly());
 
         lastName = new TextField();
         lastName.setWidthFull();
         lastName.setRequiredIndicatorVisible(true);
         lastName.setLabel(getI18nLabel("lastName"));
+        lastName.setReadOnly(isReadOnly());
 
         company = new TextField();
         company.setWidthFull();
         company.setLabel(getI18nLabel("company"));
+        company.setReadOnly(isReadOnly());
 
         phone = new TextField();
         phone.setWidthFull();
         phone.setLabel(getI18nLabel("phone"));
+        phone.setReadOnly(isReadOnly());
 
         street = new TextField();
         street.setWidthFull();
         street.setLabel(getI18nLabel("street"));
+        street.setReadOnly(isReadOnly());
 
         city = new TextField();
         city.setWidthFull();
         city.setLabel(getI18nLabel("city"));
+        city.setReadOnly(isReadOnly());
 
         zip = new TextField();
         zip.setWidthFull();
         zip.setLabel(getI18nLabel("zip"));
+        zip.setReadOnly(isReadOnly());
 
         country = new CountrySelect();
         country.setWidthFull();
         country.setLabel(getI18nLabel("country"));
+        country.setReadOnly(isReadOnly());
 
         // Create empty selects - will be populated in initializeServiceDependentFields()
         role = new RoleSelect(new ArrayList<>());
         role.setWidthFull();
         role.setRequiredIndicatorVisible(true);
         role.setLabel(getI18nLabel("role"));
-        if (!isCreateBean()) {
-            role.setReadOnly(true);
-        }
+        role.setReadOnly(!isCreateBean() || isReadOnly());
 
         networkSelect = new NetworkSelect(new ArrayList<>());
         networkSelect.setWidthFull();
         networkSelect.setLabel(getI18nLabel("network"));
+        networkSelect.setReadOnly(isReadOnly());
 
         groups = new NetworkGroupSelect(new ArrayList<>(), true);
         groups.setWidthFull();
+        groups.setEnabled(!isReadOnly());
 
         exclusiveGroups = new NetworkGroupSelect(new ArrayList<>(), true);
         exclusiveGroups.setWidthFull();
+        exclusiveGroups.setEnabled(!isReadOnly());
 
         groups.setVisible(Constants.USE_GROUPS);
         exclusiveGroups.setVisible(Constants.USE_GROUPS);
-
-
-
     }
 
     /**
@@ -418,6 +426,7 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         tabSheet.addTab(getI18nLabel("auth_info"),auth);
         if (hasVisualization) {
             visualizations = new GroupWidgetAdapterListing();
+            visualizations.setEnabled(!isReadOnly());
             tabSheet.addTab(getI18nLabel("visualizations_tab"),visualizations);
         }
         
@@ -577,10 +586,6 @@ public class UserForm extends AbstractBaseEntityForm<User> {
 
     }
 
-    @Override
-    public String getWindowStyle() {
-        return "user-editor";
-    }
 
     @Override
     protected void beforeCommit() throws EditorConstraintException {
@@ -599,9 +604,6 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         }
     }
 
-    @Override
-    public float[] getWindowDimension() {
-        return UiConstants.L_DIMENSION;
-    }
+
 
 }

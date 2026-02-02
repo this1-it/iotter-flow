@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.StringJoiner;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
@@ -12,10 +15,13 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
 
+import it.thisone.iotter.config.Constants;
+
 public abstract class CassandraQueryBuilder implements CassandraConstants {
 
 	public static final ConsistencyLevel DELETE_CONSISTENCY_LEVEL = ConsistencyLevel.LOCAL_QUORUM;
-	
+		private static Logger logger = LoggerFactory.getLogger(CassandraQueryBuilder.class);
+
 
 //	public static Statement deleteIndexes(String uid) {
 //		Delete stmt = QueryBuilder.delete().from(CassandraClient.getKeySpace(), MEASURES_IDX_TMP_CF);
@@ -90,6 +96,7 @@ public abstract class CassandraQueryBuilder implements CassandraConstants {
 	}
 
 	public static SimpleStatement simpleStatement(String query, ConsistencyLevel consistency, Object... values) {
+		logger.error(query);
 		SimpleStatement stmt;
 		if (values == null || values.length == 0) {
 			stmt = SimpleStatement.newInstance(query);

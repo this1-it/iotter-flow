@@ -128,6 +128,7 @@ public class CassandraAlarms extends AlarmsQueryBuilder implements Serializable 
 	public void updateAlarm(FeedAlarm item) {
 		try {
 			Statement stmt = prepareUpdateAlarm(item);
+		
 			client.executeWithRetry(stmt);
 			;
 		} catch (DriverException e) {

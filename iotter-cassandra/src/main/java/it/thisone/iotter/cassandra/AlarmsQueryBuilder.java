@@ -59,9 +59,9 @@ public class AlarmsQueryBuilder extends CassandraQueryBuilder {
 
 	public static FeedAlarm fillAlarm(Row row) {
 		FeedAlarm item = new FeedAlarm(row.getString(SN), row.getString(KEY));
-		item.setActive(row.getBool(ACTIVE));
-		item.setDelayed(row.getBool(DELAY));
-		item.setRepeated(row.getBool(REPEAT));
+		item.setActive(row.getBoolean(ACTIVE));
+		item.setDelayed(row.getBoolean(DELAY));
+		item.setRepeated(row.getBoolean(REPEAT));
 		item.setValue(row.getFloat(VAL));
 		item.setThreshold(row.getFloat(THRESHOLD));
 		item.setStatus(row.getString(STATUS));
@@ -84,17 +84,17 @@ public class AlarmsQueryBuilder extends CassandraQueryBuilder {
 		values.add(item.isDelayed());
 		values.add(item.isRepeated());
 
-		if (item.getTimestamp() != null) {
+		// Capture values once to avoid race condition between null check and add
+		Date timestamp = item.getTimestamp();
+		Date updated = item.getUpdated();
+
+		if (timestamp != null) {
 			query.append(", ").append(TS).append(" = ?");
-			values.add(item.getTimestamp());
-		} else {
-			query.append(", ").append(TS).append(" = null");
+			values.add(timestamp.toInstant());
 		}
-		if (item.getUpdated() != null) {
+		if (updated != null) {
 			query.append(", ").append(UPDATED).append(" = ?");
-			values.add(item.getUpdated());
-		} else {
-			query.append(", ").append(UPDATED).append(" = null");
+			values.add(updated.toInstant());
 		}
 
 		query.append(" WHERE ").append(SN).append(" = ? AND ").append(KEY).append(" = ?");

@@ -15,6 +15,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
+import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.security.Permissions;
 
 public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends BaseComponent {
@@ -31,11 +32,23 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 	private final HorizontalLayout buttonsLayout;
 	private Component selectable;
 	private AbstractDataProvider<T, ?> dataProvider;
-	private int maxSize = 0;
 	private long totalSize = -1;
-	private final Permissions permissions;
+	private Permissions permissions;
 
-	public AbstractBaseEntityListing(Class<T> itemType, String name, String id, boolean readOnly, Permissions permissions) {
+	public Permissions getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(Permissions permissions) {
+		this.permissions = permissions;
+		if (this.permissions != null && this.permissions.isViewAllMode()) {
+			this.permissions.setViewMode(true);
+		}
+
+		
+	}
+
+	public AbstractBaseEntityListing(Class<T> itemType, String name, String id, boolean readOnly) {
 		super(name, id);
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
@@ -44,10 +57,7 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		editorLayout = new VerticalLayout();
 		editorLayout.setSizeFull();
 		//setSizeFull();
-		this.permissions = permissions;
-		if (this.permissions != null && this.permissions.isViewAllMode()) {
-			this.permissions.setViewMode(true);
-		}
+
 
 		buttonsLayout = new HorizontalLayout();
 		//buttonsLayout.setStyleName(UIUtils.BUTTONS_STYLE);
@@ -60,9 +70,7 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		//setCompositionRoot(mainLayout);
 	}
 
-	public abstract AbstractBaseEntityForm<T> getEditor(T item);
-
-	public abstract AbstractBaseEntityDetails<T> getDetails(T item, boolean remove);
+	public abstract AbstractBaseEntityForm<User> getEditor(T item, boolean readOnly);
 
 	public VerticalLayout getMainLayout() {
 		return mainLayout;
@@ -142,10 +150,7 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		this.totalSize = totalSize;
 	}
 
-	public void setMaxSize(int maxSize) {
-		this.maxSize = maxSize;
-		enableButtons(null);
-	}
+
 
 	public void enableButtons(T item) {
 		boolean enabled = item != null;

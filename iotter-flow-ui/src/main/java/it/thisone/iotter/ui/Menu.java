@@ -12,11 +12,10 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinServletService;
 import com.vaadin.flow.server.VaadinSession;
-
-import it.thisone.iotter.ui.authentication.AccessControlFactory;
 
 public class Menu extends FlexLayout {
 
@@ -66,8 +65,10 @@ public class Menu extends FlexLayout {
         // logout menu item
         Button logoutButton = new Button(getTranslation("menu.logout"),
                 VaadinIcon.SIGN_OUT.create());
-        logoutButton.addClickListener(event -> AccessControlFactory
-                .getInstance().createAccessControl().signOut());
+        logoutButton.addClickListener(event -> {
+            VaadinSession.getCurrent().getSession().invalidate();
+            UI.getCurrent().navigate("login");
+        });
 
         logoutButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         add(logoutButton);

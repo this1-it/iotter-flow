@@ -42,7 +42,19 @@ public class GroupWidgetAdapterListing extends Composite<VerticalLayout> impleme
 	private boolean selectedOnly;
 	private String visualizationFilterText = "";
 
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+		grid.setEnabled(enabled);
+	}
+
+
 	private Collection<GroupWidget> groupWidgets;
+
+	private boolean enabled;
 
 	public String getI18nLabel(String key) {
 		return getTranslation("user.editor" + "." + key);

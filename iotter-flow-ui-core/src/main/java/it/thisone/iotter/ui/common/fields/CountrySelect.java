@@ -121,20 +121,12 @@ public class CountrySelect extends ComboBox<String> {
 	}
 
 	public CountrySelect() {
-		super(UIUtils.localize("basic.combobox.country"));
-		initialize();
-	}
 
-	private void initialize() {
-		// Set items and caption generator
+
+
 		setItems(getCountryCodes());
 		setItemLabelGenerator(code -> countryNames.getOrDefault(code, code));
-		
-		// Set a reasonable width
 		setWidth(16, Unit.EM);
-		// Disallow null selections
-//		setEmptySelectionAllowed(false);
-//		setTextInputAllowed(true);
-//		setPageLength(10);
 	}
 }
+

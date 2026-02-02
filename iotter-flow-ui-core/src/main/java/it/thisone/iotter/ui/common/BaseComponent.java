@@ -74,13 +74,9 @@ public abstract class BaseComponent extends Composite<Div> implements UiConstant
 	 * @param ratio
 	 * @return
 	 */
-	public static Dialog createDialog(String label, Component content, float[] dimension, String style) {
+	public static Dialog createDialog(String label, Component content) {
 		SideDrawer drawer = new SideDrawer();
 		drawer.setDrawerContent(content);
-		drawer.applyDimension(dimension);
-		if (style != null && !style.trim().isEmpty()) {
-			//drawer.addClassName(style);
-		}
 		return drawer;
 	}
 	

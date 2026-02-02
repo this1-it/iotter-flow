@@ -49,19 +49,13 @@ import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.persistence.service.RoleService;
 import it.thisone.iotter.persistence.service.UserService;
-
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.security.UserDetailsAdapter;
-import it.thisone.iotter.ui.common.AbstractBaseEntityDetails;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
-import it.thisone.iotter.ui.common.EntityRemovedEvent;
-import it.thisone.iotter.ui.common.EntityRemovedListener;
-import it.thisone.iotter.ui.common.EntitySelectedEvent;
-import it.thisone.iotter.ui.common.EntitySelectedListener;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -77,7 +71,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private static final String USERS_VIEW = "users.view";
 	
 	private Network network;
-	private final Permissions permissions;
+	private Permissions permissions;
 
 	@Autowired
 	private AuthenticatedUser authenticatedUser;
@@ -106,13 +100,10 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private UsersFilter currentFilter = new UsersFilter();
 	private int currentLimit = DEFAULT_LIMIT;
 
-	public UsersListing() {
-		this(PermissionsUtils.getPermissionsForUserEntity());
-	}
 
-	private UsersListing(Permissions permissions) {
-		super(User.class, USERS_VIEW, USERS_VIEW, false, permissions);
-		this.permissions = permissions;
+
+	private UsersListing() {
+		super(User.class, USERS_VIEW, USERS_VIEW, false);
 	}
 
 	public void init(Network network) {
@@ -120,6 +111,9 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			return;
 		}
 		this.network = network;
+		UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
+				() -> new IllegalStateException("User must be authenticated to edit users"));
+		this.permissions = PermissionsUtils.getPermissionsForUserEntity(currentUser);
 		buildLayout();
 	}
 
@@ -129,7 +123,6 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
 		toolbar.addClassName(TOOLBAR_STYLE);
-
 
 		queryDefinition = new UsersQueryDefinition(User.class, currentLimit, permissions);
 		queryDefinition.setNetwork(network);
@@ -159,18 +152,15 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	}
 
 	@Override
-	public AbstractBaseEntityForm<User> getEditor(User item) {
+	public AbstractBaseEntityForm<User> getEditor(User item, boolean readOnly) {
 		UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
 				() -> new IllegalStateException("User must be authenticated to edit users"));
 
 		return userFormProvider.getObject(item, network, currentUser, roleService, networkService,
-				networkGroupService, groupWidgetService, eventBus);
+				networkGroupService, groupWidgetService, eventBus, readOnly);
 	}
 
-	@Override
-	public AbstractBaseEntityDetails<User> getDetails(User item, boolean remove) {
-		return new UserDetails(item, remove, deviceService, userService);
-	}
+
 
 	private void refreshData() {
 		dataProvider.refreshAll();
@@ -408,7 +398,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		Button button = new Button();
 		button.setIcon(VaadinIcon.INFO_CIRCLE.create());
 		button.getElement().setAttribute("title", getI18nLabel("view_action"));
-		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("view_dialog"), false));
+		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("view_dialog"),false));
 		button.setVisible(permissions.isViewMode());
 		return button;
 	}
@@ -426,7 +416,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		Button button = new Button();
 		button.setIcon(VaadinIcon.TRASH.create());
 		button.getElement().setAttribute("title", getI18nLabel("remove_action"));
-		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("remove_dialog"), true));
+		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("remove_dialog"),true));
 		button.setVisible(permissions.isRemoveMode());
 		return button;
 	}
@@ -435,8 +425,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		if (item == null) {
 			return;
 		}
-		AbstractBaseEntityForm<User> editor = getEditor(item);
-		SideDrawer dialog = (SideDrawer) createDialog(label, editor, editor.getWindowDimension(), editor.getWindowStyle());
+		AbstractBaseEntityForm<User> editor = getEditor(item,false);
+		SideDrawer dialog = (SideDrawer) createDialog(label, editor);
 		editor.setSavedHandler(entity -> {
 			try {
 				if (entity.isNew()) {
@@ -453,27 +443,25 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		dialog.open();
 	}
 
-	private void openDetails(User item, String label, boolean remove) {
+	private void openDetails(User item, String label,boolean remove) {
 		if (item == null) {
 			return;
 		}
-		AbstractBaseEntityDetails<User> details = getDetails(item, remove);
-		SideDrawer dialog = (SideDrawer) createDialog(label, details, S_DIMENSION, S_WINDOW_STYLE);
-		details.addListener(new EntityRemovedListener() {
-			@Override
-			public void entityRemoved(EntityRemovedEvent<?> event) {
+		AbstractBaseEntityForm<User> details = getEditor(item,true);
+		SideDrawer dialog = (SideDrawer) createDialog(label, details);
+
+		if (remove) {
+		details.setDeleteHandler(entity -> {
+			try {
+				userService.deleteById(entity.getId());
 				dialog.close();
-				if (event.getItem() != null) {
-					refreshCurrentPage();
-				}
+				refreshCurrentPage();
+			} catch (Exception e) {
+				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
 			}
 		});
-		details.addListener(new EntitySelectedListener() {
-			@Override
-			public void entitySelected(EntitySelectedEvent<?> event) {
-				dialog.close();
-			}
-		});
+		}
+
 		dialog.open();
 	}
 
@@ -540,8 +528,6 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 	private static final class UsersQueryDefinition extends LazyQueryDefinition<User, UsersFilter>
 			implements FilterableQueryDefinition<UsersFilter> {
-
-		private static final long serialVersionUID = 1L;
 
 		private UsersFilter queryFilter;
 		private Network network;

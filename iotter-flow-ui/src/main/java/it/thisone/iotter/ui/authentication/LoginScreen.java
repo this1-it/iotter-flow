@@ -13,6 +13,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.notification.Notification;
@@ -30,7 +31,7 @@ import it.thisone.iotter.ui.main.MainView;
 /**
  * UI content when the user is not logged in yet.
  */
-@Route("Login")
+@Route("login")
 @PageTitle("Login")
 @CssImport("./styles/shared-styles.css")
 public class LoginScreen extends FlexLayout {
@@ -71,12 +72,18 @@ public class LoginScreen extends FlexLayout {
         VerticalLayout loginInformation = new VerticalLayout();
         loginInformation.setClassName("login-information");
 
+        Image logo = new Image("icons/icon.png", "Iotter");
+        logo.setWidth("128px");
+        logo.setHeight("128px");
+        loginInformation.add(logo);
+
         H1 loginInfoHeader = new H1(getTranslation("login.info.header"));
         loginInfoHeader.setWidth("100%");
-        Span loginInfoText = new Span(getTranslation("login.info.text"));
-        loginInfoText.setWidth("100%");
         loginInformation.add(loginInfoHeader);
-        loginInformation.add(loginInfoText);
+
+        // Span loginInfoText = new Span(getTranslation("login.info.text"));
+        // loginInfoText.setWidth("100%");
+        // loginInformation.add(loginInfoText);
 
         return loginInformation;
     }

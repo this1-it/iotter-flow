@@ -1,6 +1,7 @@
 package it.thisone.iotter.ui.eventbus;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.server.CustomizedSystemMessages;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 import com.vaadin.flow.spring.annotation.SpringComponent;
@@ -42,22 +43,46 @@ public class UIEventBusInitializer implements VaadinServiceInitListener {
     public void serviceInit(ServiceInitEvent event) {
         logger.debug("Vaadin service init - adding UI init listener");
 
+        // Configure system messages for session expired / connection lost
+        // When server restarts or session expires, redirect to logout to properly invalidate session
+        event.getSource().setSystemMessagesProvider(systemMessagesInfo -> {
+            CustomizedSystemMessages messages = new CustomizedSystemMessages();
+            // Redirect to login on session expired (covers server restart)
+            messages.setSessionExpiredURL("/login");
+            messages.setSessionExpiredNotificationEnabled(false);
+            // Handle internal error
+            messages.setInternalErrorURL("/login");
+            messages.setInternalErrorNotificationEnabled(false);
+            return messages;
+        });
+
         event.getSource().addUIInitListener(uiInitEvent -> {
             UI ui = uiInitEvent.getUI();
             logger.debug("UI initialized: {}", ui.getUIId());
 
-            // Get the UI-scoped UIEventBus from Spring context
-            // The @UIScope annotation ensures each UI gets its own instance
-            UIEventBus eventBus = applicationContext.getBean(UIEventBus.class);
+            try {
+                // Check if session is valid before accessing UI-scoped beans
+                if (ui.getSession() == null || !ui.getSession().hasLock()) {
+                    logger.debug("Session not available, skipping UIEventBus initialization");
+                    return;
+                }
 
-            // Store in UI session for easy access
-            ui.getSession().setAttribute(UIEventBus.class, eventBus);
+                // Get the UI-scoped UIEventBus from Spring context
+                // The @UIScope annotation ensures each UI gets its own instance
+                UIEventBus eventBus = applicationContext.getBean(UIEventBus.class);
 
-            // Clean up registry on detach
-            ui.addDetachListener(detachEvent -> {
-                logger.debug("UI detached: {}", ui.getUIId());
-                registry.unregisterAll(ui);
-            });
+                // Store in UI session for easy access
+                ui.getSession().setAttribute(UIEventBus.class, eventBus);
+
+                // Clean up registry on detach
+                ui.addDetachListener(detachEvent -> {
+                    logger.debug("UI detached: {}", ui.getUIId());
+                    registry.unregisterAll(ui);
+                });
+            } catch (Exception e) {
+                // Handle cases where UI scope is not active (e.g., session expired)
+                logger.warn("Could not initialize UIEventBus for UI {}: {}", ui.getUIId(), e.getMessage());
+            }
         });
     }
 }

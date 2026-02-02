@@ -39,6 +39,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 	private String name;
     private UserDetailsAdapter currentUser;
     private Network network;
+    private boolean readOnly;
     private FormLayout formLayout;
 	private Map<String, Component> fields = new HashMap<>();
 	private List<String> properties = new ArrayList<>();
@@ -54,6 +55,16 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 	}
 
 	/**
+	 * Returns true if the form is in read-only mode.
+	 * Subclasses should use this to set their fields as read-only.
+	 *
+	 * @return true if the form is read-only
+	 */
+	public boolean isReadOnly() {
+		return readOnly;
+	}
+
+	/**
 	 * Set the event poster for publishing UI events (e.g., PendingChangesEvent).
 	 * This should be called by subclasses that inject UIEventBus.
 	 *
@@ -65,36 +76,48 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 
 	/**
      * A generic entity form using Vaadin 8 Binder and AbstractForm
-     * 
-     * @param facade contains entity to be edited and binder
+     *
+     * @param entity the entity to be edited
+     * @param entityType the class type of the entity
+     * @param name the form name used for i18n keys
      * @param network used for editing relations, it may be null
+     * @param currentUser the current authenticated user
+     * @param readOnly if true, the form is displayed in read-only mode (save button hidden)
      */
-    public AbstractBaseEntityForm(T entity, Class<T> entityType, String name, Network network, UserDetailsAdapter currentUser) {
+    public AbstractBaseEntityForm(T entity, Class<T> entityType, String name, Network network, UserDetailsAdapter currentUser, boolean readOnly) {
         super(entityType);
         this.name = name;
         this.network = network;
         this.currentUser = currentUser;
+        this.readOnly = readOnly;
         this.setBinder(new Binder<>(entityType));
         setEntity(entity);
-        
+
         if (getEntity().getOwner() == null) {
         	//getEntity().setOwner(UIUtils.getUserDetails().getTenant());
         }
-        
-        
+
+
         // Configure buttons styling
 
         getSaveButton().setWidth(ACTION_BUTTON_WIDTH, Unit.PIXELS);
         getCancelButton().setWidth(ACTION_BUTTON_WIDTH, Unit.PIXELS);
-        
+
+        // Hide save button in read-only mode
+        if (readOnly) {
+            getSaveButton().setVisible(false);
+        }
+
         // Initially disable save button if form is invalid
         if (!getBinder().isValid()) {
             getSaveButton().setEnabled(false);
         }
-        
+
         // Add validation listener to enable/disable save button
         getBinder().addStatusChangeListener(event -> {
-            getSaveButton().setEnabled(event.getBinder().isValid());
+            if (!this.readOnly) {
+                getSaveButton().setEnabled(event.getBinder().isValid());
+            }
         });
     }
 
@@ -326,10 +349,6 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
                 otherObject.getEntity().getId()).isEquals();
     }
 
-    @Deprecated
-    public abstract String getWindowStyle();
-    
-    public abstract float[] getWindowDimension();
     
     /**
      * Change bean after commit copy extra field to bean if needed
