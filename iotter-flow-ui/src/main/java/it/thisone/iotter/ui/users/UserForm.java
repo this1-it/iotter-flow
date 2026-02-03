@@ -2,6 +2,7 @@ package it.thisone.iotter.ui.users;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,6 +11,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -55,6 +58,8 @@ import it.thisone.iotter.ui.validators.AntiReDoSEmailValidator;
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class UserForm extends AbstractBaseEntityForm<User> {
+
+    public static Logger logger = LoggerFactory.getLogger(UserForm.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -127,10 +132,9 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         }
 
         populateFields();
-
         bindFields();
-    }
 
+    }
 
 
     /**
@@ -237,34 +241,43 @@ public class UserForm extends AbstractBaseEntityForm<User> {
      * 
      */
     private void populateFields() {
-
+        Role currentRole = getEntity().getRole();
+        Set<NetworkGroup> currentGroups = getEntity().getGroups();
  
         // Populate role select based on current user's permissions
-        List<Role> roles = new ArrayList<>();
+
+        //if (isCreateBean()) {
+        List<Role> availableRoles = new ArrayList<>();
         if (getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR)) {
             //roles = roleService.findAll();
 
-            roles.add(roleService.findByName(Constants.ROLE_ADMINISTRATOR));
-            roles.add(roleService.findByName(Constants.ROLE_SUPERUSER));
-            roles.add(roleService.findByName(Constants.ROLE_USER));
-            roles.add(roleService.findByName(Constants.ROLE_PRODUCTION));
-            roles.add(roleService.findByName(Constants.ROLE_FINANCE));
+            availableRoles.add(roleService.findByName(Constants.ROLE_ADMINISTRATOR));
+            availableRoles.add(roleService.findByName(Constants.ROLE_SUPERUSER));
+            availableRoles.add(roleService.findByName(Constants.ROLE_USER));
+            availableRoles.add(roleService.findByName(Constants.ROLE_PRODUCTION));
+            availableRoles.add(roleService.findByName(Constants.ROLE_FINANCE));
 
 
         } else {
-            roles.add(roleService.findByName(Constants.ROLE_ADMINISTRATOR));
-            roles.add(roleService.findByName(Constants.ROLE_SUPERUSER));
-            roles.add(roleService.findByName(Constants.ROLE_USER));
+            availableRoles.add(roleService.findByName(Constants.ROLE_ADMINISTRATOR));
+            availableRoles.add(roleService.findByName(Constants.ROLE_SUPERUSER));
+            availableRoles.add(roleService.findByName(Constants.ROLE_USER));
         }
-        role.setItems(roles);
+        role.setItems(availableRoles);
+        role.setValue(currentRole);
+
+
+
+
 
         // Populate network select
         networkSelect.setItems(loadNetworks());
-
         // Load and configure groups
         List<NetworkGroup> availableGroups = loadNetworkGroups();
         groups.setItems(availableGroups);
         exclusiveGroups.setItems(availableGroups);
+        groups.asMultiSelect().setValue(currentGroups);
+
 
         // Configure network selection and groups
         configureNetworkSelection();
@@ -281,6 +294,10 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         if (visualizations!= null) {
             visualizations.addItems(items, selectedGroups);
         }
+        
+
+
+        
         
     }
 
@@ -369,6 +386,7 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         originalPassword.addValueChangeListener(event -> getBinder().validate());
         verifiedPassword.addValueChangeListener(event -> getBinder().validate());
         email.addValueChangeListener(event -> getBinder().validate());
+
 
         getBinder().validate();
     }

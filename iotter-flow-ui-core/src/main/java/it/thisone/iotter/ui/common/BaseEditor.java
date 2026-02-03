@@ -127,8 +127,8 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 		button.addClickListener(event -> {
 				final EditorSavedEvent evt = new EditorSavedEvent(BaseEditor.this, null);
 				if (pendingChanges) {
-					String caption = UIUtils.localize("basic.editor.forget_changes");
-					String message = UIUtils.localize("basic.editor.pending_changes");
+					String caption = getTranslation("basic.editor.forget_changes");
+					String message = getTranslation("basic.editor.pending_changes");
 					Callback callback = new Callback() {
 						@Override
 						public void onDialogResult(boolean result) {

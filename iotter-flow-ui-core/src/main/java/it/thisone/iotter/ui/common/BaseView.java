@@ -4,8 +4,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 public abstract class BaseView extends VerticalLayout {
 
-
-
 	private static final long serialVersionUID = 5876788432112136543L;
 
 	public abstract String getI18nKey();

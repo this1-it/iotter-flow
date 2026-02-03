@@ -1,9 +1,12 @@
 package it.thisone.iotter.persistence.model;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
@@ -220,7 +223,6 @@ public class User extends BaseEntity {
 		}
 		return roles.iterator().next();
 	}
-
 	/**
 	 * workaround for having single role assignment
 	 * 
@@ -457,4 +459,30 @@ public class User extends BaseEntity {
 		return getGroups().contains(group);
 	}
 
+
+	public String formatRoles() {
+
+		if (roles == null || roles.isEmpty()) {
+			return "";
+		}
+		return roles.stream()
+				.filter(Objects::nonNull)
+				.sorted(Comparator.comparing(Role::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+				.map(Role::getName)
+				.filter(Objects::nonNull)
+				.collect(Collectors.joining(", "));
+	}
+
+	public String formatGroups() {
+
+		if (groups == null || groups.isEmpty()) {
+			return "";
+		}
+		return groups.stream()
+				.filter(Objects::nonNull)
+				.sorted(Comparator.comparing(NetworkGroup::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+				.map(NetworkGroup::getName)
+				.filter(Objects::nonNull)
+				.collect(Collectors.joining(", "));
+	}
 }

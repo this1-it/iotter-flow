@@ -25,7 +25,7 @@ import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.ui.ifc.IGroupWidgetListingField;
 import it.thisone.iotter.ui.model.GroupWidgetAdapter;
-import it.thisone.iotter.ui.model.GroupWidgetContainer;
+
 
 // Feature #1884
 public class GroupWidgetAdapterListing extends Composite<VerticalLayout> implements IGroupWidgetListingField {

@@ -79,10 +79,14 @@ public class UserService {
 		userDao.update(entity);
 	}
 
-	// @Transactional(readOnly=true)
-	// @ReadOnlyConnection
+	@Transactional(readOnly=true)
 	public User findOne(String id) {
-		return userDao.findOne(id);
+		User user = userDao.findOne(id);
+		if (user != null) {
+			user.getRoles().size();
+			user.getGroups().size(); 
+		}
+		return user;
 	}
 
 	public List<User> findAll() {

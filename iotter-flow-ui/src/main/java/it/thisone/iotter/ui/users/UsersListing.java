@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -63,6 +65,7 @@ import it.thisone.iotter.util.PopupNotification;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class UsersListing extends AbstractBaseEntityListing<User> {
 
+	public static Logger logger = LoggerFactory.getLogger(UsersListing.class);
 	private static final long serialVersionUID = 1L;
 	private static final String ACCOUNT_STATUS = "accountStatus";
 	private static final String USERNAME = "username";
@@ -156,6 +159,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
 				() -> new IllegalStateException("User must be authenticated to edit users"));
 
+	    //logger.error("Editor {} {} {}",item.getUsername(), formatRoles(item), formatGroups(item));
 		return userFormProvider.getObject(item, network, currentUser, roleService, networkService,
 				networkGroupService, groupWidgetService, eventBus, readOnly);
 	}
