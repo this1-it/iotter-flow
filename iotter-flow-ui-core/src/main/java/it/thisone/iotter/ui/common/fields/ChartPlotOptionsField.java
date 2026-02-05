@@ -506,7 +506,7 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 	}
 
 	public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey() + "." + key.toLowerCase());
+		return getTranslation(getI18nKey() + "." + key.toLowerCase());
 	}
 
 	public String getI18nKey() {

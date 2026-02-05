@@ -27,7 +27,7 @@ public class OrderOptionGroup extends RadioButtonGroup<Order> {
 
 
         setRenderer(new ComponentRenderer<>(value ->
-                new Span( UIUtils.localize(value.getI18nKey()) )
+                new Span( getTranslation(value.getI18nKey()) )
         ));
 
 		

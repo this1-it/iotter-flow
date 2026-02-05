@@ -2,7 +2,10 @@ package it.thisone.iotter.ui.common;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +17,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.vaadin.firitin.form.AbstractForm;
 
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.PropertyId;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -75,7 +79,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 	}
 
 	/**
-     * A generic entity form using Vaadin 8 Binder and AbstractForm
+     * A generic entity form using Binder and AbstractForm
      *
      * @param entity the entity to be edited
      * @param entityType the class type of the entity
@@ -96,10 +100,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         if (getEntity().getOwner() == null) {
         	//getEntity().setOwner(UIUtils.getUserDetails().getTenant());
         }
-
-
         // Configure buttons styling
-
         getSaveButton().setWidth(ACTION_BUTTON_WIDTH, Unit.PIXELS);
         getCancelButton().setWidth(ACTION_BUTTON_WIDTH, Unit.PIXELS);
 
@@ -121,6 +122,44 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         });
     }
 
+
+    /**
+     * Called during constructor via getFieldsLayout().
+     */
+    protected abstract void initializeFields();
+    
+    protected abstract void bindFields();
+    
+    protected void addFields() {
+    	Field[] fields = this.getClass().getDeclaredFields();
+
+    	Arrays.sort(fields, Comparator.comparingInt(f -> {
+    	    FormFieldOrder o = f.getAnnotation(FormFieldOrder.class);
+    	    return o != null ? o.value() : Integer.MAX_VALUE;
+    	}));
+
+    	for (Field field : fields) {
+    	    if (!Component.class.isAssignableFrom(field.getType())) {
+    	        continue;
+    	    }
+    	    field.setAccessible(true);
+			try {
+				Component component = (Component) field.get(this);
+	    	    if (component == null) {
+	    	        continue;
+	    	    }
+	    	    PropertyId pid = field.getAnnotation(PropertyId.class);
+	    	    String property = pid != null ? pid.value() : field.getName();
+	    	    addField(property, component);
+			} catch (IllegalArgumentException e) {
+			} catch (IllegalAccessException e) {
+			}
+
+    	}
+
+    }
+
+    
     @Override
     protected Component createContent() {
     	VerticalLayout fieldsLayout = getFieldsLayout();
@@ -154,12 +193,16 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
      * Add fields to form. Default implementation adds fields to a form layout
      */
     public VerticalLayout getFieldsLayout() {
+    	initializeFields();
+    	addFields();
         VerticalLayout mainLayout = buildMainLayout();
         mainLayout.add(buildPanel(getOrCreateFormLayout()));
         return mainLayout;
     }
 
-    protected VerticalLayout buildMainLayout() {
+    
+
+	protected VerticalLayout buildMainLayout() {
         VerticalLayout mainLayout = new VerticalLayout();
         mainLayout.setSpacing(false);
         mainLayout.setPadding(true);
@@ -196,9 +239,6 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
     protected void addField(String name, Component field) {
 		fields.put(name,field);
 		properties.add(name);
-        if (formLayout != null) {
-            formLayout.add(field);
-        }
 	}
 
 	/**

@@ -23,15 +23,15 @@ public class JobRoleOptionGroup extends RadioButtonGroup<JobRole> {
 		
 		// Set enum values as items, sorted by localized name
 		setItems(Arrays.stream(JobRole.values())
-			.sorted(Comparator.comparing(role -> UIUtils.localize(role.getI18nKey())))
+			.sorted(Comparator.comparing(role -> getTranslation(role.getI18nKey())))
 			.collect(Collectors.toList()));
 		
 		// Set caption generator to use i18n keys
-		//setItemLabelGenerator(role -> UIUtils.localize(role.getI18nKey()));
+		//setItemLabelGenerator(role -> getTranslation(role.getI18nKey()));
 		
         // Vaadin 14-compatible label rendering
         setRenderer(new ComponentRenderer<>(value ->
-                new Span(UIUtils.localize(value.getI18nKey()))
+                new Span(getTranslation(value.getI18nKey()))
         ));
 		
 	}

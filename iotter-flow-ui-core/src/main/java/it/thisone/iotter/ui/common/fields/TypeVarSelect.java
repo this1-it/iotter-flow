@@ -15,7 +15,7 @@ public class TypeVarSelect extends ComboBox<TypeVar> {
 	public TypeVarSelect() {
 		super();
 		setItems(TypeVar.values());
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 
 	}
 }

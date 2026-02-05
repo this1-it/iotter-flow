@@ -1,21 +1,15 @@
 package it.thisone.iotter.ui.common;
 
-import java.util.Iterator;
-
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.AbstractDataProvider;
 import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.data.provider.Query;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.html.Span;
-
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-
 import it.thisone.iotter.persistence.model.BaseEntity;
-import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.security.Permissions;
 
 public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends BaseComponent {
@@ -70,8 +64,13 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		//setCompositionRoot(mainLayout);
 	}
 
-	public abstract AbstractBaseEntityForm<User> getEditor(T item, boolean readOnly);
+	protected abstract AbstractBaseEntityForm<T> getEditor(T item, boolean readOnly);
 
+	protected abstract void openDetails(T item);
+	
+	protected abstract void openRemove(T item);
+
+	
 	public VerticalLayout getMainLayout() {
 		return mainLayout;
 	}

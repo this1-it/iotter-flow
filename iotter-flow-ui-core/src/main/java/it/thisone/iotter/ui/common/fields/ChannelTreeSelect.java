@@ -242,7 +242,7 @@ public class ChannelTreeSelect
      * i18n helpers
      * ------------------------------------------------------------------ */
     private String getI18nLabel(String key) {
-        return UIUtils.localize(getI18nKey() + "." + key);
+        return getTranslation(getI18nKey() + "." + key);
     }
 
     private String getI18nKey() {

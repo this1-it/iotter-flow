@@ -12,7 +12,7 @@ public class PermissionSelect extends ComboBox<Permission> {
 	
 	public PermissionSelect() {
 		super();
-		setLabel(UIUtils.localize("basic.combobox.permission"));
+		setLabel(getTranslation("basic.combobox.permission"));
 		setItems(Permission.values());
 		setItemLabelGenerator(type -> type.getDisplayName());
 		setWidth(16, Unit.EM);

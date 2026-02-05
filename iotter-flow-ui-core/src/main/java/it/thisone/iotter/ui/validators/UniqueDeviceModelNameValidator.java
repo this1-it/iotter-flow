@@ -16,18 +16,18 @@ public class UniqueDeviceModelNameValidator implements Validator<String> {
 
 	@Override
 	public ValidationResult apply(String value, ValueContext context) {
-		if (value == null || value.trim().isEmpty()) {
-			return ValidationResult.error(UIUtils.localize("validators.unique_device_model_name"));
-		}
-		
-		if (value.trim().equals(originalValue)) {
-			return ValidationResult.ok();
-		}
-		
-		boolean isUnique = (UIUtils.getServiceFactory().getDeviceService().getDeviceModel(value) == null);
-		if (!isUnique) {
-			return ValidationResult.error(UIUtils.localize("validators.unique_device_model_name"));
-		}
+//		if (value == null || value.trim().isEmpty()) {
+//			return ValidationResult.error(getTranslation("validators.unique_device_model_name"));
+//		}
+//		
+//		if (value.trim().equals(originalValue)) {
+//			return ValidationResult.ok();
+//		}
+//		
+//		boolean isUnique = (UIUtils.getServiceFactory().getDeviceService().getDeviceModel(value) == null);
+//		if (!isUnique) {
+//			return ValidationResult.error(getTranslation("validators.unique_device_model_name"));
+//		}
 		
 		return ValidationResult.ok();
 	}

@@ -29,7 +29,7 @@ public class NetworkTypeOptionGroup extends RadioButtonGroup<NetworkType> {
 		
 			
 		
-	       setRenderer(new ComponentRenderer<>(type -> new Span(UIUtils.localize(type.getI18nKey()))));
+	       setRenderer(new ComponentRenderer<>(type -> new Span(getTranslation(type.getI18nKey()))));
 	}
 
 }

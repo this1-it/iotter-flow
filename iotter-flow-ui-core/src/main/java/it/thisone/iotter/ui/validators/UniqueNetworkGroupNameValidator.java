@@ -21,23 +21,23 @@ public class UniqueNetworkGroupNameValidator implements Validator<String> {
 
 	@Override
 	public ValidationResult apply(String value, ValueContext context) {
-		if(value == null || value.trim().isEmpty()) {
-			return ValidationResult.error(UIUtils.localize("validators.unique_group_name"));
-		}
-		if(value.equals(originalValue)) {
-			return ValidationResult.ok();
-		}
-		NetworkGroup group = null;
-		try {
-			group = UIUtils.getServiceFactory().getNetworkGroupService().findByName(value, network);
-		} catch (BackendServiceException e) {
-			return ValidationResult.error(UIUtils.localize("validators.unique_group_name"));
-		}
-		
-		boolean isUnique = (group == null);
-		if (!isUnique) {
-			return ValidationResult.error(UIUtils.localize("validators.unique_group_name"));
-		}
+//		if(value == null || value.trim().isEmpty()) {
+//			return ValidationResult.error(getTranslation("validators.unique_group_name"));
+//		}
+//		if(value.equals(originalValue)) {
+//			return ValidationResult.ok();
+//		}
+//		NetworkGroup group = null;
+//		try {
+//			group = UIUtils.getServiceFactory().getNetworkGroupService().findByName(value, network);
+//		} catch (BackendServiceException e) {
+//			return ValidationResult.error(getTranslation("validators.unique_group_name"));
+//		}
+//		
+//		boolean isUnique = (group == null);
+//		if (!isUnique) {
+//			return ValidationResult.error(getTranslation("validators.unique_group_name"));
+//		}
 		return ValidationResult.ok();
 	}
 }

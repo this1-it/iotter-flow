@@ -2,11 +2,8 @@ package it.thisone.iotter.ui.users;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,14 +16,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.vaadin.flow.components.TabSheet;
 
-import com.vaadin.flow.data.binder.PropertyId;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.PropertyId;
 import com.vaadin.flow.data.binder.ValueContext;
 
 import it.thisone.iotter.config.Constants;
@@ -45,7 +39,6 @@ import it.thisone.iotter.persistence.service.RoleService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.EditorConstraintException;
-import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.ui.common.fields.AccountStatusSelect;
 import it.thisone.iotter.ui.common.fields.CountrySelect;
 import it.thisone.iotter.ui.common.fields.NetworkGroupSelect;
@@ -140,7 +133,7 @@ public class UserForm extends AbstractBaseEntityForm<User> {
     /**
      * Called during constructor via getFieldsLayout().
      */
-    private void initializeFields() {
+    protected void initializeFields() {
         username = new TextField();
         username.setWidthFull();
         username.setRequiredIndicatorVisible(true);
@@ -301,7 +294,7 @@ public class UserForm extends AbstractBaseEntityForm<User> {
         
     }
 
-    private void bindFields() {
+    protected void bindFields() {
         String requiredMessage = getTranslation("validators.fieldgroup_errors");
         getBinder().forField(username)
                 .asRequired(requiredMessage)

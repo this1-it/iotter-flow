@@ -15,14 +15,14 @@ public class UniqueDeviceActivationKeyValidator implements Validator<String> {
 
 	@Override
 	public ValidationResult apply(String value, ValueContext context) {
-		if(value != null && !value.isEmpty()) {
-			boolean isUnique = (UIUtils.getServiceFactory().getDeviceService().findByActivationKey(value) == null);
-			if (!isUnique) {
-				return ValidationResult.error(UIUtils.localize("validators.activation_key_unique"));
-			}
-		} else {
-			return ValidationResult.error(UIUtils.localize("validators.activation_key_unique"));
-		}
+//		if(value != null && !value.isEmpty()) {
+//			boolean isUnique = (UIUtils.getServiceFactory().getDeviceService().findByActivationKey(value) == null);
+//			if (!isUnique) {
+//				return ValidationResult.error(getTranslation("validators.activation_key_unique"));
+//			}
+//		} else {
+//			return ValidationResult.error(getTranslation("validators.activation_key_unique"));
+//		}
 		return ValidationResult.ok();
 	}
 }

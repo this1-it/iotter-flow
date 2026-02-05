@@ -40,7 +40,6 @@ public class ConfirmationDialog extends Dialog {
 	public ConfirmationDialog(String caption, Component component, final Callback callback) {
 		super();
 		//setHeaderTitle(caption);
-		BaseComponent.makeResponsiveDialog(this, UIUtils.S_DIMENSION, UIUtils.S_WINDOW_STYLE);
 		setDraggable(false);
 		// setImmediate(true);
 
@@ -72,7 +71,7 @@ public class ConfirmationDialog extends Dialog {
 		footer.add(buttonLayout);
 		
 		if (callback != null) {
-			confirm = new Button(UIUtils.localize("basic.editor.yes"));
+			confirm = new Button(getTranslation("basic.editor.yes"));
 			confirm.addClickListener(event-> {
 					callback.onDialogResult(true);
 					close();
@@ -83,7 +82,7 @@ public class ConfirmationDialog extends Dialog {
 			buttonLayout.add(confirm);
 		}
 
-		cancel = new Button(UIUtils.localize("basic.editor.no"));
+		cancel = new Button(getTranslation("basic.editor.no"));
 		cancel.addClickListener(event -> {
 				close();
 			}

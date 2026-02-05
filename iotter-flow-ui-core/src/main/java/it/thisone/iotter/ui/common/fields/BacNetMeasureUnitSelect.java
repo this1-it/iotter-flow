@@ -38,7 +38,7 @@ public class BacNetMeasureUnitSelect extends ComboBox<String> {
 
 
 	public BacNetMeasureUnitSelect() {
-		super(UIUtils.localize("basic.combobox.bacnet"));
+		super("basic.combobox.bacnet");
 		initialize();
 	}
 

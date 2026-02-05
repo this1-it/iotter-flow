@@ -88,7 +88,7 @@ public class ChannelSelect extends AbstractCompositeField<VerticalLayout, Channe
 	}
 
 	public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey() + "." + key);
+		return getTranslation(getI18nKey() + "." + key);
 	}
 
 	public String getI18nKey() {

@@ -803,17 +803,17 @@ public class ChartUtils {
 		ChartLang language = new ChartLang();
 		DecimalFormatSymbols decimalSymbols = DecimalFormatSymbols.getInstance(UIUtils.getLocale());
 		DateFormatSymbols dateSymbols = DateFormatSymbols.getInstance(UIUtils.getLocale());
-		language.setMonths(dateSymbols.getMonths());
-		language.setShortMonths(dateSymbols.getShortMonths());
-		language.setWeekdays(dateSymbols.getWeekdays());
-		language.setDecimalPoint(String.valueOf(decimalSymbols.getDecimalSeparator()));
-		language.setThousandsSep(String.valueOf(decimalSymbols.getGroupingSeparator()));
-		language.setLoading(UIUtils.localize("highcharts.loading", null, "Loading ..."));
-		language.setContextButtonTitle(UIUtils.localize("highcharts.contextButtonTitle", null, "Chart context menu"));
-		language.setPrintChart(UIUtils.localize("highcharts.printChart", null, "Print Chart"));
-		language.setNoData(UIUtils.localize("highcharts.noData", null, "No Data to display"));
-		language.setNoData("");
-		language.setLoading(UIUtils.localize("highcharts.loading", null, "Loading ..."));
+//		language.setMonths(dateSymbols.getMonths());
+//		language.setShortMonths(dateSymbols.getShortMonths());
+//		language.setWeekdays(dateSymbols.getWeekdays());
+//		language.setDecimalPoint(String.valueOf(decimalSymbols.getDecimalSeparator()));
+//		language.setThousandsSep(String.valueOf(decimalSymbols.getGroupingSeparator()));
+//		language.setLoading(getTranslation("highcharts.loading", null, "Loading ..."));
+//		language.setContextButtonTitle(getTranslation("highcharts.contextButtonTitle", null, "Chart context menu"));
+//		language.setPrintChart(getTranslation("highcharts.printChart", null, "Print Chart"));
+//		language.setNoData(getTranslation("highcharts.noData", null, "No Data to display"));
+//		language.setNoData("");
+//		language.setLoading(getTranslation("highcharts.loading", null, "Loading ..."));
 		return language;
 	}
 

@@ -72,7 +72,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private static final String EMAIL = "email";
 	private static final String OWNER = "owner";
 	private static final String USERS_VIEW = "users.view";
-	
+
 	private Network network;
 	private Permissions permissions;
 
@@ -103,8 +103,6 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private UsersFilter currentFilter = new UsersFilter();
 	private int currentLimit = DEFAULT_LIMIT;
 
-
-
 	private UsersListing() {
 		super(User.class, USERS_VIEW, USERS_VIEW, false);
 	}
@@ -114,8 +112,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			return;
 		}
 		this.network = network;
-		UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
-				() -> new IllegalStateException("User must be authenticated to edit users"));
+		UserDetailsAdapter currentUser = authenticatedUser.get()
+				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 		this.permissions = PermissionsUtils.getPermissionsForUserEntity(currentUser);
 		buildLayout();
 	}
@@ -156,15 +154,14 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 	@Override
 	public AbstractBaseEntityForm<User> getEditor(User item, boolean readOnly) {
-		UserDetailsAdapter currentUser = authenticatedUser.get().orElseThrow(
-				() -> new IllegalStateException("User must be authenticated to edit users"));
+		UserDetailsAdapter currentUser = authenticatedUser.get()
+				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 
-	    //logger.error("Editor {} {} {}",item.getUsername(), formatRoles(item), formatGroups(item));
-		return userFormProvider.getObject(item, network, currentUser, roleService, networkService,
-				networkGroupService, groupWidgetService, eventBus, readOnly);
+		// logger.error("Editor {} {} {}",item.getUsername(), formatRoles(item),
+		// formatGroups(item));
+		return userFormProvider.getObject(item, network, currentUser, roleService, networkService, networkGroupService,
+				groupWidgetService, eventBus, readOnly);
 	}
-
-
 
 	private void refreshData() {
 		dataProvider.refreshAll();
@@ -247,11 +244,10 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 		// Create username filter TextField
 		TextField username = new TextField();
-		
+
 		username.setPlaceholder("Filter...");
 		username.setWidthFull();
 		username.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-
 
 		// Add TextField to the username column header cell
 		filterRow.getCell(grid.getColumnByKey(USERNAME)).setComponent(username);
@@ -270,7 +266,6 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		email.setPlaceholder("Filter...");
 		email.setWidthFull();
 		email.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-
 
 		// Add TextField to the email column header cell
 		filterRow.getCell(grid.getColumnByKey(EMAIL)).setComponent(email);
@@ -315,17 +310,12 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		statusComboBox.setAllowCustomValue(false);
 
 		// Add all statuses except HIDDEN
-		statusComboBox.setItems(
-			AccountStatus.ACTIVE,
-			AccountStatus.NEED_ACTIVATION,
-			AccountStatus.EXPIRED,
-			AccountStatus.SUSPENDED,
-			AccountStatus.LOCKED
-		);
+		statusComboBox.setItems(AccountStatus.ACTIVE, AccountStatus.NEED_ACTIVATION, AccountStatus.EXPIRED,
+				AccountStatus.SUSPENDED, AccountStatus.LOCKED);
 
 		// Set i18n captions for enum values
-		statusComboBox.setItemLabelGenerator(status ->
-			getI18nLabel("enum.accountstatus." + status.name().toLowerCase()));
+		statusComboBox
+				.setItemLabelGenerator(status -> getI18nLabel("enum.accountstatus." + status.name().toLowerCase()));
 
 		// Add to header cell
 		filterRow.getCell(grid.getColumnByKey(ACCOUNT_STATUS)).setComponent(statusComboBox);
@@ -353,12 +343,9 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		if (roles == null || roles.isEmpty()) {
 			return "";
 		}
-		return roles.stream()
-				.filter(Objects::nonNull)
+		return roles.stream().filter(Objects::nonNull)
 				.sorted(Comparator.comparing(Role::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
-				.map(Role::getName)
-				.filter(Objects::nonNull)
-				.collect(Collectors.joining(", "));
+				.map(Role::getName).filter(Objects::nonNull).collect(Collectors.joining(", "));
 	}
 
 	private String formatGroups(User user) {
@@ -366,12 +353,10 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		if (groups == null || groups.isEmpty()) {
 			return "";
 		}
-		return groups.stream()
-				.filter(Objects::nonNull)
-				.sorted(Comparator.comparing(NetworkGroup::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
-				.map(NetworkGroup::getName)
-				.filter(Objects::nonNull)
-				.collect(Collectors.joining(", "));
+		return groups.stream().filter(Objects::nonNull)
+				.sorted(Comparator.comparing(NetworkGroup::getName,
+						Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+				.map(NetworkGroup::getName).filter(Objects::nonNull).collect(Collectors.joining(", "));
 	}
 
 	private String formatNetwork(User user) {
@@ -402,7 +387,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		Button button = new Button();
 		button.setIcon(VaadinIcon.INFO_CIRCLE.create());
 		button.getElement().setAttribute("title", getI18nLabel("view_action"));
-		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("view_dialog"),false));
+		button.addClickListener(event -> openDetails(getCurrentValue()));
 		button.setVisible(permissions.isViewMode());
 		return button;
 	}
@@ -420,7 +405,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		Button button = new Button();
 		button.setIcon(VaadinIcon.TRASH.create());
 		button.getElement().setAttribute("title", getI18nLabel("remove_action"));
-		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("remove_dialog"),true));
+		button.addClickListener(event -> openRemove(getCurrentValue()));
 		button.setVisible(permissions.isRemoveMode());
 		return button;
 	}
@@ -429,7 +414,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		if (item == null) {
 			return;
 		}
-		AbstractBaseEntityForm<User> editor = getEditor(item,false);
+		AbstractBaseEntityForm<User> editor = getEditor(item, false);
 		SideDrawer dialog = (SideDrawer) createDialog(label, editor);
 		editor.setSavedHandler(entity -> {
 			try {
@@ -447,28 +432,43 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		dialog.open();
 	}
 
-	private void openDetails(User item, String label,boolean remove) {
+	protected void openDetails(User item) {
 		if (item == null) {
 			return;
 		}
-		AbstractBaseEntityForm<User> details = getEditor(item,true);
-		SideDrawer dialog = (SideDrawer) createDialog(label, details);
 
-		if (remove) {
-		details.setDeleteHandler(entity -> {
-			try {
-				userService.deleteById(entity.getId());
-				dialog.close();
-				refreshCurrentPage();
-			} catch (Exception e) {
-				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
-			}
-		});
-		}
+		AbstractBaseEntityForm<User> details = getEditor(item, true);
+		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("view_dialog"), details);
+
+
 
 		dialog.open();
 	}
 
+	protected void openRemove(User item) {
+		if (item == null) {
+			return;
+		}
+
+		AbstractBaseEntityForm<User> details = getEditor(item, true);
+		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("view_dialog"), details);
+
+
+			details.setDeleteHandler(entity -> {
+				try {
+					userService.deleteById(entity.getId());
+					dialog.close();
+					refreshCurrentPage();
+				} catch (Exception e) {
+					PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+				}
+			});
+		
+
+		dialog.open();
+	}
+
+	
 	private static final class UsersFilter {
 		private String username;
 		private String email;
@@ -525,8 +525,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 		@Override
 		public String toString() {
-			return "UsersFilter{username=" + username + ", email=" + email + ", owner=" + owner +
-				   ", accountStatus=" + accountStatus + "}";
+			return "UsersFilter{username=" + username + ", email=" + email + ", owner=" + owner + ", accountStatus="
+					+ accountStatus + "}";
 		}
 	}
 
@@ -614,7 +614,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 		@Override
 		public int size(QueryDefinition<User, UsersFilter> queryDefinition) {
-				Page<User> page = findPage(0, 1);
+			Page<User> page = findPage(0, 1);
 			long total = page.getTotalElements();
 			return (int) total;
 		}
@@ -624,10 +624,11 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 				int limit) {
 			int size = limit > 0 ? limit : this.queryDefinition.getPageSize();
 			int page = size > 0 ? offset / size : 0;
-			System.out.println("UsersQuery.loadItems() - offset: " + offset + ", limit: " + limit +
-					", calculated page: " + page + ", using pageSize: " + size);
+			System.out.println("UsersQuery.loadItems() - offset: " + offset + ", limit: " + limit
+					+ ", calculated page: " + page + ", using pageSize: " + size);
 			Page<User> users = findPage(page, size);
-			System.out.println("UsersQuery.loadItems() - loaded " + users.getContent().size() + " users from page " + page);
+			System.out.println(
+					"UsersQuery.loadItems() - loaded " + users.getContent().size() + " users from page " + page);
 			return users.getContent().stream();
 		}
 
@@ -648,8 +649,9 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 				if (statusFilter != null) {
 					// Filter by specific AccountStatus
 					if (username != null && email != null) {
-						return userRepository.findByOwnerAndNetworkIdAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
-								owner, networkId, username, email, statusFilter, pageable);
+						return userRepository
+								.findByOwnerAndNetworkIdAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
+										owner, networkId, username, email, statusFilter, pageable);
 					} else if (username != null) {
 						return userRepository.findByOwnerAndNetworkIdAndUsernameStartingWithIgnoreCaseAndAccountStatus(
 								owner, networkId, username, statusFilter, pageable);
@@ -657,20 +659,24 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 						return userRepository.findByOwnerAndNetworkIdAndEmailStartingWithIgnoreCaseAndAccountStatus(
 								owner, networkId, email, statusFilter, pageable);
 					}
-					return userRepository.findByOwnerAndNetworkIdAndAccountStatus(owner, networkId, statusFilter, pageable);
+					return userRepository.findByOwnerAndNetworkIdAndAccountStatus(owner, networkId, statusFilter,
+							pageable);
 				} else {
 					// Exclude HIDDEN status
 					if (username != null && email != null) {
-						return userRepository.findByOwnerAndNetworkIdAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
-								owner, networkId, username, email, hidden, pageable);
+						return userRepository
+								.findByOwnerAndNetworkIdAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
+										owner, networkId, username, email, hidden, pageable);
 					} else if (username != null) {
-						return userRepository.findByOwnerAndNetworkIdAndUsernameStartingWithIgnoreCaseAndAccountStatusNot(
-								owner, networkId, username, hidden, pageable);
+						return userRepository
+								.findByOwnerAndNetworkIdAndUsernameStartingWithIgnoreCaseAndAccountStatusNot(owner,
+										networkId, username, hidden, pageable);
 					} else if (email != null) {
 						return userRepository.findByOwnerAndNetworkIdAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
 								owner, networkId, email, hidden, pageable);
 					}
-					return userRepository.findByOwnerAndNetworkIdAndAccountStatusNot(owner, networkId, hidden, pageable);
+					return userRepository.findByOwnerAndNetworkIdAndAccountStatusNot(owner, networkId, hidden,
+							pageable);
 				}
 			}
 
@@ -678,45 +684,59 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 				if (statusFilter != null) {
 					// Filter by specific AccountStatus
 					if (username != null && email != null && ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
-								ownerFilter, username, email, statusFilter, pageable);
+						return userRepository
+								.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
+										ownerFilter, username, email, statusFilter, pageable);
 					} else if (username != null && email != null) {
-						return userRepository.findByUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
-								username, email, statusFilter, pageable);
+						return userRepository
+								.findByUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
+										username, email, statusFilter, pageable);
 					} else if (username != null && ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndAccountStatus(
-								ownerFilter, username, statusFilter, pageable);
+						return userRepository
+								.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndAccountStatus(
+										ownerFilter, username, statusFilter, pageable);
 					} else if (email != null && ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
-								ownerFilter, email, statusFilter, pageable);
+						return userRepository
+								.findByOwnerStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
+										ownerFilter, email, statusFilter, pageable);
 					} else if (username != null) {
-						return userRepository.findByUsernameStartingWithIgnoreCaseAndAccountStatus(username, statusFilter, pageable);
+						return userRepository.findByUsernameStartingWithIgnoreCaseAndAccountStatus(username,
+								statusFilter, pageable);
 					} else if (email != null) {
-						return userRepository.findByEmailStartingWithIgnoreCaseAndAccountStatus(email, statusFilter, pageable);
+						return userRepository.findByEmailStartingWithIgnoreCaseAndAccountStatus(email, statusFilter,
+								pageable);
 					} else if (ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndAccountStatus(ownerFilter, statusFilter, pageable);
+						return userRepository.findByOwnerStartingWithIgnoreCaseAndAccountStatus(ownerFilter,
+								statusFilter, pageable);
 					}
 					return userRepository.findByAccountStatus(statusFilter, pageable);
 				} else {
 					// Exclude HIDDEN status
 					if (username != null && email != null && ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
-								ownerFilter, username, email, hidden, pageable);
+						return userRepository
+								.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
+										ownerFilter, username, email, hidden, pageable);
 					} else if (username != null && email != null) {
-						return userRepository.findByUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
-								username, email, hidden, pageable);
+						return userRepository
+								.findByUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
+										username, email, hidden, pageable);
 					} else if (username != null && ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndAccountStatusNot(
-								ownerFilter, username, hidden, pageable);
+						return userRepository
+								.findByOwnerStartingWithIgnoreCaseAndUsernameStartingWithIgnoreCaseAndAccountStatusNot(
+										ownerFilter, username, hidden, pageable);
 					} else if (email != null && ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
-								ownerFilter, email, hidden, pageable);
+						return userRepository
+								.findByOwnerStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
+										ownerFilter, email, hidden, pageable);
 					} else if (username != null) {
-						return userRepository.findByUsernameStartingWithIgnoreCaseAndAccountStatusNot(username, hidden, pageable);
+						return userRepository.findByUsernameStartingWithIgnoreCaseAndAccountStatusNot(username, hidden,
+								pageable);
 					} else if (email != null) {
-						return userRepository.findByEmailStartingWithIgnoreCaseAndAccountStatusNot(email, hidden, pageable);
+						return userRepository.findByEmailStartingWithIgnoreCaseAndAccountStatusNot(email, hidden,
+								pageable);
 					} else if (ownerFilter != null) {
-						return userRepository.findByOwnerStartingWithIgnoreCaseAndAccountStatusNot(ownerFilter, hidden, pageable);
+						return userRepository.findByOwnerStartingWithIgnoreCaseAndAccountStatusNot(ownerFilter, hidden,
+								pageable);
 					}
 					return userRepository.findByAccountStatusNot(hidden, pageable);
 				}
@@ -726,27 +746,29 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			if (statusFilter != null) {
 				// Filter by specific AccountStatus
 				if (username != null && email != null) {
-					return userRepository.findByOwnerAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
-							owner, username, email, statusFilter, pageable);
+					return userRepository
+							.findByOwnerAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatus(
+									owner, username, email, statusFilter, pageable);
 				} else if (username != null) {
-					return userRepository.findByOwnerAndUsernameStartingWithIgnoreCaseAndAccountStatus(owner, username, statusFilter,
-							pageable);
+					return userRepository.findByOwnerAndUsernameStartingWithIgnoreCaseAndAccountStatus(owner, username,
+							statusFilter, pageable);
 				} else if (email != null) {
-					return userRepository.findByOwnerAndEmailStartingWithIgnoreCaseAndAccountStatus(owner, email, statusFilter,
-							pageable);
+					return userRepository.findByOwnerAndEmailStartingWithIgnoreCaseAndAccountStatus(owner, email,
+							statusFilter, pageable);
 				}
 				return userRepository.findByOwnerAndAccountStatus(owner, statusFilter, pageable);
 			} else {
 				// Exclude HIDDEN status
 				if (username != null && email != null) {
-					return userRepository.findByOwnerAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
-							owner, username, email, hidden, pageable);
+					return userRepository
+							.findByOwnerAndUsernameStartingWithIgnoreCaseAndEmailStartingWithIgnoreCaseAndAccountStatusNot(
+									owner, username, email, hidden, pageable);
 				} else if (username != null) {
-					return userRepository.findByOwnerAndUsernameStartingWithIgnoreCaseAndAccountStatusNot(owner, username, hidden,
-							pageable);
+					return userRepository.findByOwnerAndUsernameStartingWithIgnoreCaseAndAccountStatusNot(owner,
+							username, hidden, pageable);
 				} else if (email != null) {
-					return userRepository.findByOwnerAndEmailStartingWithIgnoreCaseAndAccountStatusNot(owner, email, hidden,
-							pageable);
+					return userRepository.findByOwnerAndEmailStartingWithIgnoreCaseAndAccountStatusNot(owner, email,
+							hidden, pageable);
 				}
 				return userRepository.findByOwnerAndAccountStatusNot(owner, hidden, pageable);
 			}
@@ -764,15 +786,13 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			List<Sort.Order> orders = new ArrayList<>();
 			for (QuerySortOrder sortOrder : sortOrders) {
 				String property = sortOrder.getSorted();
-				Sort.Direction direction = sortOrder.getDirection() == SortDirection.ASCENDING
-					? Sort.Direction.ASC
-					: Sort.Direction.DESC;
+				Sort.Direction direction = sortOrder.getDirection() == SortDirection.ASCENDING ? Sort.Direction.ASC
+						: Sort.Direction.DESC;
 				orders.add(new Sort.Order(direction, property));
 			}
 
 			// Add secondary sort by username if not already included
-			boolean hasUsernameSorting = sortOrders.stream()
-				.anyMatch(so -> USERNAME.equals(so.getSorted()));
+			boolean hasUsernameSorting = sortOrders.stream().anyMatch(so -> USERNAME.equals(so.getSorted()));
 			if (!hasUsernameSorting) {
 				orders.add(new Sort.Order(Sort.Direction.ASC, USERNAME));
 			}

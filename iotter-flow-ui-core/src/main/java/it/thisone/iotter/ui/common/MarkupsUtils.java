@@ -42,7 +42,7 @@ public class MarkupsUtils {
 	public static String toHtml(GraphicWidget widget) {
 		StringWriter writer = new StringWriter();
 		Html markup = new Html(writer);
-		String type = UIUtils.localize(widget.getType().getI18nKey());
+		String type = widget.getType().getI18nKey();
 		String beanName = (widget.getLabel() != null) ? type + ": " + widget.getLabel() : type + ": " + widget.getId();
 		markup.text(beanName).br();
 		if (!widget.getFeeds().isEmpty()) {
@@ -260,7 +260,7 @@ public class MarkupsUtils {
 	}
 
 	private static String getI18nLabel(String sectionKey, String key) {
-		return UIUtils.localize(sectionKey + "." + key);
+		return sectionKey + "." + key;
 	}
 
 	/**

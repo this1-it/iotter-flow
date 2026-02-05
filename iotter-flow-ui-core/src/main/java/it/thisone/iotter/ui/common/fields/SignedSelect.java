@@ -12,9 +12,9 @@ public class SignedSelect extends ComboBox<Signed> {
 
 	public SignedSelect() {
 		super();
-		setLabel(UIUtils.localize("basic.combobox.signed"));
+		setLabel(getTranslation("basic.combobox.signed"));
 		setItems(Signed.values());
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 		setWidth(16, Unit.EM);
 //		setEmptySelectionAllowed(false);
 //		setTextInputAllowed(true);

@@ -21,11 +21,11 @@ public class AreasOfInterestOptionGroup extends CheckboxGroup<AreasOfInterest> {
 		
 		// Set enum values as items, sorted by localized name
 		setItems(Arrays.stream(AreasOfInterest.values())
-			.sorted(Comparator.comparing(area -> UIUtils.localize(area.getI18nKey())))
+			.sorted(Comparator.comparing(area -> getTranslation(area.getI18nKey())))
 			.collect(Collectors.toList()));
 		
 		// Set caption generator to use i18n keys
-		setItemLabelGenerator(area -> UIUtils.localize(area.getI18nKey()));
+		setItemLabelGenerator(area -> getTranslation(area.getI18nKey()));
 	}
 	
 

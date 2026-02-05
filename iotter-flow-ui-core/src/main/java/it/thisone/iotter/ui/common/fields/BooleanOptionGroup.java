@@ -18,8 +18,8 @@ public class BooleanOptionGroup extends RadioButtonGroup<Boolean> {
 
         // Ordered labels: false first, then true
         Map<Boolean, String> labels = new LinkedHashMap<>();
-        labels.put(false, UIUtils.localize("enum.boolean.false"));
-        labels.put(true, UIUtils.localize("enum.boolean.true"));
+        labels.put(false, getTranslation("enum.boolean.false"));
+        labels.put(true, getTranslation("enum.boolean.true"));
 
         setItems(labels.keySet());
 

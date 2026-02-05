@@ -78,7 +78,7 @@ AbstractCompositeField<VerticalLayout, EmbeddedImageData, ImageData>
 	protected void setPresentationValue(final ImageData data) {
 		this.currentValue = data;
 		if (data == null) {
-			label.setText(UIUtils.localize("groupwidgets.custommap.missing_image"));
+			label.setText(getTranslation("groupwidgets.custommap.missing_image"));
 			button.setIcon(VaadinIcon.UPLOAD.create());
 			//image.setSource(new ThemeResource("img/empty-image.png"));
 	
@@ -96,7 +96,7 @@ AbstractCompositeField<VerticalLayout, EmbeddedImageData, ImageData>
 			button.setIcon(VaadinIcon.EDIT.create());
 		} catch (Exception e) {
 			//image.setSource(new ThemeResource("img/empty-image.png"));
-			label.setText(UIUtils.localize("groupwidgets.custommap.missing_image"));
+			label.setText(getTranslation("groupwidgets.custommap.missing_image"));
 			button.setIcon(VaadinIcon.UPLOAD.create());
 			return;
 		}

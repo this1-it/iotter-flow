@@ -269,7 +269,7 @@ implements Receiver {
 
 
 	public String getI18nKey(String key) {
-		return UIUtils.localize(name + "." + key);
+		return getTranslation(name + "." + key);
 	}
 
 }

@@ -237,17 +237,22 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 		if (ChannelUtils.isTypeDigital(channel)) {
 			format = "%s";
 			args = new String[1];
-			args[0] = UIUtils.localize("channel.remote.digital");
+			args[0] = getTranslation("channel.remote.digital");
 		} else {
 			DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance();
 			format = "%s:%s, %s:%s";
 			args = new String[8];
-			args[0] = UIUtils.localize("channel.remote.min");
+			args[0] = getTranslation("channel.remote.min");
 			args[1] = decimalFormat.format(remote.getMin());
-			args[2] = UIUtils.localize("channel.remote.max");
+			args[2] = getTranslation("channel.remote.max");
 			args[3] = decimalFormat.format(remote.getMax());
 		}
 		return String.format(format, (Object[]) args);
+	}
+
+	private String getTranslation(String key) {
+		// TODO Auto-generated method stub
+		return key;
 	}
 
 	public boolean isHideUnits() {

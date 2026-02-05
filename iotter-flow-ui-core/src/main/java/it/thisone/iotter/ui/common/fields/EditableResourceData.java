@@ -122,7 +122,7 @@ extends AbstractCompositeField<HorizontalLayout, EditableResourceData, ResourceD
 
 
 	public String getI18nKey(String key) {
-		return UIUtils.localize(name + "." + key);
+		return getTranslation(name + "." + key);
 	}
 
 	public UploadFileHandler getUploadField() {

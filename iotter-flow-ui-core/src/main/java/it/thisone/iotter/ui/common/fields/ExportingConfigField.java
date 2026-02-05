@@ -115,7 +115,7 @@ public class ExportingConfigField extends AbstractCompositeField<FormLayout, Exp
 		return i18nkey;
 	}
 	public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey()  + "." + key);
+		return getTranslation(getI18nKey()  + "." + key);
 	}
 	
 	private RadioButtonGroup<Order> createOrderRadioButtonGroup() {
@@ -123,11 +123,11 @@ public class ExportingConfigField extends AbstractCompositeField<FormLayout, Exp
 		optionGroup.setItems(Order.values());
 
 		optionGroup.setRenderer(new ComponentRenderer<Span,Order>(order ->
-        new Span(UIUtils.localize(order.getI18nKey()))
+        new Span(getTranslation(order.getI18nKey()))
 				));
 
 //	    optionGroup.setItemLabelGenerator(
-//	            literal -> UIUtils.localize(literal.getI18nKey())
+//	            literal -> getTranslation(literal.getI18nKey())
 //	        );
 
 		return optionGroup;

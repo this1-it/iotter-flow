@@ -44,10 +44,10 @@ public final class PasswordValidator implements Validator<String> {
 //            return null;
 //        }
 //        if (password.length() < Constants.Validators.MIN_PASSWORD_LENGTH) {
-//            return ValidationResult.error(UIUtils.localize("validators.too-short-password"));
+//            return ValidationResult.error(getTranslation("validators.too-short-password"));
 //        }
 //        if (editor.equalsField("username", password)) {
-//            return ValidationResult.error(UIUtils.localize("validators.username-equals-password"));        	
+//            return ValidationResult.error(getTranslation("validators.username-equals-password"));        	
 //        }
 		return ValidationResult.ok();
 	}

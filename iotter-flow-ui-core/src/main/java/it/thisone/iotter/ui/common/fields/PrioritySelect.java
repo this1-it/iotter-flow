@@ -12,9 +12,9 @@ public class PrioritySelect extends ComboBox<Priority> {
 	
 	public PrioritySelect() {
 		super();
-		setLabel(UIUtils.localize("basic.combobox.priority"));
+		setLabel(getTranslation("basic.combobox.priority"));
 		setItems(Priority.values());
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 		setWidth(16, Unit.EM);
 //		setEmptySelectionAllowed(false);
 //		setTextInputAllowed(true);

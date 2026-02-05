@@ -12,7 +12,7 @@ public class QualifierSelect extends ComboBox<Qualifier> {
 	
 	public QualifierSelect() {
 		super();
-		setLabel(UIUtils.localize("basic.combobox.qualifier"));
+		setLabel(getTranslation("basic.combobox.qualifier"));
 		setItems(Qualifier.values());
 		setItemLabelGenerator(type -> type.getDisplayName());
 		setWidth(16, Unit.EM);

@@ -12,7 +12,7 @@ public class TypeReadSelect extends ComboBox<TypeRead> {
 	public TypeReadSelect() {
 		super();
 		setItems(TypeRead.values());
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 	}
 
 }

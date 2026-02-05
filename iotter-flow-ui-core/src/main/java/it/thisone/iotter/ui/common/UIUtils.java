@@ -488,4 +488,11 @@ throw new UnsupportedOperationException("vaadin8 legacy");
 		}
 		return Date.from(localDateTime.atZone(timeZone.toZoneId()).toInstant());
 	}
+
+
+
+	public static boolean isMobile() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

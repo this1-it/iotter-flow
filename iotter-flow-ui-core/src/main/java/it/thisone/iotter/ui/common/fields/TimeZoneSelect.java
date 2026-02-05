@@ -28,7 +28,7 @@ public class TimeZoneSelect extends ComboBox<TimeZone> {
 	}
 
 	public TimeZoneSelect() {
-		super(UIUtils.localize("basic.combobox.timezone"));
+		super("basic.combobox.timezone");
 		
 		// Set the timezone list as items
 		setItems(getTimeZones());

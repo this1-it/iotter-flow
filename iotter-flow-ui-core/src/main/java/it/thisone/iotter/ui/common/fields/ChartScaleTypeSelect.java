@@ -12,7 +12,7 @@ public class ChartScaleTypeSelect extends ComboBox<ChartScaleType> {
 	public ChartScaleTypeSelect() {
 		super();
 		setItems(ChartScaleType.values());
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 	}
 
 }

@@ -46,20 +46,20 @@ public class GeoLocationForm extends AbstractForm<GeoLocation> {
 			.bind(GeoLocation::getAddress, GeoLocation::setAddress);
 
 		getBinder().forField(latitude)
-			.asRequired(UIUtils.localize("validators.fieldgroup_errors"))
+			.asRequired(getTranslation("validators.fieldgroup_errors"))
 			.withConverter(new StringToDoubleConverter(getI18nLabel("invalid_latitude")))
 			.withValidator(new DoubleRangeValidator(getI18nLabel("invalid_latitude"), -90d, 90d))
 			.bind(GeoLocation::getLatitude, GeoLocation::setLatitude);
 
 		getBinder().forField(longitude)
-			.asRequired(UIUtils.localize("validators.fieldgroup_errors"))
+			.asRequired(getTranslation("validators.fieldgroup_errors"))
 			.withConverter(new StringToDoubleConverter(getI18nLabel("invalid_longitude")))
 			.withValidator(new DoubleRangeValidator(getI18nLabel("invalid_longitude"), -180d, 180d))
 			.bind(GeoLocation::getLongitude, GeoLocation::setLongitude);
 	}
 
 	public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey() + "." + key);
+		return getTranslation(getI18nKey() + "." + key);
 	}
 
 	public String getI18nKey() {

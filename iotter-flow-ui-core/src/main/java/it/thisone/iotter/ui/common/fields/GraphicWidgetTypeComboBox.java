@@ -17,9 +17,9 @@ public class GraphicWidgetTypeComboBox extends ComboBox<GraphicWidgetType> {
 	public GraphicWidgetTypeComboBox() {
 		super();
 		List<GraphicWidgetType> sortedItems = Arrays.asList(GraphicWidgetType.values());
-		sortedItems.sort(Comparator.comparing(type -> UIUtils.localize(type.getI18nKey())));
+		sortedItems.sort(Comparator.comparing(type -> getTranslation(type.getI18nKey())));
 		setItems(sortedItems);
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 
 	}
 

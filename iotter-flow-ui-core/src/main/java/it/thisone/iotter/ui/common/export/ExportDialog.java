@@ -558,17 +558,17 @@ public class ExportDialog extends Dialog {
 
 	private void handleExportResult(ExportResult result, Throwable ex, ExportStartEvent event) {
 		if (ex != null || result == null) {
-			PopupNotification.show(UIUtils.localize("export.failed_export") + " " + event.getConfig().getName(),
+			PopupNotification.show(getTranslation("export.failed_export") + " " + event.getConfig().getName(),
 					PopupNotification.Type.ERROR);
 			return;
 		}
 		if (result.alreadyLocked) {
-			PopupNotification.show(UIUtils.localize("export.already_running_export") + " " + event.getConfig().getName(),
+			PopupNotification.show(getTranslation("export.already_running_export") + " " + event.getConfig().getName(),
 					PopupNotification.Type.ERROR);
 			return;
 		}
 		if (result.exported == null) {
-			PopupNotification.show(UIUtils.localize("export.failed_export") + " " + event.getConfig().getName(),
+			PopupNotification.show(getTranslation("export.failed_export") + " " + event.getConfig().getName(),
 					PopupNotification.Type.ERROR);
 			return;
 		}
@@ -588,7 +588,7 @@ public class ExportDialog extends Dialog {
 		downloader.extend(lnkFile);
 
 		Dialog dialog = new Dialog();
-		dialog.add(new Span(UIUtils.localize("export.export_finished")));
+		dialog.add(new Span(getTranslation("export.export_finished")));
 		dialog.add(lnkFile);
 		dialog.setDraggable(false);
 		dialog.open();
@@ -629,7 +629,7 @@ public class ExportDialog extends Dialog {
 	private RadioButtonGroup<Order> createOrderRadioButtonGroup() {
 		RadioButtonGroup<Order> optionGroup = new RadioButtonGroup<>();
 		optionGroup.setItems(Order.values());
-		//optionGroup.setItemLabelGenerator(literal -> UIUtils.localize(literal.getI18nKey()));
+		//optionGroup.setItemLabelGenerator(literal -> getTranslation(literal.getI18nKey()));
 
 		return optionGroup;
 	}
@@ -637,7 +637,7 @@ public class ExportDialog extends Dialog {
 	private RadioButtonGroup<ExportFileMode> createFileModeRadioButtonGroup() {
 		RadioButtonGroup<ExportFileMode> optionGroup = new RadioButtonGroup<>();
 		optionGroup.setItems(ExportFileMode.values());
-		//optionGroup.setItemLabelGenerator(literal -> UIUtils.localize(literal.getI18nKey()));
+		//optionGroup.setItemLabelGenerator(literal -> getTranslation(literal.getI18nKey()));
 		return optionGroup;
 	}
 
@@ -704,7 +704,7 @@ public class ExportDialog extends Dialog {
 		}
 
 		combo.setItems(items);
-//		combo.setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+//		combo.setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 //		combo.setEmptySelectionAllowed(false);
 		if (!items.isEmpty()) {
 			combo.setValue(items.get(0));
@@ -730,7 +730,7 @@ public class ExportDialog extends Dialog {
 	}
 
 	public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey() + "." + key);
+		return getTranslation(getI18nKey() + "." + key);
 	}
 
 	public String getI18nKey() {

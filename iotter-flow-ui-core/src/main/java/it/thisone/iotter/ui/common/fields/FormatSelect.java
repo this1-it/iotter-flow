@@ -12,7 +12,7 @@ public class FormatSelect extends ComboBox<Format> {
 	public FormatSelect() {
 		super();
 		setItems(Format.values());
-		setItemLabelGenerator(type -> UIUtils.localize(type.getI18nKey()));
+		setItemLabelGenerator(type -> getTranslation(type.getI18nKey()));
 	}
 
 }
