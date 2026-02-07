@@ -484,7 +484,8 @@ public class ExportDialog extends Dialog {
 					properties.setOrder(formBean.getExportOrder());
 					config.setInterpolation(formBean.getInterpolation());
 					String email = formBean.getExportEmail();
-					String owner = UIUtils.getUserDetails().getUsername();
+					//String owner = getCurrentUser().getUsername();
+					String owner = formBean.getExportEmail();
 					if (config.getLockId() == null) {
 						config.setLockId(config.getName() + owner);
 					}

@@ -8,24 +8,25 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.vaadin.data.ValueProvider;
-import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.shared.ui.grid.HeightMode;
-import com.vaadin.ui.Accordion;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.CustomComponent;
-import com.vaadin.ui.Grid;
+import com.vaadin.flow.function.ValueProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.accordion.AccordionPanel;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.TabSheet;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.ui.TabSheet.SelectedTabChangeEvent;
 import com.vaadin.ui.TabSheet.Tab;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.ui.renderers.HtmlRenderer;
-import com.vaadin.ui.themes.ValoTheme;
+
 
 import it.thisone.iotter.cassandra.model.FeedAlarmEvent;
 import it.thisone.iotter.cassandra.model.IFeedAlarm;
@@ -46,8 +47,9 @@ import it.thisone.iotter.ui.model.ChannelAdapter;
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
 
 public abstract class AbstractDeviceInfo extends BaseComponent implements IDeviceInfo {
+
 	private static final long serialVersionUID = 1L;
-	private Accordion multicomponent;
+	private com.vaadin.flow.component.accordion.Accordion multicomponent;
 	protected Device device;
 	protected ChannelAdapterDataProvider container;
 	protected Collection<GroupWidget> widgets;
@@ -55,23 +57,23 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 	public AbstractDeviceInfo() {
 		super(UIUtils.MAPS_DEVICES_GOOGLE, UUID.randomUUID().toString());
 		multicomponent = new Accordion();
-		multicomponent.addStyleName(ValoTheme.TABSHEET_FRAMED);
-		multicomponent.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
-		multicomponent.addSelectedTabChangeListener(new TabSheet.SelectedTabChangeListener() {
-			/**
-					 * 
-					 */
-			private static final long serialVersionUID = 1L;
+		// multicomponent.addClassName(ValoTheme.TABSHEET_FRAMED);
+		// multicomponent.addClassName(ValoTheme.TABSHEET_PADDED_TABBAR);
+		// multicomponent.addSelectedTabChangeListener(new TabSheet.SelectedTabChangeListener() {
+		// 	/**
+		// 			 * 
+		// 			 */
+		// 	private static final long serialVersionUID = 1L;
 
-			public void selectedTabChange(SelectedTabChangeEvent event) {
-				TabSheet tabsheet = event.getTabSheet();
-				if (tabsheet.getSelectedTab() instanceof ITabContent) {
-					((ITabContent) tabsheet.getSelectedTab()).lazyLoad();
-				}
-			}
-		});
+		// 	public void selectedTabChange(SelectedTabChangeEvent event) {
+		// 		TabSheet tabsheet = event.getTabSheet();
+		// 		if (tabsheet.getSelectedTab() instanceof ITabContent) {
+		// 			((ITabContent) tabsheet.getSelectedTab()).lazyLoad();
+		// 		}
+		// 	}
+		// });
 
-		setCompositionRoot(multicomponent);
+		setRootComposition(multicomponent);
 	}
 
 	public void setContent(Device device, Collection<GroupWidget> widgets) {
@@ -82,18 +84,18 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 
 	@Override
 	public void addListener(ItemSelectedListener listener) {
-		try {
-			Method method = ItemSelectedListener.class.getDeclaredMethod(ItemSelectedListener.ITEM_SELECTED,
-					new Class[] { ItemSelectedEvent.class });
-			addListener(ItemSelectedEvent.class, listener, method);
-		} catch (final java.lang.NoSuchMethodException e) {
-			throw new java.lang.RuntimeException("Internal error,  method not found");
-		}
+		// try {
+		// 	Method method = ItemSelectedListener.class.getDeclaredMethod(ItemSelectedListener.ITEM_SELECTED,
+		// 			new Class[] { ItemSelectedEvent.class });
+		// 	addListener(ItemSelectedEvent.class, listener, method);
+		// } catch (final java.lang.NoSuchMethodException e) {
+		// 	throw new java.lang.RuntimeException("Internal error,  method not found");
+		// }
 	}
 
 	@Override
 	public void removeListener(ItemSelectedListener listener) {
-		removeListener(ItemSelectedEvent.class, listener);
+		//removeListener(ItemSelectedEvent.class, listener);
 	}
 
 
@@ -126,7 +128,7 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 	
 	protected Component buildLinks() {
 		final Grid<GroupWidget> grid = new Grid<>();
-		grid.addStyleName("smallgrid");
+		grid.addClassName("smallgrid");
 		grid.setHeightMode(HeightMode.CSS);
 		grid.setSelectionMode(SelectionMode.SINGLE);
 		grid.setSizeFull();
@@ -151,35 +153,35 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 	
 	private ValueProvider<GroupWidget, String> nameValueProvider() {
 		return groupWidget -> String.format("%s %s", 
-				VaadinIcons.EXTERNAL_LINK.getHtml(),
+				VaadinIcon.EXTERNAL_LINK.getHtml(),
 				groupWidget.getName());
 	}
 
 	
 
 	protected VerticalLayout buildGeneral() {
-		String status = UIUtils.localize(device.getStatus().getI18nKey());
+		String status = getTranslation(device.getStatus().getI18nKey());
 		Date date = device.getLastContactDate();
 		String timestamp = date != null ? ChartUtils.formatDate(date, null) : "";
 		StringBuffer sb = new StringBuffer();
-		sb.append(VaadinIcons.FLAG.getHtml());
+		sb.append(VaadinIcon.FLAG.create());
 		sb.append("&nbsp;");
 		sb.append(device.getSerial());
 		sb.append("&nbsp;");
-		sb.append(VaadinIcons.COGS.getHtml());
+		sb.append(VaadinIcon.COGS.getHtml());
 		sb.append("&nbsp;");
 		sb.append(status.toUpperCase());
 		sb.append("<br/>");
 		if (device.checkInactive(date)) {
 			sb.append("<span style=\"color: #ff0000;\">");
-			sb.append(VaadinIcons.PLUG.getHtml());
+			sb.append(VaadinIcon.PLUG.getHtml());
 			sb.append("&nbsp;OFFLINE");
 			sb.append("&nbsp;");
 			sb.append(timestamp);
 			sb.append("</span>");
 			sb.append("&nbsp;");
 		} else {
-			sb.append(VaadinIcons.PLUG.getHtml());
+			sb.append(VaadinIcon.PLUG.getHtml());
 			sb.append("&nbsp;ONLINE");
 			sb.append("&nbsp;");
 			sb.append(timestamp);
@@ -187,10 +189,10 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 		}
 
 		Label label = new Label(sb.toString(), ContentMode.HTML);
-		label.addStyleName(ValoTheme.LABEL_TINY);
+		label.addClassName(ValoTheme.LABEL_TINY);
 		label.setSizeFull();
 		VerticalLayout layout = new VerticalLayout();
-		layout.setMargin(true);
+		layout.setPadding(true);
 		layout.addComponent(label);
 		return layout;
 	}
@@ -199,8 +201,8 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 		Date lastContact = UIUtils.getCassandraService().getFeeds().getLastContact(device.getSerial());
 		device.setLastContactDate(lastContact);
 		VerticalLayout general = buildGeneral();
-		Tab generalTab = multicomponent.addTab(general, device.getLabel(), VaadinIcons.DASHBOARD);
-		generalTab.setStyleName(ValoTheme.LABEL_BOLD);
+		Tab generalTab = multicomponent.addTab(general, device.getLabel(), VaadinIcon.DASHBOARD);
+		generalTab.setClassName(ValoTheme.LABEL_BOLD);
  
 		if (!device.getChannels().isEmpty()) {
 			container = new ChannelAdapterDataProvider();
@@ -208,22 +210,22 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 			List<ChannelAdapter> selected = filterSelected();
 
 			if (lastContact != null && device.isRunning() && !selected.isEmpty()) {
-				multicomponent.addTab(buildLastMeasures(selected), getI18nLabel("measures"), VaadinIcons.SIGNAL);
+				multicomponent.addTab(buildLastMeasures(selected), getI18nLabel("measures"), VaadinIcon.SIGNAL);
 			} else {
-				String content = String.format("%s %s", VaadinIcons.SIGNAL.getHtml(), getI18nLabel("no_measures"));
+				String content = String.format("%s %s", VaadinIcon.SIGNAL.getHtml(), getI18nLabel("no_measures"));
 				Label label = new Label(content, ContentMode.HTML);
-				label.addStyleName(ValoTheme.LABEL_TINY);
+				label.addClassName(ValoTheme.LABEL_TINY);
 				label.setSizeFull();
 				general.addComponent(label);
 			}
 
 			if (widgets != null && !widgets.isEmpty()) {
-				multicomponent.addTab(buildLinks(), getI18nLabel("visualizations"), VaadinIcons.BAR_CHART);
+				multicomponent.addTab(buildLinks(), getI18nLabel("visualizations"), VaadinIcon.BAR_CHART);
 			} else {
-				String content = String.format("%s %s", VaadinIcons.BAR_CHART.getHtml(),
+				String content = String.format("%s %s", VaadinIcon.BAR_CHART.getHtml(),
 						getI18nLabel("no_visualizations"));
 				Label label = new Label(content, ContentMode.HTML);
-				label.addStyleName(ValoTheme.LABEL_TINY);
+				label.addClassName(ValoTheme.LABEL_TINY);
 				label.setSizeFull();
 				general.addComponent(label);
 			}
@@ -231,12 +233,12 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 			boolean hasAlarms = (count > 0);
 
 			if (hasAlarms) {
-				Tab tab = multicomponent.addTab(buildAlarms(), getI18nLabel("alarms"), VaadinIcons.BELL);
+				Tab tab = multicomponent.addTab(buildAlarms(), getI18nLabel("alarms"), VaadinIcon.BELL);
 				multicomponent.setSelectedTab(tab);
 			} else {
-				String content = String.format("%s %s", VaadinIcons.BELL_SLASH.getHtml(), getI18nLabel("no_alarms"));
+				String content = String.format("%s %s", VaadinIcon.BELL_SLASH.getHtml(), getI18nLabel("no_alarms"));
 				Label label = new Label(content, ContentMode.HTML);
-				label.addStyleName(ValoTheme.LABEL_TINY);
+				label.addClassName(ValoTheme.LABEL_TINY);
 				label.setSizeFull();
 				general.addComponent(label);
 			}
@@ -248,7 +250,7 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 	
 	
 	
-	public class ChannelContainerGrid extends CustomComponent implements ITabContent {
+	public class ChannelContainerGrid extends Composite<VerticalLayout> implements ITabContent {
 		private static final long serialVersionUID = 1L;
 		private Grid<ChannelAdapter> grid;
 		private List<ChannelAdapter> channels;
@@ -258,12 +260,12 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 			super();
 			channels = items;
 			grid = new Grid<>();
-			grid.addStyleName("smallgrid");
-			grid.setHeightMode(HeightMode.CSS);
-			grid.setSelectionMode(SelectionMode.NONE);
+			grid.addClassName("smallgrid");
+			// grid.setHeightMode(HeightMode.CSS);
+			// grid.setSelectionMode(SelectionMode.NONE);
 			grid.setSizeFull();
 			grid.setEnabled(false);
-			grid.setHeaderVisible(false);
+			//grid.setHeaderVisible(false);
 			
 			dataProvider = new ListDataProvider<>(new ArrayList<>());
 			grid.setDataProvider(dataProvider);
@@ -283,20 +285,20 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 				}
 			}
 			
-			setCompositionRoot(grid);
+			getContent().add(grid);
 		}
 
 		@Override
 		public void refresh() {
-			UI.getCurrent().access(new Runnable() {
-				@Override
-				public void run() {
-					dataProvider.getItems().clear();
-					dataProvider.getItems().addAll(channels);
-					dataProvider.refreshAll();
-					UIUtils.push();
-				}
-			});
+			// UI.getCurrent().access(new Runnable() {
+			// 	@Override
+			// 	public void run() {
+			// 		dataProvider.getItems().clear();
+			// 		dataProvider.getItems().addAll(channels);
+			// 		dataProvider.refreshAll();
+			// 		UIUtils.push();
+			// 	}
+			// });
 		}
 
 		
@@ -314,7 +316,7 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 	}
 	
 	
-	public class AlarmContainerGrid extends CustomComponent implements ITabContent {
+	public class AlarmContainerGrid extends Composite<VerticalLayout> implements ITabContent {
 		private static final long serialVersionUID = 1L;
 		private Grid<ChannelAdapter> grid;
 		private Device device;
@@ -324,12 +326,12 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 			super();
 			device = entity;
 			grid = new Grid<>();
-			grid.addStyleName("smallgrid");
-			grid.setHeightMode(HeightMode.CSS);
-			grid.setSelectionMode(SelectionMode.NONE);
+			grid.addClassName("smallgrid");
+			// grid.setHeightMode(HeightMode.CSS);
+			// grid.setSelectionMode(SelectionMode.NONE);
 			grid.setSizeFull();
 			grid.setEnabled(false);
-			grid.setHeaderVisible(false);
+			//grid.setHeaderVisible(false);
 			
 			dataProvider = new ListDataProvider<>(new ArrayList<>());
 			grid.setDataProvider(dataProvider);
@@ -339,7 +341,7 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 			grid.addColumn(ChannelAdapter::getAlarmValue);
 			grid.addColumn(ChannelAdapter::getAlarmDate);
 			
-			setCompositionRoot(grid);
+			setRootComposition(grid);
 		}
 
 		@Override
@@ -356,33 +358,33 @@ public abstract class AbstractDeviceInfo extends BaseComponent implements IDevic
 
 		@Override
 		public void refresh() {
-			UI.getCurrent().access(new Runnable() {
-				@Override
-				public void run() {
-					List<FeedAlarmEvent> events = UIUtils.getCassandraService().getAlarms().getAlarmEvents(device.getSerial(), 30);
-					ChannelAdapterDataProvider ccontainer = new ChannelAdapterDataProvider();
-					ccontainer.addChannels(device.getChannels());
-					List<IFeedAlarm> alarms = new ArrayList<>();
-					alarms.addAll(events);
+			// UI.getCurrent().access(new Runnable() {
+			// 	@Override
+			// 	public void run() {
+			// 		List<FeedAlarmEvent> events = UIUtils.getCassandraService().getAlarms().getAlarmEvents(device.getSerial(), 30);
+			// 		ChannelAdapterDataProvider ccontainer = new ChannelAdapterDataProvider();
+			// 		ccontainer.addChannels(device.getChannels());
+			// 		List<IFeedAlarm> alarms = new ArrayList<>();
+			// 		alarms.addAll(events);
 					
-					List<ChannelAdapter> allAdapters = ccontainer.renderAlarms(alarms);
-					// Filter only alarmed items and sort by alarm date descending
-					List<ChannelAdapter> filteredAdapters = allAdapters.stream()
-							.filter(adapter -> Boolean.TRUE.equals(adapter.isAlarmed()))
-							.sorted((a, b) -> {
-								if (a.getAlarmDate() == null && b.getAlarmDate() == null) return 0;
-								if (a.getAlarmDate() == null) return 1;
-								if (b.getAlarmDate() == null) return -1;
-								return b.getAlarmDate().compareTo(a.getAlarmDate()); // descending
-							})
-							.collect(java.util.stream.Collectors.toList());
+			// 		List<ChannelAdapter> allAdapters = ccontainer.renderAlarms(alarms);
+			// 		// Filter only alarmed items and sort by alarm date descending
+			// 		List<ChannelAdapter> filteredAdapters = allAdapters.stream()
+			// 				.filter(adapter -> Boolean.TRUE.equals(adapter.isAlarmed()))
+			// 				.sorted((a, b) -> {
+			// 					if (a.getAlarmDate() == null && b.getAlarmDate() == null) return 0;
+			// 					if (a.getAlarmDate() == null) return 1;
+			// 					if (b.getAlarmDate() == null) return -1;
+			// 					return b.getAlarmDate().compareTo(a.getAlarmDate()); // descending
+			// 				})
+			// 				.collect(java.util.stream.Collectors.toList());
 					
-					dataProvider.getItems().clear();
-					dataProvider.getItems().addAll(filteredAdapters);
-					dataProvider.refreshAll();
-					UIUtils.push();
-				}
-			});
+			// 		dataProvider.getItems().clear();
+			// 		dataProvider.getItems().addAll(filteredAdapters);
+			// 		dataProvider.refreshAll();
+			// 		UIUtils.push();
+			// 	}
+			// });
 		}
 	}
 	

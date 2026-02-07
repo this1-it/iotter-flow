@@ -6,9 +6,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
-
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.ui.main.UiConstants;
 
@@ -34,6 +40,11 @@ public abstract class BaseComponent extends Composite<Div> implements UiConstant
 		this.i18nkey = i18nkey;
 		setId(id);
 		
+	}
+
+	public void setRootComposition(Component component) {
+        getContent().removeAll();
+        getContent().add(component);
 	}
 	
 	@Override
@@ -80,95 +91,57 @@ public abstract class BaseComponent extends Composite<Div> implements UiConstant
 		return drawer;
 	}
 	
-	/*
-	 * Bug #174 [VAADIN] Controllare la gestione del resize dei dialog modali nel caso di resize del browser
-	 * 
-	 * UiUtils.MODAL_DIALOG_STYLE
-	 */
 
-	
-	public static void makeFullSizeDialog(Dialog dialog) {
-//		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
-//		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
-//		dialog.setWidth(width, Unit.PIXELS);
-//		dialog.setHeight(height, Unit.PIXELS);
-	}	
-	
-	public static void makeResponsiveDialog(Dialog dialog, float[] dimension, String style) {
-//		if (dimension == null || dimension.length < 2) {
-//			dimension = UIUtils.M_DIMENSION;
-//		}
-//		final BrowserWindowResizeListener resizeListener = createBrowserWindowResizeListener(dialog, dimension);
-//		int width = UI.getCurrent().getPage().getBrowserWindowWidth();
-//		int height = UI.getCurrent().getPage().getBrowserWindowHeight();
-//		if (width < 481 || height < 481) {
-//			dimension = new float[]{1f,1f};
-//		}
-//		if (UIUtils.isMobile()) {
-//			dimension = new float[]{1f,1f};
-//		}
-		
-//		dialog.setWidth(width * dimension[0], Unit.PIXELS);
-//		dialog.setHeight(height * dimension[1], Unit.PIXELS);
-//		UI.getCurrent().getPage()
-//				.addBrowserWindowResizeListener(resizeListener);
-		
-//		dialog.addOpenedChangeListener(event -> {
-//			if (!event.isOpened()) {
-//				UI.getCurrent().getPage()
-//					.removeBrowserWindowResizeListener(resizeListener);
-//			}
-//		});
-		
-		//dialog.setStyleName(UIUtils.MODAL_DIALOG_STYLE);
-		//dialog.addClassName(style);
-		
-	}
-	
-//	@SuppressWarnings("serial")
-//	public static BrowserWindowResizeListener createBrowserWindowResizeListener(final Dialog component, final float[] dimension) {
-//		return new BrowserWindowResizeListener() {
-//			@Override
-//			public void browserWindowResized(BrowserWindowResizeEvent event) {
-//				int width = UI.getCurrent().getPage().getBrowserWindowWidth();
-//				int height = UI.getCurrent().getPage().getBrowserWindowHeight();
-//				float x = dimension[0];
-//				float y = dimension[1];
-//				if (width < 481 || height < 481) {
-//					x = 1f;
-//					y = 1f;
-//				}
-//				component.setWidth(width * x, Unit.PIXELS);
-//				component.setHeight(height * y, Unit.PIXELS);
-//			}
-//		};
-//	}
 
-	
 
-	/**
-	 * Bug #144 Issue on AbstractBaseEntityListing not properly displayed after upgrade to 7.3
-	 * 
-	 */
-	public void setRootComposition(Component compositionRoot) {
-		//setCompositionRoot(compositionRoot);
-	}
+public static Dialog createDialogWithClose(
+        String title,
+        Component content,
+        String closeLabel
+) {
+    Dialog dialog = new Dialog();
+    dialog.setCloseOnEsc(true);
+    dialog.setCloseOnOutsideClick(true);
 
-	//@Override
-//	@Override
-//	protected void setCompositionRoot(Component compositionRoot) {
-//		super.setCompositionRoot(compositionRoot);
-//	}
-	
-//	public HasComponents findParentTabSheet() {
-//		HasComponents component = getParent();
-//		while (component != null) {
-//			if (component instanceof TabSheet) {
-//				return component;
-//			}
-//			component = component.getParent();
-//		}
-//		return null;
-//	}
-	
+    // ---------- Header ----------
+    H3 headerTitle = new H3(title != null ? title : "");
+    headerTitle.getStyle().set("margin", "0");
+
+    Button headerClose = new Button(VaadinIcon.CLOSE_SMALL.create(), e -> dialog.close());
+    headerClose.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+
+    HorizontalLayout header = new HorizontalLayout(headerTitle, headerClose);
+    header.setWidthFull();
+    header.setAlignItems(FlexComponent.Alignment.CENTER);
+    header.expand(headerTitle);
+
+    // ---------- Content ----------
+    VerticalLayout contentWrapper = new VerticalLayout(content);
+    contentWrapper.setPadding(false);
+    contentWrapper.setSpacing(true);
+
+    // IMPORTANT: allow natural sizing
+    content.getElement().getStyle().remove("width");
+    content.getElement().getStyle().remove("height");
+
+    // ---------- Footer ----------
+    Button closeButton = new Button(
+            closeLabel != null ? closeLabel : "Close",
+            e -> dialog.close()
+    );
+
+    HorizontalLayout footer = new HorizontalLayout(closeButton);
+    footer.setWidthFull();
+    footer.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+
+    // ---------- Root layout ----------
+    VerticalLayout layout = new VerticalLayout(header, contentWrapper, footer);
+    layout.setPadding(true);
+    layout.setSpacing(true);
+    layout.setAlignItems(FlexComponent.Alignment.STRETCH);
+
+    dialog.add(layout);
+    return dialog;
+}
+
 }

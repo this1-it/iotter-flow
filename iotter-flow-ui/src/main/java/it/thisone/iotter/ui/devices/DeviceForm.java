@@ -8,28 +8,43 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vaadin.annotations.PropertyId;
-import com.vaadin.data.ValidationResult;
-import com.vaadin.data.ValueContext;
-import com.vaadin.data.converter.StringToDoubleConverter;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Layout;
-import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.ValoTheme;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.vaadin.flow.components.TabSheet;
 
+import com.vaadin.flow.data.binder.PropertyId;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.converter.StringToDoubleConverter;
+import com.vaadin.flow.component.checkbox.Checkbox;
+
+
+import com.vaadin.flow.component.formlayout.FormLayout;
+
+
+
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+
+import it.thisone.iotter.cassandra.CassandraFeeds;
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.DeviceStatus;
 import it.thisone.iotter.enums.TracingAction;
+import it.thisone.iotter.integration.AlarmService;
+import it.thisone.iotter.integration.CassandraService;
 import it.thisone.iotter.persistence.model.Channel;
 import it.thisone.iotter.persistence.model.ChannelComparator;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.ExportingConfig;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.model.NetworkGroup;
+import it.thisone.iotter.persistence.service.DeviceService;
+import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.persistence.service.NetworkGroupService;
+import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.persistence.service.RoleService;
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.channels.ChannelAlarmListing;
 import it.thisone.iotter.ui.channels.ChannelLastMeasuresListing;
 import it.thisone.iotter.ui.channels.ChannelListing;
@@ -46,12 +61,11 @@ import it.thisone.iotter.ui.common.fields.LegacyDateTimeField;
 import it.thisone.iotter.ui.common.fields.NetworkGroupSelect;
 import it.thisone.iotter.ui.common.fields.NetworkSelect;
 import it.thisone.iotter.ui.ifc.ITabContent;
-import it.thisone.iotter.ui.networkgroups.NetworkGroupUsers;
-import it.thisone.iotter.ui.validators.UniqueDeviceActivationKeyValidator;
-import it.thisone.iotter.ui.validators.UniqueDeviceSerialValidator;
 import it.thisone.iotter.util.EncryptUtils;
 import it.thisone.iotter.util.Utils;
 
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DeviceForm extends AbstractBaseEntityForm<Device> {
 
 	private static final long serialVersionUID = 1L;
@@ -95,10 +109,10 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	private TextField writeApikey;
 
 	@PropertyId("publishing")
-	private CheckBox publishing;
+	private Checkbox publishing;
 
 	@PropertyId("tracing")
-	private CheckBox tracing;
+	private Checkbox tracing;
 
 	private NetworkSelect networkSelect;
 	private NetworkGroupSelect groupsSelect;
@@ -124,147 +138,192 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	private ChannelAlarmListing alarmListing;
 	private Collection<NetworkGroup> groups = new ArrayList<NetworkGroup>();
 
-	public DeviceForm(Device entity, Network network) {
-		super(entity, Device.class, NAME, network);
+	@Autowired
+	private DeviceService deviceService;
+	@Autowired
+	private AlarmService alarmService;
+	@Autowired
+    private  NetworkService networkService;
+	@Autowired
+    private NetworkGroupService networkGroupService;
+	@Autowired
+    private GroupWidgetService groupWidgetService;
+	@Autowired
+    private CassandraService cassandraService;
+
+	
+	@Autowired
+	public DeviceForm(Device entity, Network network,  UserDetailsAdapter currentUser, boolean readOnly) {
+		super(entity, Device.class, NAME, network, currentUser, readOnly);
 		if (isCreateBean()) {
 			initializeDefaults();
 		}
-		// initializeFields() and registerFields() are called from getFieldsLayout()
-		// during super() constructor, so we don't need to call them again here
+		populateFields();
 		bindFields();
 	}
 
 	private void initializeDefaults() {
-		getEntity().setOwner(UIUtils.getUserDetails().getUsername());
-		boolean sticky = UIUtils.getUserDetails().getUsername().equalsIgnoreCase(Constants.ROLE_PRODUCTION);
+		getEntity().setOwner(getCurrentUser().getUsername());
+		boolean sticky = getCurrentUser().getUsername().equalsIgnoreCase(Constants.ROLE_PRODUCTION);
 		getEntity().setSticky(sticky);
 		getEntity().setTracing(true);
 		getEntity().setStatus(DeviceStatus.PRODUCED);
 		getEntity().setProductionDate(new Date());
 	}
 
-	private void initializeFields() {
+	protected void initializeFields() {
 		serial = new TextField();
 		serial.setSizeFull();
+		serial.setReadOnly(isReadOnly());
 		serial.setRequiredIndicatorVisible(isCreateBean());
-		serial.setCaption(getI18nLabel("serial"));
+		serial.setLabel(getI18nLabel("serial"));
 		if (!isCreateBean()) {
 			serial.setReadOnly(true);
 		}
 
 		activationKey = new TextField();
 		activationKey.setSizeFull();
+		activationKey.setReadOnly(isReadOnly());
 		activationKey.setRequiredIndicatorVisible(isCreateBean());
-		activationKey.setCaption(getI18nLabel("activationKey"));
+		activationKey.setLabel(getI18nLabel("activationKey"));
 		if (!isCreateBean()) {
 			activationKey.setReadOnly(true);
 		}
 
 		label = new TextField();
 		label.setSizeFull();
+		label.setReadOnly(isReadOnly());
 		label.setRequiredIndicatorVisible(true);
-		label.setCaption(getI18nLabel("label"));
+		label.setLabel(getI18nLabel("label"));
 
 		model = new DeviceModelSelect(loadDeviceModels());
 		model.setSizeFull();
+		model.setReadOnly(isReadOnly());
 		model.setRequiredIndicatorVisible(isCreateBean());
-		model.setCaption(getI18nLabel("model"));
+		model.setLabel(getI18nLabel("model"));
 		if (!isCreateBean()) {
 			model.setReadOnly(true);
 		}
 
 		firmwareVersion = new TextField();
 		firmwareVersion.setSizeFull();
+		firmwareVersion.setReadOnly(isReadOnly());
 		firmwareVersion.setRequiredIndicatorVisible(isCreateBean());
-		firmwareVersion.setCaption(getI18nLabel("firmwareVersion"));
+		firmwareVersion.setLabel(getI18nLabel("firmwareVersion"));
 		if (!isCreateBean()) {
 			firmwareVersion.setReadOnly(true);
 		}
 
 		productionDate = new CustomDateField(UIUtils.getBrowserTimeZone());
 		productionDate.setSizeFull();
+		productionDate.setReadOnly(isReadOnly());
 		productionDate.setRequiredIndicatorVisible(isCreateBean());
-		productionDate.setCaption(getI18nLabel("productionDate"));
+		productionDate.setLabel(getI18nLabel("productionDate"));
 		if (!isCreateBean()) {
 			productionDate.setReadOnly(true);
 		}
 
 		activationDate = new CustomDateField(UIUtils.getBrowserTimeZone());
 		activationDate.setSizeFull();
+		activationDate.setReadOnly(isReadOnly());
 		activationDate.setRequiredIndicatorVisible(isCreateBean());
-		activationDate.setCaption(getI18nLabel("activationDate"));
+		activationDate.setLabel(getI18nLabel("activationDate"));
 		if (!isCreateBean()) {
 			activationDate.setReadOnly(true);
 		}
 
 		inactivityMinutes = new DeviceInactivityOptionGroup();
-		inactivityMinutes.setSizeFull();
+		inactivityMinutes.setReadOnly(isReadOnly());
 		inactivityMinutes.setRequiredIndicatorVisible(isCreateBean());
-		inactivityMinutes.setCaption(getI18nLabel("inactivityMinutes"));
+		inactivityMinutes.setLabel(getI18nLabel("inactivityMinutes"));
 
 		status = new DeviceStatusSelect();
 		status.setSizeFull();
-		status.setCaption(getI18nLabel("status"));
+		status.setReadOnly(isReadOnly());
+		status.setLabel(getI18nLabel("status"));
 		status.setReadOnly(true);
 
 		lastContactDate = new LegacyDateTimeField();
-		lastContactDate.setSizeFull();
-		lastContactDate.setCaption(getI18nLabel("lastContactDate"));
-		lastContactDate.setDateFormat("yyyy-MM-dd HH:mm:ss");
+		lastContactDate.setReadOnly(isReadOnly());
 		lastContactDate.setReadOnly(true);
 
 		readApikey = new TextField();
 		readApikey.setSizeFull();
-		readApikey.setCaption(getI18nLabel("readApikey"));
+		readApikey.setReadOnly(isReadOnly());
+		readApikey.setLabel(getI18nLabel("readApikey"));
 
 		writeApikey = new TextField();
 		writeApikey.setSizeFull();
-		writeApikey.setCaption(getI18nLabel("writeApikey"));
+		writeApikey.setReadOnly(isReadOnly());
+		writeApikey.setLabel(getI18nLabel("writeApikey"));
 		writeApikey.setReadOnly(true);
 
-		publishing = new CheckBox();
+		publishing = new Checkbox();
 		publishing.setSizeFull();
-		publishing.setCaption(getI18nLabel("publishing"));
+		publishing.setReadOnly(isReadOnly());
+		publishing.setLabel(getI18nLabel("publishing"));
 
-		tracing = new CheckBox();
+		tracing = new Checkbox();
 		tracing.setSizeFull();
-		tracing.setCaption(getI18nLabel("tracing"));
+		tracing.setReadOnly(isReadOnly());
+		tracing.setLabel(getI18nLabel("tracing"));
 
-		networkSelect = new NetworkSelect(loadNetworks());
+		networkSelect = new NetworkSelect(new ArrayList<>());
 		networkSelect.setSizeFull();
-		networkSelect.setCaption(getI18nLabel("network"));
+		networkSelect.setReadOnly(isReadOnly());
+		networkSelect.setLabel(getI18nLabel("network"));
 
-		groupsSelect = new NetworkGroupSelect(loadNetworkGroups(), true);
+		groupsSelect = new NetworkGroupSelect(new ArrayList<>(), true);
 		groupsSelect.setSizeFull();
-		groupsSelect.setCaption(getI18nLabel("groups"));
+		groupsSelect.setEnabled(!isReadOnly());
 		groupsSelect.setVisible(Constants.USE_GROUPS);
 
-		exclusiveGroups = new NetworkGroupSelect(loadNetworkGroups(), true);
+		exclusiveGroups = new NetworkGroupSelect(new ArrayList<>(), true);
 		exclusiveGroups.setSizeFull();
-		exclusiveGroups.setCaption(getI18nLabel("exclusive_groups"));
+		exclusiveGroups.setEnabled(!isReadOnly());
 		exclusiveGroups.setVisible(Constants.USE_GROUPS);
 
 		locationAddress = new TextField();
 		locationAddress.setSizeFull();
-		locationAddress.setCaption(getI18nLabel("location.address"));
+		locationAddress.setReadOnly(isReadOnly());
+		locationAddress.setLabel(getI18nLabel("location.address"));
 
 		locationLatitude = new TextField();
 		locationLatitude.setSizeFull();
-		locationLatitude.setCaption(getI18nLabel("location.latitude"));
+		locationLatitude.setReadOnly(isReadOnly());
+		locationLatitude.setLabel(getI18nLabel("location.latitude"));
 
 		locationLongitude = new TextField();
 		locationLongitude.setSizeFull();
-		locationLongitude.setCaption(getI18nLabel("location.longitude"));
+		locationLongitude.setReadOnly(isReadOnly());
+		locationLongitude.setLabel(getI18nLabel("location.longitude"));
 
 		locationElevation = new TextField();
 		locationElevation.setSizeFull();
-		locationElevation.setCaption(getI18nLabel("location.elevation"));
+		locationElevation.setReadOnly(isReadOnly());
+		locationElevation.setLabel(getI18nLabel("location.elevation"));
 
 
 
 		exportingConfig = new ExportingConfigField();
-		exportingConfig.setSizeFull();
-		exportingConfig.setCaption(getI18nLabel("exportingConfig"));
+		exportingConfig.setReadOnly(isReadOnly());
+	}
+
+
+    /**
+     * Initialized fields that require services (networks, groups).
+     * 
+     */
+    private void populateFields() {
+		        Set<NetworkGroup> currentGroups = getEntity().getGroups();
+
+		        // Populate network select
+        networkSelect.setItems(loadNetworks());
+        // Load and configure groups
+        List<NetworkGroup> availableGroups = loadNetworkGroups();
+        groupsSelect.setItems(availableGroups);
+        exclusiveGroups.setItems(availableGroups);
+        groupsSelect.asMultiSelect().setValue(currentGroups);
 	}
 
 	private void registerFields() {
@@ -293,16 +352,34 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		addField("exportingConfig", exportingConfig);
 	}
 
-	private void bindFields() {
-		String requiredMessage = UIUtils.localize("validators.fieldgroup_errors");
+	protected void bindFields() {
+		String requiredMessage = getTranslation("validators.fieldgroup_errors");
 		getBinder().forField(serial)
 				.withValidator(value -> !isCreateBean() || (value != null && !value.trim().isEmpty()),
 						requiredMessage)
+				.withValidator((value, context) -> {
+					if (!isCreateBean() || value == null || value.trim().isEmpty()) {
+						return ValidationResult.ok();
+					}
+					if (deviceService.findBySerial(value.trim()) != null) {
+						return ValidationResult.error(getTranslation("validators.serial_unique"));
+					}
+					return ValidationResult.ok();
+				})
 				.bind(Device::getSerial, Device::setSerial);
 
 		getBinder().forField(activationKey)
 				.withValidator(value -> !isCreateBean() || (value != null && !value.trim().isEmpty()),
 						requiredMessage)
+				.withValidator((value, context) -> {
+					if (!isCreateBean() || value == null || value.trim().isEmpty()) {
+						return ValidationResult.ok();
+					}
+					if (deviceService.findByActivationKey(value.trim()) != null) {
+						return ValidationResult.error(getTranslation("validators.activation_key_unique"));
+					}
+					return ValidationResult.ok();
+				})
 				.bind(Device::getActivationKey, Device::setActivationKey);
 
 		getBinder().forField(label)
@@ -344,27 +421,27 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 				.bind(Device::getWriteApikey, Device::setWriteApikey);
 
 		getBinder().forField(publishing)
-				.bind(Device::isPublishing, Device::setPublishing);
+				.bind(device -> device.isPublishing(), Device::setPublishing);
 
 		getBinder().forField(tracing)
-				.bind(Device::isTracing, Device::setTracing);
+				.bind(device -> device.isTracing(), Device::setTracing);
 
 		getBinder().forField(locationAddress)
 				.bind(device -> device.getLocation().getAddress(),
 						(device, value) -> device.getLocation().setAddress(value));
 
 		getBinder().forField(locationLatitude)
-				.withConverter(new StringToDoubleConverter(UIUtils.localize("validators.fieldgroup_errors")))
+				.withConverter(new StringToDoubleConverter(getTranslation("validators.fieldgroup_errors")))
 				.bind(device -> device.getLocation().getLatitude(),
 						(device, value) -> device.getLocation().setLatitude(value != null ? value : 0d));
 
 		getBinder().forField(locationLongitude)
-				.withConverter(new StringToDoubleConverter(UIUtils.localize("validators.fieldgroup_errors")))
+				.withConverter(new StringToDoubleConverter(getTranslation("validators.fieldgroup_errors")))
 				.bind(device -> device.getLocation().getLongitude(),
 						(device, value) -> device.getLocation().setLongitude(value != null ? value : 0d));
 
 		getBinder().forField(locationElevation)
-				.withConverter(new StringToDoubleConverter(UIUtils.localize("validators.fieldgroup_errors")))
+				.withConverter(new StringToDoubleConverter(getTranslation("validators.fieldgroup_errors")))
 				.bind(device -> device.getLocation().getElevation(),
 						(device, value) -> device.getLocation().setElevation(value != null ? value : 0d));
 
@@ -375,37 +452,37 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	}
 
 	@Override
-	public Layout getFieldsLayout() {
+	public VerticalLayout getFieldsLayout() {
 		// Ensure fields are initialized before building the layout
 		// This is necessary because getFieldsLayout() is called during super() constructor
 		// before initializeFields() can be executed
 		if (serial == null) {
 			initializeFields();
 			registerFields();
+
 		}
 
 		Device entity = getEntity();
 		VerticalLayout mainLayout = buildMainLayout();
 
 		TabSheet multicomponent = new TabSheet();
-		multicomponent.addStyleName(ValoTheme.TABSHEET_FRAMED);
-		multicomponent.setSizeFull();
+				multicomponent.setSizeFull();
 
-		mainLayout.addComponent(multicomponent);
+		mainLayout.add(multicomponent);
 
-		multicomponent.addTab(buildPanel(buildGeneralForm()), getI18nLabel("general_tab"));
+		multicomponent.addTab(getI18nLabel("general_tab"), buildPanel(buildGeneralForm()));
 
 		groups = new ArrayList<NetworkGroup>();
 		if (!isCreateBean()) {
-			Date lastContactDateValue = UIUtils.getCassandraService().getFeeds().getLastContact(entity.getSerial());
+			Date lastContactDateValue = cassandraService.getFeeds().getLastContact(entity.getSerial());
 			entity.setLastContactDate(lastContactDateValue);
 			lastContactDate.setValue(lastContactDateValue);
 
-			boolean production = UIUtils.getUserDetails().hasRole(Constants.ROLE_PRODUCTION);
-			boolean supervisor = UIUtils.getUserDetails().hasRole(Constants.ROLE_SUPERVISOR);
+			boolean production = getCurrentUser().hasRole(Constants.ROLE_PRODUCTION);
+			boolean supervisor = getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR);
 
 			if (supervisor) {
-				multicomponent.addTab(buildPanel(buildMeasuresForm()), getI18nLabel("measures_tab"));
+				multicomponent.addTab(getI18nLabel("measures_tab"), buildPanel(buildMeasuresForm()));
 			}
 
 			if (groupsSelect != null && supervisor) {
@@ -423,12 +500,9 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 				groupsSelect.setNetworkSelection(networkSelect, getNetwork(), entity.getNetwork());
 				applyGroupSelection(entity.getGroups());
 				groups = Collections.unmodifiableCollection(groupsSelect.getSelectedItems());
-
 				exclusiveGroups.setExclusiveGroups(entity.getGroups());
-
 				networkSelect.setReadOnly(true);
-
-				multicomponent.addTab(buildPanel(buildAssociationsForm()), getI18nLabel("associations_tab"));
+				multicomponent.addTab(getI18nLabel("associations_tab"), buildPanel(buildAssociationsForm()));
 			}
 
 			boolean hasChannels = entity.getChannels() != null && !entity.getChannels().isEmpty();
@@ -446,14 +520,14 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 				Collections.sort(channels, new ChannelComparator());
 
 				if (!production) {
-					multicomponent.addTab(buildPanel(buildLocationForm()), getI18nLabel("location_tab"));
+					multicomponent.addTab(getI18nLabel("location_tab"), buildPanel(buildLocationForm()));
 				}
 
 				channelListing = new ChannelListing(channels);
-				multicomponent.addTab(channelListing, getI18nLabel("channels_tab"));
+				multicomponent.addTab(getI18nLabel("channels_tab"), channelListing);
 
 				if (entity.isAlarmed()) {
-					UIUtils.getServiceFactory().getAlarmService().setUpFiredAlarms(entity);
+					alarmService.setUpFiredAlarms(entity);
 				}
 
 				List<Channel> alarms = new ArrayList<>();
@@ -468,36 +542,33 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 				}
 
 				alarmListing = new ChannelAlarmListing(alarms);
-				NetworkGroup group = UIUtils.getServiceFactory().getDeviceService().getDeviceAlarmGroup(entity);
+				NetworkGroup group = deviceService.getDeviceAlarmGroup(entity);
 				alarmListing.setAlarmGroup(group);
-				multicomponent.addTab(alarmListing, getI18nLabel("alarms_tab"));
+				multicomponent.addTab(getI18nLabel("alarms_tab"), alarmListing);
 
 				ChannelRemoteControlListing remote = new ChannelRemoteControlListing(channels);
-				multicomponent.addTab(remote, getI18nLabel("remote_tab"));
+				multicomponent.addTab(getI18nLabel("remote_tab"), remote);
 
 				lastValues = new ChannelLastMeasuresListing(channels);
 				lastValues.setSizeFull();
-				multicomponent.addTab(lastValues, getI18nLabel("lastvalues_tab"));
+				multicomponent.addTab(getI18nLabel("lastvalues_tab"), lastValues);
 
 				if (supervisor) {
 					DeviceRollup rollup = new DeviceRollup(entity);
-					rollup.setSizeFull();
-					multicomponent.addTab(rollup, getI18nLabel("rollup_tab"));
-					DeviceConfig config = new DeviceConfig(entity);
-					config.setSizeFull();
-					multicomponent.addTab(config, getI18nLabel("config_tab"));
+					multicomponent.addTab(getI18nLabel("rollup_tab"), rollup);
+
 				}
 			}
 
 			if (entity.isRunning() && entity.getMaster() == null) {
-				multicomponent.addTab(buildExportTab(entity), getI18nLabel("export_tab"));
+				multicomponent.addTab(getI18nLabel("export_tab"), buildExportTab(entity));
 			}
 		}
 
-		multicomponent.addSelectedTabChangeListener(event -> {
-			TabSheet tabsheet = event.getTabSheet();
-			if (tabsheet.getSelectedTab() instanceof ITabContent) {
-				((ITabContent) tabsheet.getSelectedTab()).lazyLoad();
+		multicomponent.addSelectedChangeListener(event -> {
+			com.vaadin.flow.component.Component selected = multicomponent.getSelectedTabContents();
+			if (selected instanceof ITabContent) {
+				((ITabContent) selected).lazyLoad();
 			}
 		});
 
@@ -506,54 +577,53 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 
 	private FormLayout buildGeneralForm() {
 		FormLayout layout = createFormLayout();
-		layout.addComponent(serial);
-		layout.addComponent(activationKey);
-		layout.addComponent(label);
-		layout.addComponent(model);
-		layout.addComponent(firmwareVersion);
-		layout.addComponent(productionDate);
-		layout.addComponent(activationDate);
-		layout.addComponent(inactivityMinutes);
+		layout.add(serial);
+		layout.add(activationKey);
+		layout.add(label);
+		layout.add(model);
+		layout.add(firmwareVersion);
+		layout.add(productionDate);
+		layout.add(activationDate);
+		layout.add(inactivityMinutes);
 		return layout;
 	}
 
 	private FormLayout buildMeasuresForm() {
 		FormLayout layout = createFormLayout();
-		layout.addComponent(status);
-		layout.addComponent(lastContactDate);
-		layout.addComponent(readApikey);
-		layout.addComponent(writeApikey);
-		layout.addComponent(publishing);
-		layout.addComponent(tracing);
+		layout.add(status);
+		layout.add(lastContactDate);
+		layout.add(readApikey);
+		layout.add(writeApikey);
+		layout.add(publishing);
+		layout.add(tracing);
 		return layout;
 	}
 
 	private FormLayout buildAssociationsForm() {
 		FormLayout layout = createFormLayout();
-		layout.addComponent(networkSelect);
-		layout.addComponent(groupsSelect);
+		layout.add(networkSelect);
+		layout.add(groupsSelect);
 		return layout;
 	}
 
 	private FormLayout buildLocationForm() {
 		FormLayout layout = createFormLayout();
-		layout.addComponent(locationAddress);
-		layout.addComponent(locationLatitude);
-		layout.addComponent(locationLongitude);
-		layout.addComponent(locationElevation);
+		layout.add(locationAddress);
+		layout.add(locationLatitude);
+		layout.add(locationLongitude);
+		layout.add(locationElevation);
 		return layout;
 	}
 
 	private FormLayout buildExportForm() {
 		FormLayout layout = createFormLayout();
-		layout.addComponent(exportingConfig);
+		layout.add(exportingConfig);
 		return layout;
 	}
 
 	private FormLayout createFormLayout() {
 		FormLayout formLayout = new FormLayout();
-		formLayout.setMargin(true);
-		formLayout.setSpacing(true);
+		formLayout.setWidthFull();
 		return formLayout;
 	}
 
@@ -568,32 +638,27 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	}
 
 	private List<Network> loadNetworks() {
-		return UIUtils.getServiceFactory().getNetworkService()
-				.findByOwner(UIUtils.getUserDetails().getTenant());
+		return networkService
+				.findByOwner(getCurrentUser().getTenant());
 	}
 
 	private List<NetworkGroup> loadNetworkGroups() {
-		return UIUtils.getServiceFactory().getNetworkGroupService()
-				.findByOwner(UIUtils.getUserDetails().getTenant());
+		return networkGroupService
+				.findByOwner(getCurrentUser().getTenant());
 	}
 
-	private Component buildExportTab(Device entity) {
+	private VerticalLayout buildExportTab(Device entity) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setSpacing(true);
 
-		layout.addComponent(buildPanel(buildExportForm()));
+		layout.add(buildPanel(buildExportForm()));
 
-		NetworkGroup group = UIUtils.getServiceFactory().getDeviceService().getDeviceExportGroup(entity);
-		String[] visibleColumns = new String[] { "username", "email", "displayName" };
-		NetworkGroupUsers users = new NetworkGroupUsers(group, visibleColumns);
-		users.setSizeFull();
-		layout.addComponent(users);
 		return layout;
 	}
 
 	private Collection<it.thisone.iotter.persistence.model.DeviceModel> loadDeviceModels() {
-		return UIUtils.getServiceFactory().getDeviceService().getDeviceModels();
+		return deviceService.getDeviceModels();
 	}
 
 	@Override
@@ -611,11 +676,11 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		ExportingConfig exportingConfigBean = exportingConfig.getValue();
 		source.setExportingConfig(exportingConfigBean);
 
-		source.setModifier(UIUtils.getUserDetails().getUsername());
+		source.setModifier(getCurrentUser().getUsername());
 
 		Device conflicted = null;
 		if (!source.isNew() && alarmListing != null) {
-			conflicted = UIUtils.getServiceFactory().getDeviceService().findOne(source.getId());
+			conflicted = deviceService.findOne(source.getId());
 			alarmListing.commitAlarms(source);
 		}
 
@@ -630,17 +695,17 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		}
 
 		if (isCreateBean()) {
-			UIUtils.getServiceFactory().getDeviceService().trace(source, TracingAction.DEVICE_CREATION,
-					source.toString(), UIUtils.getUserDetails().getName(), null);
+			deviceService.trace(source, TracingAction.DEVICE_CREATION,
+					source.toString(), getCurrentUser().getName(), null);
 		} else {
-			UIUtils.getServiceFactory().getDeviceService().fireUpdatedEvent(source);
-			UIUtils.getServiceFactory().getDeviceService().trace(source, TracingAction.DEVICE_UPDATE,
-					source.toString(), UIUtils.getUserDetails().getName(), null);
-			UIUtils.getServiceFactory().getAlarmService().registerAlarms(source);
+			deviceService.fireUpdatedEvent(source);
+			deviceService.trace(source, TracingAction.DEVICE_UPDATE,
+					source.toString(), getCurrentUser().getName(), null);
+			alarmService.registerAlarms(source);
 			if (channelListing != null && !channelListing.getRemoved().isEmpty()) {
-				UIUtils.getServiceFactory().getDeviceService()
+				deviceService
 						.deleteChannels(getEntity(), channelListing.getRemoved());
-				conflicted = UIUtils.getServiceFactory().getDeviceService().findBySerial(source.getSerial());
+				conflicted = deviceService.findBySerial(source.getSerial());
 				refreshItem(conflicted);
 				getBinder().readBean(conflicted);
 			}
@@ -651,8 +716,6 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	protected void beforeCommit() throws EditorConstraintException {
 		Device source = getEntity();
 
-		validateRequiredFields();
-
 		if (groupsSelect != null) {
 			Set<NetworkGroup> selected = new HashSet<>(groupsSelect.getSelectedItems());
 			source.setGroups(selected);
@@ -661,8 +724,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		if (groups == null) {
 			return;
 		}
-		boolean hasVisualizations = UIUtils.getServiceFactory()
-				.getGroupWidgetService()
+		boolean hasVisualizations = groupWidgetService
 				.hasVisualizations(source);
 		if (hasVisualizations) {
 			if (groupsSelect == null) {
@@ -678,61 +740,6 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		}
 	}
 
-	private void validateRequiredFields() throws EditorConstraintException {
-		if (isCreateBean()) {
-			requireField(serial);
-			requireField(activationKey);
-			requireField(model);
-			requireField(firmwareVersion);
-			requireField(productionDate);
-			requireField(activationDate);
-			requireField(inactivityMinutes);
-			validateUniqueOnCreate();
-		}
-		requireField(label);
-	}
 
-	private void requireField(Component field) throws EditorConstraintException {
-		if (field instanceof TextField) {
-			String value = ((TextField) field).getValue();
-			if (value == null || value.trim().isEmpty()) {
-				throw new EditorConstraintException(UIUtils.localize("validators.fieldgroup_errors"));
-			}
-		} else if (field instanceof CustomDateField) {
-			if (((CustomDateField) field).getValue() == null) {
-				throw new EditorConstraintException(UIUtils.localize("validators.fieldgroup_errors"));
-			}
-		} else if (field instanceof DeviceInactivityOptionGroup) {
-			if (((DeviceInactivityOptionGroup) field).getValue() == null) {
-				throw new EditorConstraintException(UIUtils.localize("validators.fieldgroup_errors"));
-			}
-		} else if (field instanceof DeviceModelSelect) {
-			if (((DeviceModelSelect) field).getValue() == null) {
-				throw new EditorConstraintException(UIUtils.localize("validators.fieldgroup_errors"));
-			}
-		}
-	}
 
-	private void validateUniqueOnCreate() throws EditorConstraintException {
-		ValidationResult serialResult = new UniqueDeviceSerialValidator()
-				.apply(serial.getValue(), new ValueContext(serial));
-		if (serialResult.isError()) {
-			throw new EditorConstraintException(serialResult.getErrorMessage());
-		}
-		ValidationResult activationResult = new UniqueDeviceActivationKeyValidator()
-				.apply(activationKey.getValue(), new ValueContext(activationKey));
-		if (activationResult.isError()) {
-			throw new EditorConstraintException(activationResult.getErrorMessage());
-		}
-	}
-
-	@Override
-	public String getWindowStyle() {
-		return "device-editor";
-	}
-
-	@Override
-	public float[] getWindowDimension() {
-		return UIUtils.L_DIMENSION;
-	}
 }

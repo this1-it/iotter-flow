@@ -440,8 +440,6 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		AbstractBaseEntityForm<User> details = getEditor(item, true);
 		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("view_dialog"), details);
 
-
-
 		dialog.open();
 	}
 
@@ -451,7 +449,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		}
 
 		AbstractBaseEntityForm<User> details = getEditor(item, true);
-		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("view_dialog"), details);
+		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("remove_dialog"), details);
 
 
 			details.setDeleteHandler(entity -> {

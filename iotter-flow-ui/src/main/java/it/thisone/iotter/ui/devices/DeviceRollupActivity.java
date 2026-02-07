@@ -1,8 +1,8 @@
 package it.thisone.iotter.ui.devices;
 
 
-import com.vaadin.ui.Layout;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.enums.ChartScaleType;
 import it.thisone.iotter.enums.GraphicWidgetType;
@@ -18,6 +18,8 @@ import it.thisone.iotter.ui.common.charts.ChartUtils;
 
 public class DeviceRollupActivity 
 extends AbstractBaseEntityDetails<Device> {
+	// TODO(flow-migration): manual refactor required for Vaadin 8 APIs removed in Flow (dialogs/tabs/legacy layout or UIUtils context access).
+
 	/**
 	 * 
 	 */
@@ -27,7 +29,7 @@ extends AbstractBaseEntityDetails<Device> {
 		super(item, Device.class, DeviceForm.NAME, new String[] {}, false);
 		getSelectButton().setVisible(false);
 		getRemoveButton().setVisible(false);
-		getCancelButton().setCaption(UIUtils.localize("basic.editor.close"));
+		getCancelButton().setCaption(getTranslation("basic.editor.close"));
 		setDetails(getContentLayout());
 	}
 
@@ -43,7 +45,7 @@ extends AbstractBaseEntityDetails<Device> {
 	private Layout getContentLayout() {
 		VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setSpacing(true);
-		mainLayout.setMargin(true);
+		mainLayout.setPadding(true);
 		mainLayout.setSizeFull();
 		Device device = this.getBean();
 		

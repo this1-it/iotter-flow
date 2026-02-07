@@ -3,27 +3,37 @@ package it.thisone.iotter.ui.devices;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import com.vaadin.annotations.PropertyId;
-import com.vaadin.data.Binder;
-import com.vaadin.ui.FormLayout;
-import com.vaadin.ui.Layout;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
+
+import com.vaadin.flow.data.binder.PropertyId;
+import com.vaadin.flow.data.binder.ValidationResult;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.component.formlayout.FormLayout;
+
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.model.NetworkGroup;
+import it.thisone.iotter.persistence.service.DeviceService;
+import it.thisone.iotter.persistence.service.NetworkGroupService;
+import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.EditorConstraintException;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.fields.NetworkGroupSelect;
 import it.thisone.iotter.ui.common.fields.NetworkSelect;
-import it.thisone.iotter.ui.validators.DeviceActivationKeyValidator;
-import it.thisone.iotter.ui.validators.DeviceActivationSerialValidator;
 
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DeviceActivatorForm extends AbstractBaseEntityForm<Device> {
+
 	public static final String GROUPS = "groups";
 	public static final String ACTIVATION_KEY = "activationKey";
 	public static final String SERIAL = "serial";
@@ -40,16 +50,24 @@ public class DeviceActivatorForm extends AbstractBaseEntityForm<Device> {
     private NetworkGroupSelect groupsSelect;
     private final Network defaultNetwork;
 
-    public DeviceActivatorForm(Network network) {
-        super(new Device(), Device.class, "device.activator", network);
+    @Autowired
+    private DeviceService deviceService;
+    @Autowired
+    private NetworkService networkService;
+	@Autowired
+    private NetworkGroupService networkGroupService;
+
+    @Autowired
+    public DeviceActivatorForm(Network network, UserDetailsAdapter currentUser) {
+        super(new Device(), Device.class, "device.activator", network, currentUser, false);
         this.defaultNetwork = network;
-        initializeFields();
+  
         bindFields();
-        getBinder().readBean(getEntity());
+
         configureGroups();
     }
 
-    private void initializeFields() {
+    protected void initializeFields() {
         serial = new TextField(getI18nLabel(SERIAL));
         serial.setSizeFull();
         serial.setRequiredIndicatorVisible(true);
@@ -60,23 +78,23 @@ public class DeviceActivatorForm extends AbstractBaseEntityForm<Device> {
 
         networkSelect = new NetworkSelect(loadNetworks());
         networkSelect.setSizeFull();
-        networkSelect.setCaption(getI18nLabel("network"));
+        networkSelect.setLabel(getI18nLabel("network"));
 
         List<NetworkGroup> availableGroups = loadNetworkGroups();
         groupsSelect = new NetworkGroupSelect(availableGroups, true);
         groupsSelect.setSizeFull();
-        groupsSelect.setCaption(getI18nLabel(GROUPS));
+        //groupsSelect.setLabel(getI18nLabel(GROUPS));
         groupsSelect.setVisible(Constants.USE_GROUPS);
     }
 
     private List<Network> loadNetworks() {
-        return UIUtils.getServiceFactory().getNetworkService()
-                .findByOwner(UIUtils.getUserDetails().getTenant());
+        return networkService
+                .findByOwner(getCurrentUser().getTenant());
     }
 
     private List<NetworkGroup> loadNetworkGroups() {
-        return UIUtils.getServiceFactory().getNetworkGroupService()
-                .findByOwner(UIUtils.getUserDetails().getTenant());
+        return networkGroupService
+                .findByOwner(getCurrentUser().getTenant());
     }
 
     private void configureGroups() {
@@ -84,28 +102,47 @@ public class DeviceActivatorForm extends AbstractBaseEntityForm<Device> {
         groupsSelect.selectDefaultGroup();
     }
 
-    private void bindFields() {
+    protected void bindFields() {
         Binder<Device> binder = getBinder();
 
         binder.forField(serial)
-                .asRequired(UIUtils.localize("validators.fieldgroup_errors"))
-                .withValidator(new DeviceActivationSerialValidator(ACTIVATION_KEY))
+                .asRequired(getTranslation("validators.fieldgroup_errors"))
+                .withValidator((value, context) -> {
+                    if (value != null && !value.trim().isEmpty()) {
+                        Device device = deviceService.findBySerial(value.trim());
+                        if (device == null || !device.isAvailableForActivation()) {
+                            return ValidationResult.error(getTranslation("validators.device_serial_not_found"));
+                        }
+                    }
+                    return ValidationResult.ok();
+                })
                 .bind(Device::getSerial, Device::setSerial);
 
         binder.forField(activationKey)
-                .asRequired(UIUtils.localize("validators.fieldgroup_errors"))
-                .withValidator(new DeviceActivationKeyValidator(SERIAL))
+                .asRequired(getTranslation("validators.fieldgroup_errors"))
+                .withValidator((value, context) -> {
+                    if (value != null && !value.trim().isEmpty()) {
+                        String serialValue = serial.getValue();
+                        if (serialValue != null && !serialValue.trim().isEmpty()) {
+                            Device device = deviceService.findBySerial(serialValue.trim());
+                            if (device == null || !device.isAvailableForActivation()
+                                    || !value.equals(device.getActivationKey())) {
+                                return ValidationResult.error(getTranslation("validators.device_activation_not_valid"));
+                            }
+                        }
+                    }
+                    return ValidationResult.ok();
+                })
                 .bind(Device::getActivationKey, Device::setActivationKey);
     }
 
     @Override
-    public Layout getFieldsLayout() {
+    public VerticalLayout getFieldsLayout() {
         VerticalLayout mainLayout = buildMainLayout();
         FormLayout formLayout = new FormLayout();
-        formLayout.setMargin(true);
-        formLayout.setSpacing(true);
-        formLayout.addComponents(serial, activationKey, networkSelect, groupsSelect);
-        mainLayout.addComponent(buildPanel(formLayout));
+        formLayout.setWidthFull();
+        formLayout.add(serial, activationKey, networkSelect, groupsSelect);
+        mainLayout.add(buildPanel(formLayout));
         return mainLayout;
     }
 
@@ -119,13 +156,4 @@ public class DeviceActivatorForm extends AbstractBaseEntityForm<Device> {
         getEntity().setGroups(selectedGroups);
     }
 
-    @Override
-    public String getWindowStyle() {
-        return "device-activator";
-    }
-
-    @Override
-    public float[] getWindowDimension() {
-        return UIUtils.M_DIMENSION;
-    }
 }

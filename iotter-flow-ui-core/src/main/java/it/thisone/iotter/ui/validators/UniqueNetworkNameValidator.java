@@ -26,7 +26,7 @@ public class UniqueNetworkNameValidator implements Validator<String> {
 //			return ValidationResult.ok();
 //		}
 //		
-//		String owner = UIUtils.getUserDetails().getTenant();
+//		String owner = getCurrentUser().getTenant();
 //
 //		Network network = null;
 //		try {

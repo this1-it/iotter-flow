@@ -3,8 +3,9 @@ package it.thisone.iotter.ui.devices;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.vaadin.ui.RadioButtonGroup;
-import com.vaadin.ui.themes.ValoTheme;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -21,15 +22,15 @@ public class DeviceInactivityOptionGroup extends RadioButtonGroup<Integer> {
 		
 		// Create the items map
 		Map<Integer, String> items = new LinkedHashMap<>();
-		items.put(0, UIUtils.localize("basic.editor.no"));
-		items.put(Constants.Provisioning.INACTIVITY_MINUTES, UIUtils.localize("basic.editor.yes"));
+		items.put(0, getTranslation("basic.editor.no"));
+		items.put(Constants.Provisioning.INACTIVITY_MINUTES, getTranslation("basic.editor.yes"));
 		
 		// Set items and captions
 		setItems(items.keySet());
-		setItemCaptionGenerator(items::get);
+		setRenderer(new ComponentRenderer<>(value -> new Span(items.get(value))));
 		
-		// Apply horizontal styling
-		addStyleName(ValoTheme.OPTIONGROUP_HORIZONTAL);
+		// Apply horizontal styling through app css
+		addClassName("option-group-horizontal");
 	}
 
 }

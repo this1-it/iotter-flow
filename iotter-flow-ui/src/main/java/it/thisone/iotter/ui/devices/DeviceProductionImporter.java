@@ -18,38 +18,39 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vaadin.gridutil.cell.GridCellFilter;
-import org.vaadin.viritin.button.PrimaryButton;
-import org.vaadin.viritin.form.AbstractForm;
-import org.vaadin.viritin.layouts.MFormLayout;
-
-import com.vaadin.annotations.PropertyId;
-import com.vaadin.data.HasValue;
-import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.Page;
-import com.vaadin.server.StreamResource;
-import com.vaadin.server.StreamResource.StreamSource;
-import com.vaadin.shared.ui.grid.HeightMode;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.DateField;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Grid.SelectionMode;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.Command;
-import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.Notification.Type;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.ValoTheme;
 
 
+import org.vaadin.firitin.form.AbstractForm;
+import org.vaadin.firitin.components.formlayout.VFormLayout;
+
+import com.vaadin.flow.data.binder.PropertyId;
+import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.Unit;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.page.Page;
+import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.StreamResourceWriter;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.button.Button;
+//import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.grid.Grid;
+
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.menubar.MenuBar;
+
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+
+// import com.vaadin.ui.Grid.SelectionMode;
+// import com.vaadin.ui.MenuBar.Command;
+// import com.vaadin.ui.MenuBar.MenuItem;
+// import com.vaadin.ui.Notification.Type;
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.DeviceStatus;
 import it.thisone.iotter.enums.TracingAction;
@@ -68,6 +69,8 @@ import it.thisone.iotter.util.EncryptUtils;
 import it.thisone.iotter.util.PopupNotification;
 
 public class DeviceProductionImporter extends BaseComponent {
+	// TODO(flow-migration): manual refactor required for Vaadin 8 APIs removed in Flow (dialogs/tabs/legacy layout or UIUtils context access).
+
 	private static final String STICKY = "sticky";
 	/**
 	 * 
@@ -76,26 +79,26 @@ public class DeviceProductionImporter extends BaseComponent {
 	private DeviceProductionForm form;
 	private Grid<Device> grid;
 	private ListDataProvider<Device> dataProvider;
-	private HasValue.ValueChangeListener<ResourceData> resourceValueChangeListener;
+	//private HasValue.ValueChangeListener<ResourceData> resourceValueChangeListener;
 	private EditableResourceData upload;
 	private static Logger logger = LoggerFactory.getLogger(DeviceProductionImporter.class);
 
 
 	public DeviceProductionImporter() {
 		super(DeviceForm.NAME, null);
-		setCompositionRoot(buildLayout());
+		//setCompositionRoot(buildLayout());
 	}
 
-	private HasValue.ValueChangeListener<ResourceData> resourceValueChangeListener(final EditableResourceData field) {
-		return new HasValue.ValueChangeListener<ResourceData>() {
-			private static final long serialVersionUID = -2226780514986839696L;
+	// private HasValue.ValueChangeListener<ResourceData> resourceValueChangeListener(final EditableResourceData field) {
+	// 	return new HasValue.ValueChangeListener<ResourceData>() {
+	// 		private static final long serialVersionUID = -2226780514986839696L;
 
-			@Override
-			public void valueChange(HasValue.ValueChangeEvent<ResourceData> event) {
-				importResource(field.getValue());
-			}
-		};
-	}
+	// 		@Override
+	// 		public void valueChange(HasValue.ValueChangeEvent<ResourceData> event) {
+	// 			importResource(field.getValue());
+	// 		}
+	// 	};
+	// }
 
 	protected void importResource(ResourceData resource) {
 		List<Device> items = readItems(resource.getData());
@@ -103,11 +106,11 @@ public class DeviceProductionImporter extends BaseComponent {
 			dataProvider.getItems().clear();
 			dataProvider.getItems().addAll(items);
 			dataProvider.refreshAll();
-			String msg = UIUtils.localize(getI18nKey() + ".import_production.devices", new Object[] { items.size() },
+			String msg = getTranslation(getI18nKey() + ".import_production.devices", new Object[] { items.size() },
 					null);
-			PopupNotification.show(msg, Type.HUMANIZED_MESSAGE);
+			//PopupNotification.show(msg, Type.HUMANIZED_MESSAGE);
 		} else {
-			PopupNotification.show(getI18nLabel("import_production.not_found"), Type.ERROR_MESSAGE);
+			//PopupNotification.show(getI18nLabel("import_production.not_found"), Type.ERROR_MESSAGE);
 		}
 		upload.setReadOnly(true);
 	}
@@ -163,69 +166,63 @@ public class DeviceProductionImporter extends BaseComponent {
 	@SuppressWarnings({ "serial" })
 	protected MenuBar filterStickyMenuBar() {
 		MenuBar root = new MenuBar();
-		root.addStyleName(ValoTheme.BUTTON_BORDERLESS);
-		final MenuItem select = root.addItem("", VaadinIcons.EYE_SLASH, null);
-		select.addItem(getI18nLabel("import_production.select_all"), null, new Command() {
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				dataProvider.clearFilters();
-				select.setIcon(VaadinIcons.CHECK_SQUARE_O);
-				for (Device item : dataProvider.getItems()) {
-					item.setSticky(true);
-				}
-				dataProvider.refreshAll();
-				grid.clearSortOrder();
-			}
-		});
-		select.addItem(getI18nLabel("import_production.select_none"), null, new Command() {
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				select.setIcon(VaadinIcons.THIN_SQUARE);
-				dataProvider.clearFilters();
-				for (Device item : dataProvider.getItems()) {
-					item.setSticky(false);
-				}
-				dataProvider.refreshAll();
-				grid.clearSortOrder();
-			}
-		});
+		// root.addClassName(ValoTheme.BUTTON_BORDERLESS);
+		// final MenuItem select = root.addItem("", VaadinIcon.EYE_SLASH, null);
+		// select.addItem(getI18nLabel("import_production.select_all"), null, new Command() {
+		// 	@Override
+		// 	public void menuSelected(MenuItem selectedItem) {
+		// 		dataProvider.clearFilters();
+		// 		select.setIcon(VaadinIcon.CHECK_SQUARE_O);
+		// 		for (Device item : dataProvider.getItems()) {
+		// 			item.setSticky(true);
+		// 		}
+		// 		dataProvider.refreshAll();
+		// 		grid.clearSortOrder();
+		// 	}
+		// });
+		// select.addItem(getI18nLabel("import_production.select_none"), null, new Command() {
+		// 	@Override
+		// 	public void menuSelected(MenuItem selectedItem) {
+		// 		select.setIcon(VaadinIcon.THIN_SQUARE);
+		// 		dataProvider.clearFilters();
+		// 		for (Device item : dataProvider.getItems()) {
+		// 			item.setSticky(false);
+		// 		}
+		// 		dataProvider.refreshAll();
+		// 		grid.clearSortOrder();
+		// 	}
+		// });
 
 		return root;
 	}
 
 	public String getI18nLabel(String key) {
-		return UIUtils.localize(getI18nKey() + "." + key);
+		return getTranslation(getI18nKey() + "." + key);
 	}
 
 	public void addListener(EditorSelectedListener listener) {
-		try {
-			Method method = EditorSelectedListener.class.getDeclaredMethod(EditorSelectedListener.EDITOR_SELECTED,
-					new Class[] { EditorSelectedEvent.class });
-			addListener(EditorSelectedEvent.class, listener, method);
-		} catch (final java.lang.NoSuchMethodException e) {
-			throw new java.lang.RuntimeException("Internal error, editor selected method not found");
-		}
+		// try {
+		// 	Method method = EditorSelectedListener.class.getDeclaredMethod(EditorSelectedListener.EDITOR_SELECTED,
+		// 			new Class[] { EditorSelectedEvent.class });
+		// 	addListener(EditorSelectedEvent.class, listener, method);
+		// } catch (final java.lang.NoSuchMethodException e) {
+		// 	throw new java.lang.RuntimeException("Internal error, editor selected method not found");
+		// }
 	}
 
 	public void removeListener(EditorSelectedListener listener) {
-		removeListener(EditorSelectedEvent.class, listener);
+		//removeListener(EditorSelectedEvent.class, listener);
 	}
 
-	public String getWindowStyle() {
-		return getI18nKey();
-	}
 
-	public float[] getWindowDimension() {
-		return UIUtils.L_DIMENSION;
-	}
 
 	@SuppressWarnings("serial")
 	private Component buildLayout() {
 
 		grid = new Grid<>(Device.class);
-		grid.addStyleName("smallgrid");
-		grid.setHeightMode(HeightMode.CSS);
-		grid.setSelectionMode(SelectionMode.SINGLE);
+		grid.addClassName("smallgrid");
+		// grid.setHeightMode(HeightMode.CSS);
+		// grid.setSelectionMode(SelectionMode.SINGLE);
 		grid.setSizeFull();
 		
 		dataProvider = new ListDataProvider<>(new ArrayList<>());
@@ -235,62 +232,61 @@ public class DeviceProductionImporter extends BaseComponent {
 		grid.removeAllColumns();
 		
 		// Add checkbox component column
-		grid.addComponentColumn(device -> {
-			CheckBox checkBox = new CheckBox();
-			checkBox.setValue(device.isSticky());
-			checkBox.addValueChangeListener(event -> {
-				device.setSticky(event.getValue());
-				dataProvider.refreshItem(device);
-			});
-			return checkBox;
-		}).setId(STICKY).setCaption("").setWidth(100);
-		
-		// Add regular columns
-		grid.addColumn(Device::getSerial).setId("serial")
-			.setCaption(getI18nLabel("serial")).setExpandRatio(1);
-		grid.addColumn(Device::getActivationKey).setId("activationKey")
-			.setCaption(getI18nLabel("activationKey")).setExpandRatio(1);
+		// grid.addComponentColumn(device -> {
+		// 	CheckBox checkBox = new CheckBox();
+		// 	checkBox.setValue(device.isSticky());
+		// 	checkBox.addValueChangeListener(event -> {
+		// 		device.setSticky(event.getValue());
+		// 		dataProvider.refreshItem(device);
+		// 	});
+		// 	return checkBox;
+		// }).setId(STICKY).setCaption("").setWidth(100);
+		// // Add regular columns
+		// grid.addColumn(Device::getSerial).setId("serial")
+		// 	.setCaption(getI18nLabel("serial")).setExpandRatio(1);
+		// grid.addColumn(Device::getActivationKey).setId("activationKey")
+		// 	.setCaption(getI18nLabel("activationKey")).setExpandRatio(1);
 
-		MenuBar root = filterStickyMenuBar();
-		GridCellFilter<Device> filter = new GridCellFilter<>(grid);
-		filter.getFilterRow().getCell(STICKY).setComponent(root);
+		// MenuBar root = filterStickyMenuBar();
+		// GridCellFilter<Device> filter = new GridCellFilter<>(grid);
+		// filter.getFilterRow().getCell(STICKY).setComponent(root);
 
-		boolean ignoreCase = true;
-		boolean onlyMatchPrefix = false;
-		org.vaadin.gridutil.cell.CellFilterComponent<TextField> serialFilter = 
-			filter.setTextFilter("serial", ignoreCase, onlyMatchPrefix, "");
-		TextField serial = serialFilter.getComponent();
-		serial.setStyleName(ValoTheme.TEXTFIELD_TINY);
-		grid.setSizeFull();
+		// boolean ignoreCase = true;
+		// boolean onlyMatchPrefix = false;
+		// org.vaadin.gridutil.cell.CellFilterComponent<TextField> serialFilter = 
+		// 	filter.setTextFilter("serial", ignoreCase, onlyMatchPrefix, "");
+		// TextField serial = serialFilter.getComponent();
+		// serial.setClassName(ValoTheme.TEXTFIELD_TINY);
+		// grid.setSizeFull();
 
 		HorizontalLayout header = new HorizontalLayout();
-		header.setMargin(true);
-		header.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
-		header.setWidth(100.0f, Unit.PERCENTAGE);
+		header.setPadding(true);
+		// header.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
+		// header.setWidth(100.0f, Unit.PERCENTAGE);
 
 		upload = new EditableResourceData();
-		upload.getUploadField().setAcceptFilter(".csv");
-		upload.getResourceLabel().setCaption(getI18nLabel("import_production.upload"));
-		resourceValueChangeListener = resourceValueChangeListener(upload);
-		upload.addValueChangeListener(resourceValueChangeListener);
-		header.addComponent(upload);
+		// upload.getUploadField().setAcceptFilter(".csv");
+		// upload.getResourceLabel().setCaption(getI18nLabel("import_production.upload"));
+		// resourceValueChangeListener = resourceValueChangeListener(upload);
+		// upload.addValueChangeListener(resourceValueChangeListener);
+		// header.add(upload);
 
 		Button download = new Button();
-		download.setIcon(VaadinIcons.DOWNLOAD);
-		download.addClickListener(new Button.ClickListener() {
-			@Override
-			public void buttonClick(ClickEvent event) {
-				downloadActivated();
-			}
-		});
+		// download.setIcon(VaadinIcon.DOWNLOAD);
+		// download.addClickListener(new Button.ClickListener() {
+		// 	@Override
+		// 	public void buttonClick(ClickEvent event) {
+		// 		downloadActivated();
+		// 	}
+		// });
 
-		header.addComponent(download);
-		header.setComponentAlignment(download, Alignment.MIDDLE_RIGHT);
+		header.add(download);
+		//header.setComponentAlignment(download, Alignment.MIDDLE_RIGHT);
 
 		form = new DeviceProductionForm();
-		form.setCaption(getI18nLabel("import_production.defaults"));
-		form.getSaveButton().setCaption(UIUtils.localize("basic.editor.confirm"));
-		form.setResetButton(new PrimaryButton(UIUtils.localize("basic.editor.cancel")).withVisible(false));
+		// form.setCaption(getI18nLabel("import_production.defaults"));
+		// form.getSaveButton().setCaption(getTranslation("basic.editor.confirm"));
+		// form.setResetButton(new PrimaryButton(getTranslation("basic.editor.cancel")).withVisible(false));
 		Device entity = new Device();
 		form.setEntity(entity);
 		form.setSavedHandler(new AbstractForm.SavedHandler<Device>() {
@@ -307,8 +303,8 @@ public class DeviceProductionImporter extends BaseComponent {
 						if (!form.getEntity().getOwner().equals(Constants.ROLE_PRODUCTION.toLowerCase())) {
 							item.setStatus(DeviceStatus.ACTIVATED);
 						}
-						UIUtils.getServiceFactory().getDeviceService().trace(item, TracingAction.DEVICE_CREATION,
-								item.toString(), UIUtils.getUserDetails().getName(), null);
+						// UIUtils.getServiceFactory().getDeviceService().trace(item, TracingAction.DEVICE_CREATION,
+						// 		item.toString(), getCurrentUser().getName(), null);
 
 						items.add(item);
 					}
@@ -316,7 +312,7 @@ public class DeviceProductionImporter extends BaseComponent {
 				if (!items.isEmpty()) {
 					fireEvent(new EditorSelectedEvent(DeviceProductionImporter.this, items));
 				} else {
-					PopupNotification.show(getI18nLabel("import_production.not_selected"), Type.ERROR_MESSAGE);
+					//PopupNotification.show(getI18nLabel("import_production.not_selected"), Type.ERROR_MESSAGE);
 					form.model.setValue((DeviceModel) null);
 				}
 			}
@@ -331,41 +327,41 @@ public class DeviceProductionImporter extends BaseComponent {
 		});
 
 		VerticalLayout layout = new VerticalLayout();
-		layout.setMargin(true);
-		layout.addComponent(form);
+		layout.setPadding(true);
+		layout.add(form);
 		form.productionDate.setValue(LocalDate.now());
 
 		VerticalLayout verticalLayout = new VerticalLayout();
 		verticalLayout.setSizeFull();
-		verticalLayout.addComponent(header);
-		verticalLayout.addComponent(grid);
-		verticalLayout.setExpandRatio(grid, 1f);
-		verticalLayout.addComponent(layout);
+		verticalLayout.add(header);
+		verticalLayout.add(grid);
+		//verticalLayout.setExpandRatio(grid, 1f);
+		verticalLayout.add(layout);
 
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
-		buttonLayout.addComponent(form.getSaveButton());
-		buttonLayout.addComponent(form.getResetButton());
-		buttonLayout.addComponent(form.getDeleteButton());
+		buttonLayout.add(form.getSaveButton());
+		buttonLayout.add(form.getResetButton());
+		buttonLayout.add(form.getDeleteButton());
 
 		HorizontalLayout footer = new HorizontalLayout();
-		footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
-		footer.setWidth(100.0f, Unit.PERCENTAGE);
-		footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-		footer.addComponent(buttonLayout);
-		footer.setExpandRatio(buttonLayout, 1f);
-		verticalLayout.addComponent(footer);
+		//footer.addClassName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+		// footer.setWidth(100.0f, Unit.PERCENTAGE);
+		// footer.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		footer.add(buttonLayout);
+		//footer.setExpandRatio(buttonLayout, 1f);
+		verticalLayout.add(footer);
 
 		return verticalLayout;
 	}
 
 	protected void downloadActivated() {
 		String fn = String.format("activated-%tF.csv", new Date());
-		Page.getCurrent().open(createStreamResource(fn), null, false);
+		//Page.getCurrent().open(createStreamResource(fn), null, false);
 
 		// Button lnkFile = new Button("activated devices");
-		// lnkFile.setIcon(VaadinIcons.FILE);
-		// lnkFile.setStyleName("link");
+		// lnkFile.setIcon(VaadinIcon.FILE);
+		// lnkFile.setClassName("link");
 		// StreamResource stream = createStreamResource();
 		// FileDownloader fileDownloader = new FileDownloader(stream);
 		// fileDownloader.extend(lnkFile);
@@ -386,38 +382,38 @@ public class DeviceProductionImporter extends BaseComponent {
 
 	}
 
-	private StreamResource createStreamResource(String fn) {
-		StreamResource stream = new StreamResource(new StreamSource() {
-			private static final long serialVersionUID = 3825453932246713909L;
+// 	private StreamResource createStreamResource(String fn) {
+// 		StreamResource stream = new StreamResource(new StreamSource() {
+// 			private static final long serialVersionUID = 3825453932246713909L;
 
-			@Override
-			public InputStream getStream() {
-				DeviceCriteria criteria = new DeviceCriteria();
-				//criteria.setActivated(true);
-				List<Device> devices = UIUtils.getServiceFactory().getDeviceService().search(criteria, 0, 10000);
-				StringWriter sw = new StringWriter();
-				sw.append("serial,production date,activation date,firmware,model,owner,status\n");
-				for (Device device : devices) {
-					DeviceStatus status = device.getStatus();
-					String owner = device.getOwner();
-//					if (status.equals(DeviceStatus.PRODUCED) && device.getHistory().getOwner() != null) {
-//						owner =  owner + "/" +device.getHistory().getOwner();
-//					}
-					sw.append(String.format("%s,%tF,%tF,%s,%s,%s,%s\n", 
-							device.getSerial(), //
-							device.getProductionDate(), //
-							device.getActivationDate(), //
-							device.getFirmwareVersion(), //
-							device.getModel().getName(), //
-							owner, //
-							status.name() //
-							));
-				}
-				return new ByteArrayInputStream(sw.toString().getBytes());
-			}
-		}, fn);
-		return stream;
-	}
+// 			@Override
+// 			public InputStream getStream() {
+// 				DeviceCriteria criteria = new DeviceCriteria();
+// 				//criteria.setActivated(true);
+// 				List<Device> devices = UIUtils.getServiceFactory().getDeviceService().search(criteria, 0, 10000);
+// 				StringWriter sw = new StringWriter();
+// 				sw.append("serial,production date,activation date,firmware,model,owner,status\n");
+// 				for (Device device : devices) {
+// 					DeviceStatus status = device.getStatus();
+// 					String owner = device.getOwner();
+// //					if (status.equals(DeviceStatus.PRODUCED) && device.getHistory().getOwner() != null) {
+// //						owner =  owner + "/" +device.getHistory().getOwner();
+// //					}
+// 					sw.append(String.format("%s,%tF,%tF,%s,%s,%s,%s\n", 
+// 							device.getSerial(), //
+// 							device.getProductionDate(), //
+// 							device.getActivationDate(), //
+// 							device.getFirmwareVersion(), //
+// 							device.getModel().getName(), //
+// 							owner, //
+// 							status.name() //
+// 							));
+// 				}
+// 				return new ByteArrayInputStream(sw.toString().getBytes());
+// 			}
+// 		}, fn);
+// 		return stream;
+// 	}
 
 	public class DeviceProductionForm extends AbstractForm<Device> {
 
@@ -428,7 +424,7 @@ public class DeviceProductionImporter extends BaseComponent {
 		private TextField firmwareVersion;
 
 		@PropertyId("productionDate")
-		private DateField productionDate;
+		private DatePicker productionDate;
 
 		@PropertyId("inactivityMinutes")
 		private DeviceInactivityOptionGroup inactivityMinutes;
@@ -448,26 +444,26 @@ public class DeviceProductionImporter extends BaseComponent {
 			model = new DeviceModelSelect(models);
 			model.setSizeFull();
 			model.setRequiredIndicatorVisible(true);
-			model.setCaption(getI18nLabel("model"));
+			model.setLabel(getI18nLabel("model"));
 
 			firmwareVersion = new TextField();
 			firmwareVersion.setSizeFull();
 			firmwareVersion.setRequiredIndicatorVisible(true);
-			firmwareVersion.setCaption(getI18nLabel("firmwareVersion"));
+			firmwareVersion.setLabel(getI18nLabel("firmwareVersion"));
 
-			productionDate = new DateField();
+			productionDate = new DatePicker();
 			productionDate.setSizeFull();
 			productionDate.setRequiredIndicatorVisible(true);
-			productionDate.setCaption(getI18nLabel("productionDate"));
+			productionDate.setLabel(getI18nLabel("productionDate"));
 
 			inactivityMinutes = new DeviceInactivityOptionGroup();
-			inactivityMinutes.setSizeFull();
+			//inactivityMinutes.setSizeFull();
 			inactivityMinutes.setRequiredIndicatorVisible(true);
-			inactivityMinutes.setCaption(getI18nLabel("inactivityMinutes"));
+			inactivityMinutes.setLabel(getI18nLabel("inactivityMinutes"));
 
 			owner = new ComboBox<>(getI18nLabel("owner"));
-			owner.setEmptySelectionAllowed(false);
-			owner.setTextInputAllowed(false);
+			// owner.setEmptySelectionAllowed(false);
+			// owner.setTextInputAllowed(false);
 			owner.setSizeFull();
 			owner.setRequiredIndicatorVisible(true);
 
@@ -480,15 +476,15 @@ public class DeviceProductionImporter extends BaseComponent {
 			}
 
 			owner.setItems(owners);
-			owner.setStyleName(ValoTheme.COMBOBOX_SMALL);
+			//owner.setClassName(ValoTheme.COMBOBOX_SMALL);
 			owner.setValue(Constants.ROLE_PRODUCTION.toLowerCase());
 
 		}
 
 		@Override
 		protected Component createContent() {
-			return new MFormLayout(model, firmwareVersion, productionDate, inactivityMinutes, owner).withMargin(false)
-					.withWidth(100, Unit.PERCENTAGE);
+			return new VFormLayout(model, firmwareVersion, productionDate, inactivityMinutes, owner).withMargin(false)
+					;
 		}
 
 	}

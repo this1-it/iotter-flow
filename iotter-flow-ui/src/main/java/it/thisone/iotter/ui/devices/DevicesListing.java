@@ -13,35 +13,29 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import com.google.common.collect.Range;
 import com.google.common.eventbus.Subscribe;
-import com.vaadin.data.provider.QuerySortOrder;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.Sizeable;
-import com.vaadin.shared.data.sort.SortDirection;
-import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.shared.ui.ValueChangeMode;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.TabSheet.Tab;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
-import com.vaadin.ui.components.grid.HeaderRow;
-import com.vaadin.ui.themes.ValoTheme;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.TextFieldVariant;
+import com.vaadin.flow.data.provider.QuerySortOrder;
+import com.vaadin.flow.data.provider.SortDirection;
+import com.vaadin.flow.data.value.ValueChangeMode;
 
 import it.thisone.iotter.cassandra.model.Interpolation;
 import it.thisone.iotter.config.Constants;
@@ -62,14 +56,17 @@ import it.thisone.iotter.persistence.model.ChannelComparator;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.Network;
+import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.persistence.repository.DeviceRepository;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.provisioning.ProvisionedEvent;
 import it.thisone.iotter.security.EntityPermission;
 import it.thisone.iotter.security.Permissions;
-import it.thisone.iotter.ui.common.AbstractBaseEntityDetails;
+import it.thisone.iotter.security.UserDetailsAdapter;
+
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
@@ -81,10 +78,12 @@ import it.thisone.iotter.ui.common.EntityRemovedListener;
 import it.thisone.iotter.ui.common.EntitySelectedEvent;
 import it.thisone.iotter.ui.common.EntitySelectedListener;
 import it.thisone.iotter.ui.common.PermissionsUtils;
+import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.common.export.ExportDialog;
 import it.thisone.iotter.ui.eventbus.DeviceChangedEvent;
+import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
@@ -109,36 +108,34 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private static final String REMOVE_BUTTON = "remove";
 
 	public static final int ALARMED_LABEL_COUNT = 4;
-	
-	private Network network;
-	private boolean hasParameters = true;
-	private TabSheet tabsheet;
-	private DeviceWidgetBox boxes;
-	private IProvisioningWizard wizard;
-	private final Permissions permissions;
-	private final boolean supervisor = UIUtils.getUserDetails().hasRole(Constants.ROLE_SUPERVISOR);
-	private final boolean production = UIUtils.getUserDetails().hasRole(Constants.ROLE_PRODUCTION);
-	private int counter = ALARMED_LABEL_COUNT;
 
+	@Autowired
+	private AuthenticatedUser authenticatedUser;
+	@Autowired
+	private UIEventBus uiEventBus;
 	@Autowired
 	private DeviceRepository deviceRepository;
-
 	@Autowired
 	private DeviceService deviceService;
+
+	private Network network;
+	private boolean hasParameters = true;
+	private DeviceWidgetBox boxes;
+	private IProvisioningWizard wizard;
+	private Permissions permissions;
+	private boolean supervisor;
+	private boolean production;
+	private int counter = ALARMED_LABEL_COUNT;
 
 	private Grid<Device> grid;
 	private LazyQueryDataProvider<Device, DevicesFilter> dataProvider;
 	private DevicesQueryDefinition queryDefinition;
 	private DevicesFilter currentFilter = new DevicesFilter();
 	private int currentLimit = DEFAULT_LIMIT;
+	private UserDetailsAdapter currentUser;
 
 	public DevicesListing() {
-		this(PermissionsUtils.getPermissionsForDeviceEntity());
-	}
-
-	private DevicesListing(Permissions permissions) {
-		super(Device.class, DEVICE_VIEW, DEVICE_VIEW, false, permissions);
-		this.permissions = permissions;
+		super(Device.class, DEVICE_VIEW, DEVICE_VIEW, false);
 	}
 
 	public void init(Network network) {
@@ -151,19 +148,24 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 		this.network = network;
 		this.hasParameters = hasParameters;
+		currentUser = authenticatedUser.get().orElse(null);
+		this.permissions = PermissionsUtils.getPermissionsForDeviceEntity(currentUser);
+		setPermissions(this.permissions);
+		this.supervisor = currentUser != null && currentUser.hasRole(Constants.ROLE_SUPERVISOR);
+		this.production = currentUser != null && currentUser.hasRole(Constants.ROLE_PRODUCTION);
 		buildLayout();
 	}
 
 	private void buildLayout() {
 		HorizontalLayout toolbar = new HorizontalLayout();
-		toolbar.setWidth(100, Unit.PERCENTAGE);
+		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
-		toolbar.setMargin(true);
-		toolbar.addStyleName(UIUtils.TOOLBAR_STYLE);
+		toolbar.setPadding(true);
+		toolbar.addClassName(TOOLBAR_STYLE);
 
 		queryDefinition = new DevicesQueryDefinition(Device.class, currentLimit, permissions);
 		queryDefinition.setNetwork(network);
-		queryDefinition.setOwner(UIUtils.getUserDetails().getTenant());
+		queryDefinition.setOwner(authenticatedUser.getTenant().orElse(null));
 		queryDefinition.setPage(0, currentLimit);
 		queryDefinition.setQueryFilter(currentFilter);
 		dataProvider = new LazyQueryDataProvider<>(queryDefinition, new DevicesQueryFactory(deviceRepository));
@@ -172,57 +174,70 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
-
 		VerticalLayout listingLayout = createListingLayout(toolbar, grid);
 		setSelectable(grid);
 		setupDeviceWidgetBox(grid, listingLayout);
 
-		if (hasParameters) {
-			tabsheet = new TabSheet();
-			tabsheet.addStyleName(ValoTheme.TABSHEET_FRAMED);
-			tabsheet.setSizeFull();
-			tabsheet.addTab(listingLayout, getI18nLabel("devices_parameters"));
-			getMainLayout().addComponent(tabsheet);
-			getMainLayout().setExpandRatio(tabsheet, 1f);
-		} else {
-			listingLayout.setCaption(null);
-			getMainLayout().addComponent(listingLayout);
-			getMainLayout().setExpandRatio(listingLayout, 1f);
-		}
+		getMainLayout().add(listingLayout);
+		getMainLayout().setFlexGrow(1f, listingLayout);
 
 		updateTotalCount();
 
-		getButtonsLayout().addComponent(createExportDataButton());
-		getButtonsLayout().addComponent(createAlarmsButton());
-		getButtonsLayout().addComponent(createResetButton());
-		getButtonsLayout().addComponent(createRemoveButton());
-		getButtonsLayout().addComponent(createModifyButton());
-		getButtonsLayout().addComponent(createActivateButton());
-		getButtonsLayout().addComponent(createAddButton());
-		getButtonsLayout().addComponent(createImportButton());
+		getButtonsLayout().add(createExportDataButton(), createAlarmsButton(), createResetButton(), createRemoveButton(),
+				createModifyButton(), createActivateButton(), createViewButton(), createAddButton(), createImportButton());
 		if (hasParameters && UIUtils.isMobile()) {
-			getButtonsLayout().addComponent(createDeviceWidgetButton());
+			getButtonsLayout().add(createDeviceWidgetButton());
 		}
-		toolbar.addComponent(getButtonsLayout());
-		toolbar.setComponentAlignment(getButtonsLayout(), Alignment.MIDDLE_RIGHT);
+		toolbar.add(getButtonsLayout());
+		toolbar.setAlignItems(Alignment.CENTER);
 		enableButtons(null);
 	}
 
 	@Override
-	public AbstractBaseEntityForm<Device> getEditor(Device item) {
-		return new DeviceForm(item, network);
+	public AbstractBaseEntityForm<Device> getEditor(Device item, boolean readOnly) {
+		return new DeviceForm(item, network,currentUser,readOnly);
 	}
 
 	@Override
-	public AbstractBaseEntityDetails<Device> getDetails(Device item, boolean remove) {
-		return new DeviceDetails(item, remove);
+	protected void openDetails(Device item) {
+		if (item == null) {
+			return;
+		}
+
+		AbstractBaseEntityForm<Device> details = getEditor(item, true);
+		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("view_dialog"), details);
+
+		dialog.open();
+	}
+
+	@Override
+	protected void openRemove(Device item) {
+				if (item == null) {
+			return;
+		}
+
+		AbstractBaseEntityForm<Device> details = getEditor(item, true);
+		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("remove_dialog"), details);
+
+
+			details.setDeleteHandler(entity -> {
+				try {
+					deviceService.delete(entity);
+					dialog.close();
+					refreshCurrentPage();
+				} catch (Exception e) {
+					PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+				}
+			});
+		
+
 	}
 
 	private void refreshData() {
 		dataProvider.refreshAll();
 		updateTotalCount();
 		grid.scrollToStart();
-		grid.asSingleSelect().clear();
+		grid.deselectAll();
 		enableButtons(null);
 	}
 
@@ -235,85 +250,57 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	private void updateTotalCount() {
-		long total = getTotalCount();
-		setTotalSize(total);
+		setTotalSize(getTotalCount());
 	}
 
 	private Grid<Device> createGrid() {
-		Grid<Device> grid = new Grid<>();
-		grid.setDataProvider(dataProvider);
-		grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-		grid.setSizeFull();
-		grid.addStyleName(UIUtils.TABLE_STYLE);
+		Grid<Device> table = new Grid<>();
+		table.setDataProvider(dataProvider);
+		table.setSelectionMode(Grid.SelectionMode.SINGLE);
+		table.setSizeFull();
+		//table.addClassName(UIUtils.TABLE_STYLE);
 
-		List<Grid.Column<Device, ?>> columns = new ArrayList<>();
-
-		// Always visible columns
-		Grid.Column<Device, String> labelColumn = grid.addColumn(this::formatLabel).setId(LABEL);
-		columns.add(labelColumn);
-
-		Grid.Column<Device, String> profileColumn = grid.addColumn(this::formatProfile).setId("profile");
-		columns.add(profileColumn);
-
-		Grid.Column<Device, String> modelColumn = grid.addColumn(this::formatModel).setId("model");
-		columns.add(modelColumn);
-
-		Grid.Column<Device, String> alarmStatusColumn = grid.addColumn(this::formatAlarmStatus).setId(ALARM_STATUS);
-		columns.add(alarmStatusColumn);
+		List<Grid.Column<Device>> columns = new ArrayList<>();
+		columns.add(table.addColumn(this::formatLabel).setKey(LABEL));
+		columns.add(table.addColumn(this::formatProfile).setKey("profile"));
+		columns.add(table.addColumn(this::formatModel).setKey("model"));
+		columns.add(table.addColumn(this::formatAlarmStatus).setKey(ALARM_STATUS));
 
 		if (network == null) {
-			Grid.Column<Device, String> networkColumn = grid.addColumn(this::formatNetwork).setId("network");
-			columns.add(networkColumn);
+			columns.add(table.addColumn(this::formatNetwork).setKey("network"));
 		}
 
-		Grid.Column<Device, String> statusColumn = grid.addColumn(this::formatDeviceStatus).setId(DEVICE_STATUS);
-		columns.add(statusColumn);
+		columns.add(table.addColumn(this::formatDeviceStatus).setKey(DEVICE_STATUS));
 
-		// Conditional columns (viewAll mode)
 		if (permissions.isViewAllMode()) {
-			Grid.Column<Device, String> ownerColumn = grid.addColumn(Device::getOwner).setId(OWNER);
-			columns.add(ownerColumn);
-
-			Grid.Column<Device, String> serialColumn = grid.addColumn(Device::getSerial).setId("serial");
-			columns.add(serialColumn);
-
-			Grid.Column<Device, Boolean> publishingColumn = grid.addColumn(Device::isPublishing).setId("publishing");
-			columns.add(publishingColumn);
-
-			Grid.Column<Device, Boolean> tracingColumn = grid.addColumn(Device::isTracing).setId("tracing");
-			columns.add(tracingColumn);
+			columns.add(table.addColumn(Device::getOwner).setKey(OWNER));
+			columns.add(table.addColumn(Device::getSerial).setKey("serial"));
+			columns.add(table.addColumn(Device::isPublishing).setKey("publishing"));
+			columns.add(table.addColumn(Device::isTracing).setKey("tracing"));
 		}
 
-		// Disable sorting on all columns except label, alarmStatus, deviceStatus, owner
-		for (Grid.Column<Device, ?> column : columns) {
-			String columnId = column.getId();
-			if (!LABEL.equals(columnId) && !ALARM_STATUS.equals(columnId) && !DEVICE_STATUS.equals(columnId)
-					&& !OWNER.equals(columnId)) {
+		for (Grid.Column<Device> column : columns) {
+			String id = column.getKey();
+			if (!LABEL.equals(id) && !ALARM_STATUS.equals(id) && !DEVICE_STATUS.equals(id) && !OWNER.equals(id)) {
 				column.setSortable(false);
 			}
+			column.setHeader(getI18nLabel(id));
 		}
 
-		// Set i18n captions
-		for (Grid.Column<Device, ?> column : columns) {
-			column.setCaption(getI18nLabel(column.getId()));
-		}
-
-		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
-		initFilters(grid);
-		return grid;
+		table.setColumnOrder(columns.toArray(new Grid.Column[0]));
+		initFilters(table);
+		return table;
 	}
 
-	private void initFilters(Grid<Device> grid) {
-		HeaderRow filterRow = grid.appendHeaderRow();
+	private void initFilters(Grid<Device> table) {
+		HeaderRow filterRow = table.appendHeaderRow();
 
-		// LABEL FILTER (TextField)
 		TextField labelField = new TextField();
 		labelField.setPlaceholder("Filter...");
-		labelField.setWidth(100, Unit.PERCENTAGE);
-		labelField.setStyleName(ValoTheme.TEXTFIELD_TINY);
+		labelField.setWidthFull();
+		labelField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
 		labelField.setValueChangeMode(ValueChangeMode.LAZY);
-		filterRow.getCell(LABEL).setComponent(labelField);
-
+		filterRow.getCell(table.getColumnByKey(LABEL)).setComponent(labelField);
 		labelField.addValueChangeListener(event -> {
 			currentFilter.setLabel(event.getValue());
 			queryDefinition.setQueryFilter(currentFilter);
@@ -321,18 +308,13 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			refreshCurrentPage();
 		});
 
-		// ALARM STATUS FILTER (ComboBox)
 		ComboBox<AlarmStatus> alarmStatusCombo = new ComboBox<>();
 		alarmStatusCombo.setPlaceholder("Filter...");
-		alarmStatusCombo.setWidth(100, Unit.PERCENTAGE);
-		alarmStatusCombo.setStyleName(ValoTheme.COMBOBOX_TINY);
-		alarmStatusCombo.setEmptySelectionAllowed(true);
-		alarmStatusCombo.setTextInputAllowed(false);
+		alarmStatusCombo.setWidthFull();
+		alarmStatusCombo.setClearButtonVisible(true);
 		alarmStatusCombo.setItems(AlarmStatus.values());
-		alarmStatusCombo.setItemCaptionGenerator(
-				status -> getI18nLabel("enum.alarmstatus." + status.name().toLowerCase()));
-		filterRow.getCell(ALARM_STATUS).setComponent(alarmStatusCombo);
-
+		alarmStatusCombo.setItemLabelGenerator(status -> getI18nLabel("enum.alarmstatus." + status.name().toLowerCase()));
+		filterRow.getCell(table.getColumnByKey(ALARM_STATUS)).setComponent(alarmStatusCombo);
 		alarmStatusCombo.addValueChangeListener(event -> {
 			currentFilter.setAlarmStatus(event.getValue());
 			queryDefinition.setQueryFilter(currentFilter);
@@ -340,18 +322,13 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			refreshCurrentPage();
 		});
 
-		// DEVICE STATUS FILTER (ComboBox)
 		ComboBox<DeviceStatus> deviceStatusCombo = new ComboBox<>();
 		deviceStatusCombo.setPlaceholder("Filter...");
-		deviceStatusCombo.setWidth(100, Unit.PERCENTAGE);
-		deviceStatusCombo.setStyleName(ValoTheme.COMBOBOX_TINY);
-		deviceStatusCombo.setEmptySelectionAllowed(true);
-		deviceStatusCombo.setTextInputAllowed(false);
+		deviceStatusCombo.setWidthFull();
+		deviceStatusCombo.setClearButtonVisible(true);
 		deviceStatusCombo.setItems(DeviceStatus.values());
-		deviceStatusCombo.setItemCaptionGenerator(
-				status -> getI18nLabel("enum.devicestatus." + status.name().toLowerCase()));
-		filterRow.getCell(DEVICE_STATUS).setComponent(deviceStatusCombo);
-
+		deviceStatusCombo.setItemLabelGenerator(status -> getI18nLabel("enum.devicestatus." + status.name().toLowerCase()));
+		filterRow.getCell(table.getColumnByKey(DEVICE_STATUS)).setComponent(deviceStatusCombo);
 		deviceStatusCombo.addValueChangeListener(event -> {
 			currentFilter.setDeviceStatus(event.getValue());
 			queryDefinition.setQueryFilter(currentFilter);
@@ -359,15 +336,13 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			refreshCurrentPage();
 		});
 
-		// OWNER FILTER (TextField, only in viewAll mode)
 		if (permissions.isViewAllMode()) {
 			TextField ownerField = new TextField();
 			ownerField.setPlaceholder("Filter...");
-			ownerField.setWidth(100, Unit.PERCENTAGE);
-			ownerField.setStyleName(ValoTheme.TEXTFIELD_TINY);
+			ownerField.setWidthFull();
+			ownerField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
 			ownerField.setValueChangeMode(ValueChangeMode.LAZY);
-			filterRow.getCell(OWNER).setComponent(ownerField);
-
+			filterRow.getCell(table.getColumnByKey(OWNER)).setComponent(ownerField);
 			ownerField.addValueChangeListener(event -> {
 				currentFilter.setOwner(event.getValue());
 				queryDefinition.setQueryFilter(currentFilter);
@@ -389,54 +364,40 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (label == null) {
 			return "";
 		}
-		if (label.length() <= 40) {
-			return label;
-		}
-		return label.substring(0, 40) + "...";
+		return label.length() <= 40 ? label : label.substring(0, 40) + "...";
 	}
 
 	private String formatModel(Device device) {
-		if (device.getModel() == null) {
-			return "";
-		}
-		return device.getModel().getName();
+		return device.getModel() != null ? device.getModel().getName() : "";
 	}
 
 	private String formatAlarmStatus(Device device) {
 		AlarmStatus status = device.getAlarmStatus();
-		if (status == null) {
-			return "";
-		}
-		return getI18nLabel("enum.alarmstatus." + status.name().toLowerCase());
+		return status != null ? getI18nLabel("enum.alarmstatus." + status.name().toLowerCase()) : "";
 	}
 
 	private String formatDeviceStatus(Device device) {
 		DeviceStatus status = device.getStatus();
-		if (status == null) {
-			return "";
-		}
-		return getI18nLabel("enum.devicestatus." + status.name().toLowerCase());
+		return status != null ? getI18nLabel("enum.devicestatus." + status.name().toLowerCase()) : "";
 	}
 
 	private String formatNetwork(Device device) {
-		Network net = device.getNetwork();
-		return net != null ? net.getName() : "";
+		return device.getNetwork() != null ? device.getNetwork().getName() : "";
 	}
 
-	private VerticalLayout createListingLayout(HorizontalLayout toolbar, Grid<Device> grid) {
+	private VerticalLayout createListingLayout(HorizontalLayout toolbar, Grid<Device> table) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setSpacing(true);
-		layout.addComponent(toolbar);
-		layout.addComponent(grid);
-		layout.setExpandRatio(grid, 1f);
+		layout.add(toolbar, table);
+		layout.setFlexGrow(1f, table);
 		return layout;
 	}
 
 	private Button createAddButton() {
 		Button button = new Button();
-		button.setIcon(UIUtils.ICON_ADD);
-		button.setDescription(getI18nLabel("add"));
+		button.setIcon(VaadinIcon.PLUS.create());
+		button.getElement().setProperty("title", getI18nLabel("add"));
 		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openEditor(new Device(), getI18nLabel("add_dialog")));
 		button.setVisible(permissions.isCreateMode());
@@ -445,17 +406,17 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private Button createViewButton() {
 		Button button = new Button();
-		button.setIcon(UIUtils.ICON_DETAILS);
-		button.setDescription(getI18nLabel("view_action"));
-		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("view_dialog"), false));
+		button.setIcon(VaadinIcon.INFO_CIRCLE.create());
+		button.getElement().setProperty("title", getI18nLabel("view_action"));
+		button.addClickListener(event -> openDetails(getCurrentValue()));
 		button.setVisible(permissions.isViewMode());
 		return button;
 	}
 
 	private Button createModifyButton() {
 		Button button = new Button();
-		button.setIcon(UIUtils.ICON_MODIFY);
-		button.setDescription(getI18nLabel("modify_action"));
+		button.setIcon(VaadinIcon.EDIT.create());
+		button.getElement().setProperty("title", getI18nLabel("modify_action"));
 		button.setId(MODIFY_BUTTON);
 		button.addClickListener(event -> openEditor(getCurrentValue(), getI18nLabel("modify_dialog")));
 		button.setVisible(permissions.isModifyMode());
@@ -464,18 +425,18 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private Button createRemoveButton() {
 		Button button = new Button();
-		button.setIcon(UIUtils.ICON_REMOVE);
-		button.setDescription(getI18nLabel("remove_action"));
+		button.setIcon(VaadinIcon.TRASH.create());
+		button.getElement().setProperty("title", getI18nLabel("remove_action"));
 		button.setId(REMOVE_BUTTON);
-		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("remove_dialog"), true));
+		button.addClickListener(event -> openRemove(getCurrentValue()));
 		button.setVisible(permissions.isRemoveMode());
 		return button;
 	}
 
 	private Button createActivateButton() {
 		Button button = new Button();
-		button.setIcon(UIUtils.ICON_ACTIVATE);
-		button.setDescription(getI18nLabel("activate_button"));
+		button.setIcon(VaadinIcon.CHECK_CIRCLE.create());
+		button.getElement().setProperty("title", getI18nLabel("activate_button"));
 		button.setId("activate_button" + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openActivation());
 		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.ACTIVATE));
@@ -484,13 +445,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private Button createResetButton() {
 		Button button = new Button();
-		if (supervisor) {
-			button.setIcon(UIUtils.ICON_RESET);
-			button.setDescription(getI18nLabel("reset_button"));
-		} else {
-			button.setIcon(UIUtils.ICON_REMOVE);
-			button.setDescription(getI18nLabel("remove_button"));
-		}
+		button.setIcon(supervisor ? VaadinIcon.REFRESH.create() : VaadinIcon.TRASH.create());
+		button.getElement().setProperty("title", supervisor ? getI18nLabel("reset_button") : getI18nLabel("remove_button"));
 		button.setId(RESET_BUTTON);
 		button.addClickListener(event -> openReset(getCurrentValue()));
 		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.RESET));
@@ -499,8 +455,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private Button createAlarmsButton() {
 		Button button = new Button();
-		button.setIcon(VaadinIcons.BELL);
-		button.setDescription(getI18nLabel("alarms_button"));
+		button.setIcon(VaadinIcon.BELL.create());
+		button.getElement().setProperty("title", getI18nLabel("alarms_button"));
 		button.setId(ALARM_BUTTON);
 		button.addClickListener(event -> openAlarms(getCurrentValue()));
 		return button;
@@ -508,8 +464,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private Button createExportDataButton() {
 		Button button = new Button();
-		button.setIcon(VaadinIcons.DOWNLOAD);
-		button.setDescription(getI18nLabel("export_button"));
+		button.setIcon(VaadinIcon.DOWNLOAD.create());
+		button.getElement().setProperty("title", getI18nLabel("export_button"));
 		button.setId(DOWNLOAD_BUTTON);
 		button.addClickListener(event -> openDownload(getCurrentValue()));
 		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.EXPORT_DATA));
@@ -518,8 +474,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private Button createImportButton() {
 		Button button = new Button();
-		button.setIcon(VaadinIcons.UPLOAD);
-		button.setDescription(getI18nLabel("import_production"));
+		button.setIcon(VaadinIcon.UPLOAD.create());
+		button.getElement().setProperty("title", getI18nLabel("import_production"));
 		button.setId("import_button" + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openImporter());
 		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.IMPORT));
@@ -528,8 +484,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private Button createDeviceWidgetButton() {
 		Button button = new Button();
-		button.setIcon(VaadinIcons.INFO);
-		button.setDescription(getI18nLabel("groupwidgetbox_button"));
+		button.setIcon(VaadinIcon.INFO.create());
+		button.getElement().setProperty("title", getI18nLabel("groupwidgetbox_button"));
 		button.addClickListener(event -> openGroupWidgetBox());
 		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.MODIFY));
 		return button;
@@ -539,8 +495,11 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (item == null) {
 			return;
 		}
-		AbstractBaseEntityForm<Device> editor = getEditor(item);
-		Window dialog = createDialog(label, editor, editor.getWindowDimension(), editor.getWindowStyle());
+		AbstractBaseEntityForm<Device> editor = getEditor(item, false);
+		Dialog dialog = createDialog(label, editor);
+		if (dialog instanceof SideDrawer) {
+			((SideDrawer) dialog).applyDimension(UIUtils.L_DIMENSION);
+		}
 		editor.setSavedHandler(entity -> {
 			try {
 				if (entity.isNew()) {
@@ -551,65 +510,66 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 				dialog.close();
 				refreshCurrentPage();
 			} catch (Exception e) {
-				PopupNotification.show(e.getMessage(), Notification.Type.ERROR_MESSAGE);
+				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
 			}
 		});
-		UI.getCurrent().addWindow(dialog);
+		dialog.open();
 	}
 
 	private void openActivation() {
-		final DeviceActivatorForm content = new DeviceActivatorForm(network);
-		Window dialog = createDialog(getI18nLabel("device_activation"), content, content.getWindowDimension(),
-				content.getWindowStyle());
+		final DeviceActivatorForm content = new DeviceActivatorForm(network,currentUser);
+		Dialog dialog = createDialog(getI18nLabel("device_activation"), content);
+		// if (dialog instanceof SideDrawer) {
+		// 	((SideDrawer) dialog).applyDimension(content.getWindowDimension());
+		// }
 		content.setSavedHandler(item -> {
 			if (item != null) {
-				String deviceSerial = item.getSerial();
-				String activationKey = item.getActivationKey();
-				String username = UIUtils.getUserDetails().getUsername();
-				
 				try {
-					UIUtils.getServiceFactory().getSubscriptionService().factoryReset(deviceSerial, activationKey);
-					UIUtils.getServiceFactory().getUserService().deviceActivation(deviceSerial,
-							activationKey, username, item.getNetwork());
+					UIUtils.getServiceFactory().getSubscriptionService().factoryReset(item.getSerial(), item.getActivationKey());
+					UIUtils.getServiceFactory().getUserService().deviceActivation(item.getSerial(), item.getActivationKey(),
+							currentUser.getUsername(), item.getNetwork());
+					refreshCurrentPage();
+					PopupNotification.show(getI18nLabel("device_activated"));
 				} catch (BackendServiceException e) {
 					logger.debug("device_activation", e);
+					PopupNotification.show(getI18nLabel("device_not_activated"), PopupNotification.Type.ERROR);
 				}
-
-				refreshCurrentPage();
-				PopupNotification.show(getI18nLabel("device_activated"));
 			} else {
-				PopupNotification.show(getI18nLabel("device_not_activated"), Notification.Type.ERROR_MESSAGE);
+				PopupNotification.show(getI18nLabel("device_not_activated"), PopupNotification.Type.ERROR);
 			}
 			dialog.close();
 		});
-		UI.getCurrent().addWindow(dialog);
+		dialog.open();
 	}
 
 	private void openImporter() {
 		final DeviceProductionImporter content = new DeviceProductionImporter();
-		Window dialog = createDialog(getI18nLabel("import_production"), content, content.getWindowDimension(),
-				content.getWindowStyle());
+		Dialog dialog = createDialog(getI18nLabel("import_production"), content);
+		// if (dialog instanceof SideDrawer) {
+		// 	((SideDrawer) dialog).applyDimension(content.getWindowDimension());
+		// }
 		content.addListener(new EditorSelectedListener() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
+			@SuppressWarnings("unchecked")
 			public void editorSelected(EditorSelectedEvent event) {
 				dialog.close();
-				if (event.getSelected() != null) {
-					@SuppressWarnings("unchecked")
-					Set<Device> items = event.getSelected();
-					for (Device item : items) {
-						try {
-							deviceService.create(item);
-						} catch (Exception e) {
-							PopupNotification.show(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-						}
-					}
-					refreshCurrentPage();
+				if (event.getSelected() == null) {
+					return;
 				}
+				Set<Device> items = (Set<Device>) event.getSelected();
+				for (Device item : items) {
+					try {
+						deviceService.create(item);
+					} catch (Exception e) {
+						PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+					}
+				}
+				refreshCurrentPage();
 			}
 		});
-		UI.getCurrent().addWindow(dialog);
+		dialog.open();
 	}
 
 	private void openAlarms(Device device) {
@@ -617,15 +577,17 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 		final DeviceAlarmsDetails content = new DeviceAlarmsDetails(device);
-		Window dialog = createDialog(getI18nLabel("device_alarms"), content, content.getWindowDimension(),
-				content.getWindowStyle());
-		content.addListener(new EntitySelectedListener() {
-			@Override
-			public void entitySelected(EntitySelectedEvent<?> event) {
-				dialog.close();
-			}
-		});
-		UI.getCurrent().addWindow(dialog);
+		Dialog dialog = createDialog(getI18nLabel("device_alarms"), content);
+		// if (dialog instanceof SideDrawer) {
+		// 	((SideDrawer) dialog).applyDimension(content.getWindowDimension());
+		// }
+		// content.addListener(new EntitySelectedListener() {
+		// 	@Override
+		// 	public void entitySelected(EntitySelectedEvent<?> event) {
+		// 		dialog.close();
+		// 	}
+		// });
+		dialog.open();
 	}
 
 	private void openDownload(Device device) {
@@ -634,29 +596,23 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 		ExportProperties props = new ExportProperties();
 		props.setLegacy(false);
-		props.setTimeZone(UIUtils.getBrowserTimeZone());
+		//props.setTimeZone(UIUtils.getBrowserTimeZone());
 		props.setFileMode(ExportFileMode.SINGLE);
 		props.setFormat(ExportFormat.EXCEL);
 		props.setLocale(UIUtils.getLocale());
 
 		ExportConfig config = new ExportConfig();
 		config.setInterpolation(Interpolation.RAW);
-
 		String lockId = device.getSerial();
 		if (UIUtils.getCassandraService().getRollup().existLockSink(lockId)) {
-			PopupNotification.show(UIUtils.localize("export.already_running_export"), Notification.Type.ERROR_MESSAGE);
+			PopupNotification.show(getTranslation("export.already_running_export"), PopupNotification.Type.ERROR);
 			return;
 		}
 
-		Range<Date> interval = Range.all();
-		if (props.isLegacy()) {
-			interval = getMeasuresRange(device);
-		} else {
-			interval = UIUtils.getCassandraService().getMeasures().getMeasuresSetRange(device.getSerial());
-		}
-
+		Range<Date> interval = props.isLegacy() ? getMeasuresRange(device)
+				: UIUtils.getCassandraService().getMeasures().getMeasuresSetRange(device.getSerial());
 		if (interval == null) {
-			PopupNotification.show("Export Data NOT available", Notification.Type.ERROR_MESSAGE);
+			PopupNotification.show("Export Data NOT available", PopupNotification.Type.ERROR);
 			return;
 		}
 
@@ -670,88 +626,55 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			config.getFeeds().add(ChartUtils.createExportFeed(channel));
 		}
 
-		ExportDialog dialog = new ExportDialog(config, props, device);
-		dialog.setCaption("Export " + device.getLabel());
-		dialog.resize(UIUtils.L_DIMENSION);
-		UI.getCurrent().addWindow(dialog);
+		ExportDialog dialog = new ExportDialog(config, props, device, java.util.concurrent.ForkJoinPool.commonPool());
+		//dialog.setHeaderTitle("Export " + device.getLabel());
+		dialog.open();
 	}
 
 	private void openReset(Device device) {
 		if (device == null) {
 			return;
 		}
-		StringBuilder sb = new StringBuilder();
-		sb.append(VaadinIcons.WARNING.getHtml());
-		sb.append("&nbsp;<b>");
-		sb.append(device.getLabel());
-		sb.append("</b>&nbsp;");
-		if (supervisor) {
-			sb.append(getI18nLabel("reset_warning"));
-		} else {
-			sb.append(getI18nLabel("delete_warning"));
-		}
-		sb.append("&nbsp;");
-		com.vaadin.ui.Label label = new com.vaadin.ui.Label(sb.toString(), ContentMode.HTML);
-		String caption = getI18nLabel("device_reset");
-		if (!supervisor) {
-			caption = getI18nLabel("remove_dialog");
-		}
 		VerticalLayout layout = new VerticalLayout();
-		layout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-		layout.addComponent(label);
-		layout.setMargin(true);
-		layout.setSizeFull();
-		Callback callback = new Callback() {
-			@Override
-			public void onDialogResult(boolean result) {
-				if (!result) {
-					return;
-				}
-				try {
-					UIUtils.getServiceFactory().getSubscriptionService().factoryReset(device.getSerial(),
-							device.getActivationKey());
-					ProvisionedEvent evt = new ProvisionedEvent(device, "");
-					UIUtils.getServiceFactory().getSubscriptionService().provisioned(evt);
-				} catch (BackendServiceException e) {
-					PopupNotification.show(e.getMessage(), Notification.Type.ERROR_MESSAGE);
-				}
-				if (boxes != null) {
-					boxes.refresh(null);
-				}
-				refreshCurrentPage();
+		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+		layout.add(new com.vaadin.flow.component.html.Span(supervisor ? getI18nLabel("reset_warning") : getI18nLabel("delete_warning")));
+		Callback callback = result -> {
+			if (!result) {
+				return;
 			}
+			try {
+				UIUtils.getServiceFactory().getSubscriptionService().factoryReset(device.getSerial(), device.getActivationKey());
+				UIUtils.getServiceFactory().getSubscriptionService().provisioned(new ProvisionedEvent(device, ""));
+			} catch (BackendServiceException e) {
+				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+			}
+			if (boxes != null) {
+				boxes.refresh(null);
+			}
+			refreshCurrentPage();
 		};
-		UI.getCurrent().addWindow(new ConfirmationDialog(caption, layout, callback));
+		Dialog dialog = new ConfirmationDialog(supervisor ? getI18nLabel("device_reset") : getI18nLabel("remove_dialog"),
+				layout, callback);
+		dialog.open();
 	}
 
 	private void openGroupWidgetBox() {
 		if (boxes == null) {
 			return;
 		}
-		Window dialog = createDialog(getI18nLabel("groupwidgetbox_device"), boxes, boxes.getWindowDimension(),
-				boxes.getWindowStyle());
-		UI.getCurrent().addWindow(dialog);
+		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"), boxes);
+		// if (dialog instanceof SideDrawer) {
+		// 	((SideDrawer) dialog).applyDimension(boxes.getWindowDimension());
+		// }
+		dialog.open();
 	}
 
 	private void openVisualization(GroupWidget bean) {
-		if (tabsheet == null || bean == null || bean == null) {
+		if (bean == null) {
 			return;
 		}
-		GroupWidgetVisualizer content = new GroupWidgetVisualizer(bean.getId().toString(), true);
-		Tab existing = tabsheet.getTab(content);
-		if (existing != null) {
-			tabsheet.removeTab(existing);
-		}
-		Tab tab = tabsheet.addTab(content);
-		tab.setClosable(true);
-		tabsheet.setSelectedTab(tab);
-		tabsheet.setCloseHandler((sheet, tabContent) -> {
-			Tab current = sheet.getTab(tabContent);
-			if (tabContent instanceof GroupWidgetVisualizer) {
-				((GroupWidgetVisualizer) tabContent).removeListeners();
-			}
-			sheet.removeTab(current);
-		});
+		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"), new GroupWidgetVisualizer(bean.getId().toString(), true));
+		dialog.open();
 	}
 
 	private void openProvisioning(Device bean) {
@@ -762,8 +685,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (wizard == null) {
 			return;
 		}
-		Window dialog = createDialog(getI18nLabel("device_provisioning"), (Component) wizard, wizard.getWindowDimension(),
-				wizard.getWindowStyle());
+		Dialog dialog = createDialog(getI18nLabel("device_provisioning"), (Component) wizard);
 		wizard.addListener(new EditorSavedListener() {
 			@Override
 			public void editorSaved(EditorSavedEvent event) {
@@ -773,7 +695,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 				dialog.close();
 			}
 		});
-		UI.getCurrent().addWindow(dialog);
+		dialog.open();
 	}
 
 	private void openDetails(Device item, String label, boolean remove) {
@@ -781,7 +703,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 		AbstractBaseEntityDetails<Device> details = getDetails(item, remove);
-		Window dialog = createDialog(label, details, UIUtils.S_DIMENSION, UIUtils.S_WINDOW_STYLE);
+		Dialog dialog = createDialog(label, details);
 		details.addListener(new EntityRemovedListener() {
 			@Override
 			public void entityRemoved(EntityRemovedEvent<?> event) {
@@ -797,13 +719,12 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 				dialog.close();
 			}
 		});
-		UI.getCurrent().addWindow(dialog);
+		dialog.open();
 	}
 
-	// Event bus integration for dynamic updates
 	@Subscribe
 	public void refreshOnDeviceChanged(final DeviceChangedEvent event) {
-		UI ui = this.getUI();
+		UI ui = getUI().orElse(null);
 		if (ui != null) {
 			ui.access(() -> {
 				try {
@@ -818,17 +739,15 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	@Subscribe
 	public void refreshWithUiAccess(final WidgetRefreshEvent event) {
-		if (this.getParent() != null && this.getParent().getUI() != null) {
-			UI ui = this.getParent().getUI();
+		UI ui = getUI().orElse(null);
+		if (ui != null) {
 			ui.access(() -> {
 				try {
 					counter--;
 					if (counter <= 0) {
 						refreshCurrentPage();
 						ui.push();
-						Random random = new Random();
-						counter = random.nextInt(ALARMED_LABEL_COUNT) + ALARMED_LABEL_COUNT;
-						logger.debug("refreshWithUiAccess ALARMED_LABEL_COUNT {}", counter);
+						counter = new Random().nextInt(ALARMED_LABEL_COUNT) + ALARMED_LABEL_COUNT;
 					}
 				} catch (Throwable e) {
 					logger.error("refreshWithUiAccess", e);
@@ -838,85 +757,64 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	@Override
-	public void attach() {
-		super.attach();
-		UIUtils.getUIEventBus().register(this);
+	protected void onAttach(AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		uiEventBus.register(this);
 	}
 
 	@Override
-	public void detach() {
-		UIUtils.getUIEventBus().unregister(this);
-		super.detach();
+	protected void onDetach(DetachEvent detachEvent) {
+		uiEventBus.unregister(this);
+		super.onDetach(detachEvent);
 	}
 
 	@Override
 	public void enableButtons(Device item) {
 		super.enableButtons(item);
-		if (item != null) {
-			for (Component component : getButtonsLayout()) {
-				if (!(component instanceof Button)) {
-					continue;
-				}
-				Button button = (Button) component;
-				if (button.getId() == null) {
-					continue;
-				}
-				boolean activated = !item.isDeActivated();
-				if (button.getId().contains(MODIFY_BUTTON)) {
-					button.setEnabled(activated);
-				} else if (button.getId().contains(ALARM_BUTTON)) {
-					boolean enabled = !DeviceStatus.PRODUCED.equals(item.getStatus()) && activated;
-					button.setEnabled(enabled);
-				} else if (button.getId().contains(DOWNLOAD_BUTTON)) {
-					boolean enabled = item.isAvailableForVisualization() && activated;
-					button.setEnabled(enabled);
-				} else if (button.getId().contains(RESET_BUTTON)) {
-					boolean enabled = (item.getNetwork() == null) && (item.getMaster() == null);
-					button.setEnabled(enabled);
-				} else if (button.getId().contains(REMOVE_BUTTON)) {
-					boolean enabled = (item.getNetwork() == null) && (item.getMaster() == null);
-					if (enabled && item.isSticky()) {
-						if (supervisor) {
-							enabled = false;
-						}
-						if (production) {
-							enabled = true;
-						}
-					}
-					button.setEnabled(enabled);
-				}
-			}
+		if (item == null) {
+			return;
 		}
+		// for (Component component : getButtonsLayout()) {
+		// 	if (!(component instanceof Button)) {
+		// 		continue;
+		// 	}
+		// 	Button button = (Button) component;
+		// 	String id = button.getId().orElse("");
+		// 	boolean activated = !item.isDeActivated();
+		// 	if (id.contains(MODIFY_BUTTON)) {
+		// 		button.setEnabled(activated);
+		// 	} else if (id.contains(ALARM_BUTTON)) {
+		// 		button.setEnabled(!DeviceStatus.PRODUCED.equals(item.getStatus()) && activated);
+		// 	} else if (id.contains(DOWNLOAD_BUTTON)) {
+		// 		button.setEnabled(item.isAvailableForVisualization() && activated);
+		// 	} else if (id.contains(RESET_BUTTON) || id.contains(REMOVE_BUTTON)) {
+		// 		boolean enabled = item.getNetwork() == null && item.getMaster() == null;
+		// 		if (enabled && id.contains(REMOVE_BUTTON) && item.isSticky()) {
+		// 			enabled = !supervisor || production;
+		// 		}
+		// 		button.setEnabled(enabled);
+		// 	}
+		// }
 	}
 
-	private void setupDeviceWidgetBox(Grid<Device> grid, VerticalLayout listingLayout) {
+	private void setupDeviceWidgetBox(Grid<Device> table, VerticalLayout listingLayout) {
 		if (!hasParameters) {
 			return;
 		}
 		boxes = new DeviceWidgetBox();
-		boxes.setSizeFull();
 
-		grid.addSelectionListener(event -> {
-			Device selected = event.getFirstSelectedItem().orElse(null);
-			if (selected != null) {
-				boxes.refresh(selected);
-			} else {
-				boxes.refresh(null);
-			}
-		});
 
+		table.addSelectionListener(event -> boxes.refresh(event.getFirstSelectedItem().orElse(null)));
 		boxes.addListener(new EditorSavedListener() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void editorSaved(EditorSavedEvent event) {
-				if (event.getSavedItem() != null) {
-					if (event.getSavedItem() instanceof GroupWidget) {
-						openVisualization((GroupWidget) event.getSavedItem());
-					}
-					if (event.getSavedItem() instanceof Device) {
-						openProvisioning((Device) event.getSavedItem());
-					}
+				if (event.getSavedItem() instanceof GroupWidget) {
+					openVisualization((GroupWidget) event.getSavedItem());
+				}
+				if (event.getSavedItem() instanceof Device) {
+					openProvisioning((Device) event.getSavedItem());
 				}
 			}
 		});
@@ -925,17 +823,15 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 
-		HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
+		SplitLayout splitPanel = new SplitLayout();
 		splitPanel.setSizeFull();
-		splitPanel.setStyleName(ValoTheme.SPLITPANEL_LARGE);
-		splitPanel.setFirstComponent(grid);
-		splitPanel.setSecondComponent(boxes);
-		splitPanel.setSplitPosition(60, Sizeable.Unit.PERCENTAGE);
-		listingLayout.replaceComponent(grid, splitPanel);
-		listingLayout.setExpandRatio(splitPanel, 1f);
+		splitPanel.addToPrimary(table);
+		splitPanel.addToSecondary(boxes);
+		splitPanel.setSplitterPosition(60);
+		listingLayout.remove(table);
+		listingLayout.add(splitPanel);
+		listingLayout.setFlexGrow(1f, splitPanel);
 	}
-
-	// Inner classes for filter infrastructure
 
 	private static final class DevicesFilter {
 		private String label;
@@ -943,71 +839,27 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		private DeviceStatus deviceStatus;
 		private String owner;
 
-		public String getLabel() {
-			return label;
-		}
-
-		public void setLabel(String label) {
-			this.label = label;
-		}
-
-		public boolean hasLabel() {
-			return label != null && !label.trim().isEmpty();
-		}
-
-		public AlarmStatus getAlarmStatus() {
-			return alarmStatus;
-		}
-
-		public void setAlarmStatus(AlarmStatus alarmStatus) {
-			this.alarmStatus = alarmStatus;
-		}
-
-		public boolean hasAlarmStatus() {
-			return alarmStatus != null;
-		}
-
-		public DeviceStatus getDeviceStatus() {
-			return deviceStatus;
-		}
-
-		public void setDeviceStatus(DeviceStatus deviceStatus) {
-			this.deviceStatus = deviceStatus;
-		}
-
-		public boolean hasDeviceStatus() {
-			return deviceStatus != null;
-		}
-
-		public String getOwner() {
-			return owner;
-		}
-
-		public void setOwner(String owner) {
-			this.owner = owner;
-		}
-
-		public boolean hasOwner() {
-			return owner != null && !owner.trim().isEmpty();
-		}
-
-		@Override
-		public String toString() {
-			return "DevicesFilter{label=" + label + ", alarmStatus=" + alarmStatus + ", deviceStatus=" + deviceStatus
-					+ ", owner=" + owner + "}";
-		}
+		public String getLabel() { return label; }
+		public void setLabel(String label) { this.label = label; }
+		public boolean hasLabel() { return label != null && !label.trim().isEmpty(); }
+		public AlarmStatus getAlarmStatus() { return alarmStatus; }
+		public void setAlarmStatus(AlarmStatus alarmStatus) { this.alarmStatus = alarmStatus; }
+		public boolean hasAlarmStatus() { return alarmStatus != null; }
+		public DeviceStatus getDeviceStatus() { return deviceStatus; }
+		public void setDeviceStatus(DeviceStatus deviceStatus) { this.deviceStatus = deviceStatus; }
+		public boolean hasDeviceStatus() { return deviceStatus != null; }
+		public String getOwner() { return owner; }
+		public void setOwner(String owner) { this.owner = owner; }
+		public boolean hasOwner() { return owner != null && !owner.trim().isEmpty(); }
 	}
 
 	private static final class DevicesQueryDefinition extends LazyQueryDefinition<Device, DevicesFilter>
 			implements FilterableQueryDefinition<DevicesFilter> {
-
 		private static final long serialVersionUID = 1L;
-
 		private DevicesFilter queryFilter;
 		private Network network;
 		private final Permissions permissions;
 		private String owner;
-		private int pageIndex;
 		private int pageSize;
 
 		public DevicesQueryDefinition(Class<Device> beanClass, int batchSize, Permissions permissions) {
@@ -1015,57 +867,20 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			this.permissions = permissions;
 		}
 
-		@Override
-		public void setQueryFilter(DevicesFilter filter) {
-			this.queryFilter = filter;
-		}
-
-		@Override
-		public DevicesFilter getQueryFilter() {
-			return queryFilter;
-		}
-
-		public Network getNetwork() {
-			return network;
-		}
-
-		public void setNetwork(Network network) {
-			this.network = network;
-		}
-
-		public Permissions getPermissions() {
-			return permissions;
-		}
-
-		public String getOwner() {
-			return owner;
-		}
-
-		public void setOwner(String owner) {
-			this.owner = owner;
-		}
-
-		public int getPageIndex() {
-			return pageIndex;
-		}
-
-		public int getPageSize() {
-			return pageSize;
-		}
-
-		public void setPage(int pageIndex, int pageSize) {
-			this.pageIndex = pageIndex;
-			this.pageSize = pageSize;
-		}
+		@Override public void setQueryFilter(DevicesFilter filter) { this.queryFilter = filter; }
+		@Override public DevicesFilter getQueryFilter() { return queryFilter; }
+		public Network getNetwork() { return network; }
+		public void setNetwork(Network network) { this.network = network; }
+		public Permissions getPermissions() { return permissions; }
+		public String getOwner() { return owner; }
+		public void setOwner(String owner) { this.owner = owner; }
+		public int getPageSize() { return pageSize; }
+		public void setPage(int pageIndex, int pageSize) { this.pageSize = pageSize; }
 	}
 
 	private static final class DevicesQueryFactory implements QueryFactory<Device, DevicesFilter> {
 		private final DeviceRepository deviceRepository;
-
-		private DevicesQueryFactory(DeviceRepository deviceRepository) {
-			this.deviceRepository = deviceRepository;
-		}
-
+		private DevicesQueryFactory(DeviceRepository deviceRepository) { this.deviceRepository = deviceRepository; }
 		@Override
 		public it.thisone.iotter.lazyquerydataprovider.Query<Device, DevicesFilter> constructQuery(
 				QueryDefinition<Device, DevicesFilter> queryDefinition) {
@@ -1073,8 +888,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 	}
 
-	private static final class DevicesQuery
-			implements it.thisone.iotter.lazyquerydataprovider.Query<Device, DevicesFilter> {
+	private static final class DevicesQuery implements it.thisone.iotter.lazyquerydataprovider.Query<Device, DevicesFilter> {
 		private final DeviceRepository deviceRepository;
 		private final DevicesQueryDefinition queryDefinition;
 
@@ -1085,75 +899,55 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 		@Override
 		public int size(QueryDefinition<Device, DevicesFilter> queryDefinition) {
-			Page<Device> page = findPage(0, 1);
-			long total = page.getTotalElements();
-			System.out.println("DevicesQuery.size() - getTotalElements: " + total);
-			return (int) total;
+			return (int) findPage(0, 1).getTotalElements();
 		}
 
 		@Override
-		public Stream<Device> loadItems(QueryDefinition<Device, DevicesFilter> queryDefinition, int offset,
-				int limit) {
-			int page = offset / this.queryDefinition.getPageSize();
-			int size = this.queryDefinition.getPageSize();
-			System.out.println("DevicesQuery.loadItems() - offset: " + offset + ", limit: " + limit
-					+ ", calculated page: " + page + ", using pageSize: " + size);
-			Page<Device> devices = findPage(page, size);
-			System.out.println(
-					"DevicesQuery.loadItems() - loaded " + devices.getContent().size() + " devices from page " + page);
-
-			// Populate transient alarmStatus for each device
+		public Stream<Device> loadItems(QueryDefinition<Device, DevicesFilter> queryDefinition, int offset, int limit) {
+			int size = queryDefinition.getLimit();
+			if (size <= 0) {
+				size = this.queryDefinition.getPageSize() > 0 ? this.queryDefinition.getPageSize() : 100;
+			}
+			int page = size > 0 ? offset / size : 0;
+			org.springframework.data.domain.Page<Device> devices = findPage(page, size);
 			List<Device> deviceList = devices.getContent();
 			populateAlarmStatusBatch(deviceList);
-
-			// Filter by alarmStatus if filter is set (post-query filtering since @Transient)
-			Stream<Device> stream = deviceList.stream();
 			DevicesFilter filter = this.queryDefinition.getQueryFilter();
+			Stream<Device> stream = deviceList.stream();
 			if (filter != null && filter.hasAlarmStatus()) {
 				stream = stream.filter(d -> filter.getAlarmStatus().equals(d.getAlarmStatus()));
 			}
-
 			return stream;
 		}
 
-		private Page<Device> findPage(int page, int size) {
-			Sort sort = buildSort();
-			Pageable pageable = PageRequest.of(page, size, sort);
+		private org.springframework.data.domain.Page<Device> findPage(int page, int size) {
+			org.springframework.data.domain.Sort sort = buildSort();
+			org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, sort);
 			DevicesFilter filter = queryDefinition.getQueryFilter();
-
-			// Extract filter values
 			String label = filter != null && filter.hasLabel() ? filter.getLabel().trim() : null;
 			DeviceStatus deviceStatus = filter != null && filter.hasDeviceStatus() ? filter.getDeviceStatus() : null;
 			String ownerFilter = filter != null && filter.hasOwner() ? filter.getOwner().trim() : null;
 
-			// PERMISSION ROUTING: Network-scoped mode
 			if (queryDefinition.getNetwork() != null) {
 				String owner = queryDefinition.getNetwork().getOwner();
 				String networkId = queryDefinition.getNetwork().getId();
-
 				if (label != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCaseAndStatus(owner,
-							networkId, label, deviceStatus, pageable);
+					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCaseAndStatus(owner, networkId, label, deviceStatus, pageable);
 				} else if (label != null) {
-					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCase(owner, networkId,
-							label, pageable);
+					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCase(owner, networkId, label, pageable);
 				} else if (deviceStatus != null) {
 					return deviceRepository.findByOwnerAndNetworkIdAndStatus(owner, networkId, deviceStatus, pageable);
 				}
 				return deviceRepository.findByOwnerAndNetworkId(owner, networkId, pageable);
 			}
 
-			// PERMISSION ROUTING: ViewAll mode
 			if (queryDefinition.getPermissions().isViewAllMode()) {
 				if (ownerFilter != null && label != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCaseAndStatus(
-							ownerFilter, label, deviceStatus, pageable);
+					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCaseAndStatus(ownerFilter, label, deviceStatus, pageable);
 				} else if (ownerFilter != null && label != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCase(ownerFilter,
-							label, pageable);
+					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCase(ownerFilter, label, pageable);
 				} else if (ownerFilter != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndStatus(ownerFilter, deviceStatus,
-							pageable);
+					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndStatus(ownerFilter, deviceStatus, pageable);
 				} else if (ownerFilter != null) {
 					return deviceRepository.findByOwnerStartingWithIgnoreCase(ownerFilter, pageable);
 				} else if (label != null && deviceStatus != null) {
@@ -1166,11 +960,9 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 				return deviceRepository.findAll(pageable);
 			}
 
-			// PERMISSION ROUTING: Owner-scoped mode (default)
 			String owner = queryDefinition.getOwner();
 			if (label != null && deviceStatus != null) {
-				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCaseAndStatus(owner, label, deviceStatus,
-						pageable);
+				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCaseAndStatus(owner, label, deviceStatus, pageable);
 			} else if (label != null) {
 				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCase(owner, label, pageable);
 			} else if (deviceStatus != null) {
@@ -1179,72 +971,43 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return deviceRepository.findByOwner(owner, pageable);
 		}
 
-		private Sort buildSort() {
+		private org.springframework.data.domain.Sort buildSort() {
 			List<QuerySortOrder> sortOrders = queryDefinition.getSortOrders();
-
-			// Default sorting by serial if no sort specified
 			if (sortOrders == null || sortOrders.isEmpty()) {
-				return Sort.by(new Sort.Order(Sort.Direction.ASC, "serial"),
-						new Sort.Order(Sort.Direction.ASC, LABEL));
+				return org.springframework.data.domain.Sort.by("serial").ascending().and(org.springframework.data.domain.Sort.by(LABEL).ascending());
 			}
-
-			// Convert Vaadin QuerySortOrder to Spring Data Sort
-			List<Sort.Order> orders = new ArrayList<>();
+			List<org.springframework.data.domain.Sort.Order> orders = new ArrayList<>();
 			for (QuerySortOrder sortOrder : sortOrders) {
 				String property = sortOrder.getSorted();
-				Sort.Direction direction = sortOrder.getDirection() == SortDirection.ASCENDING ? Sort.Direction.ASC
-						: Sort.Direction.DESC;
-				orders.add(new Sort.Order(direction, property));
+				org.springframework.data.domain.Sort.Direction direction = sortOrder.getDirection() == SortDirection.ASCENDING
+						? org.springframework.data.domain.Sort.Direction.ASC
+						: org.springframework.data.domain.Sort.Direction.DESC;
+				orders.add(new org.springframework.data.domain.Sort.Order(direction, property));
 			}
-
-			// Add secondary sort by label if not already included
 			boolean hasLabelSorting = sortOrders.stream().anyMatch(so -> LABEL.equals(so.getSorted()));
 			if (!hasLabelSorting) {
-				orders.add(new Sort.Order(Sort.Direction.ASC, LABEL));
+				orders.add(new org.springframework.data.domain.Sort.Order(org.springframework.data.domain.Sort.Direction.ASC, LABEL));
 			}
-
-			return Sort.by(orders);
+			return org.springframework.data.domain.Sort.by(orders);
 		}
 
 		private void populateAlarmStatusBatch(List<Device> devices) {
-			// Populate transient alarmStatus for each device
 			for (Device device : devices) {
-				populateAlarmStatus(device);
-			}
-		}
-
-		private void populateAlarmStatus(Device device) {
-			try {
-				// Get last contact date from service/cache
-				Date lastContactDate = getLastContactDate(device.getSerial());
-				boolean alarmed = device.isAlarmed();
-				boolean hasActiveAlarms = hasActiveAlarms(device);
-
-				// Calculate and set alarm status
-				device.changedAlarmStatus(lastContactDate, alarmed, hasActiveAlarms);
-			} catch (Exception e) {
-				// If calculation fails, set to UNDEFINED
-				logger.error("Error populating alarm status for device " + device.getSerial(), e);
-			}
-		}
-
-		private Date getLastContactDate(String serial) {
-			try {
-				// Query Cassandra for last measure timestamp
-				return UIUtils.getCassandraService().getMeasures().getLastTick(serial, null);
-			} catch (Exception e) {
-				return null;
+				try {
+					Date lastContactDate = UIUtils.getCassandraService().getMeasures().getLastTick(device.getSerial(), null);
+					device.changedAlarmStatus(lastContactDate, device.isAlarmed(), hasActiveAlarms(device));
+				} catch (Exception e) {
+					logger.error("Error populating alarm status for device {}", device.getSerial(), e);
+				}
 			}
 		}
 
 		private boolean hasActiveAlarms(Device device) {
-			// Check if device has any active alarm channels
 			if (device.getChannels() == null || device.getChannels().isEmpty()) {
 				return false;
 			}
-			return device.getChannels().stream()
-					.anyMatch(ch -> ch.getConfiguration() != null && ch.getConfiguration().isActive()
-							&& it.thisone.iotter.util.Utils.isTypeAlarm(ch.getMetaData()));
+			return device.getChannels().stream().anyMatch(ch -> ch.getConfiguration() != null && ch.getConfiguration().isActive()
+					&& it.thisone.iotter.util.Utils.isTypeAlarm(ch.getMetaData()));
 		}
 
 		private long countTotal() {
@@ -1258,20 +1021,19 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			first = new Date();
 		}
 		Date startDate = device.getActivationDate() != null ? device.getActivationDate() : device.getProductionDate();
-		if (first.before(startDate)) {
+		if (startDate != null && first.before(startDate)) {
 			first = startDate;
 		}
 		Date last = UIUtils.getCassandraService().getMeasures().getLastTick(device.getSerial(), null);
 		if (last == null) {
 			last = new Date();
 		}
-
-		Range<Date> interval = null;
 		if (first.equals(last)) {
-			interval = Range.singleton(first);
-		} else if (first.before(last)) {
-			interval = Range.closedOpen(first, last);
+			return Range.singleton(first);
 		}
-		return interval;
+		if (first.before(last)) {
+			return Range.closedOpen(first, last);
+		}
+		return null;
 	}
 }

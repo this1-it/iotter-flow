@@ -27,7 +27,6 @@ import it.thisone.iotter.persistence.model.ChannelRemoteControl;
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.devices.DeviceForm;
@@ -269,5 +268,17 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 	private boolean isSupervisor() {
 		// TODO Flow migration: inject authenticated user context and evaluate roles.
 		return false;
+	}
+
+	@Override
+	protected void openDetails(Channel item) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'openDetails'");
+	}
+
+	@Override
+	protected void openRemove(Channel item) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'openRemove'");
 	}
 }

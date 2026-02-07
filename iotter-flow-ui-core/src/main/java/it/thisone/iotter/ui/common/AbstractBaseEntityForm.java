@@ -98,7 +98,7 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         setEntity(entity);
 
         if (getEntity().getOwner() == null) {
-        	//getEntity().setOwner(UIUtils.getUserDetails().getTenant());
+        	//getEntity().setOwner(getCurrentUser().getTenant());
         }
         // Configure buttons styling
         getSaveButton().setWidth(ACTION_BUTTON_WIDTH, Unit.PIXELS);
@@ -311,8 +311,8 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
             }
             if (message == null) {
 //                message = " check application log for details ";
-//                UIUtils.trace(TracingAction.ERROR_UI, UIUtils.getUserDetails().getName(), 
-//                        UIUtils.getUserDetails().getTenant(), null, null, Utils.stackTrace(e));
+//                UIUtils.trace(TracingAction.ERROR_UI, getCurrentUser().getName(), 
+//                        getCurrentUser().getTenant(), null, null, Utils.stackTrace(e));
             }
 
             PopupNotification.show(

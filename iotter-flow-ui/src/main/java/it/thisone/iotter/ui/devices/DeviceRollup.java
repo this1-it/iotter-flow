@@ -5,21 +5,24 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.icons.VaadinIcons;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.Command;
-import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.dialog.Dialog;
 
 import it.thisone.iotter.cassandra.model.MeasureStats;
+import it.thisone.iotter.integration.CassandraService;
+import it.thisone.iotter.integration.SubscriptionService;
 import it.thisone.iotter.persistence.model.Device;
+import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.EntitySelectedEvent;
 import it.thisone.iotter.ui.common.EntitySelectedListener;
@@ -27,7 +30,15 @@ import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.ifc.ITabContent;
 import it.thisone.iotter.util.PopupNotification;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+
+@org.springframework.stereotype.Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DeviceRollup extends BaseComponent implements ITabContent {
+	// TODO(flow-migration): manual refactor required for Vaadin 8 APIs removed in Flow (dialogs/tabs/legacy layout or UIUtils context access).
+
 
 	/**
 	 * 
@@ -41,6 +52,10 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 	private ListDataProvider<MeasureStats> dataProvider;
 	private Device device;
 
+	@Autowired
+    private SubscriptionService subscriptionService;
+	@Autowired
+    private CassandraService cassandraService;
 
 	public DeviceRollup(Device item) {
 		super("device.rollup", "DeviceRollup");
@@ -48,135 +63,113 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 		grid = createGrid();
 		grid.setSizeFull();
 
-		CheckBox checkbox = new CheckBox("rollup break");
+		Checkbox checkbox = new Checkbox("rollup break");
 		checkbox.setValue(true);
 
 		MenuBar menu = new MenuBar();
-		menu.setStyleName("borderless");
-		MenuItem refresh = menu.addItem("", VaadinIcons.REFRESH, new Command() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 8346541839033375990L;
-
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				refreshData();
-				PopupNotification.show("refresh done");
-			}
+		menu.setClassName("borderless");
+		MenuItem refresh = menu.addItem(new Icon(VaadinIcon.REFRESH), e -> {
+			refreshData();
+			PopupNotification.show("refresh done");
 		});
-		refresh.setDescription("refresh");
+		//refresh.setDescription("refresh");
 
-		MenuItem rollup = menu.addItem("", VaadinIcons.QUESTION, new Command() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 8346541839033375990L;
-
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				UIUtils.getServiceFactory().getSubscriptionService()
-						.rollupDevice(device.getSerial(), checkbox.getValue());
-				PopupNotification.show("rollup started");
-			}
+		MenuItem rollup = menu.addItem(new Icon(VaadinIcon.QUESTION), e -> {
+			subscriptionService
+					.rollupDevice(device.getSerial(), checkbox.getValue());
+			PopupNotification.show("rollup started");
 		});
-		rollup.setDescription("rollup");
+		//rollup.setDescription("rollup");
 
-		MenuItem delete = menu.addItem("", VaadinIcons.TRASH, new Command() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 8346541839033375990L;
-
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				UIUtils.getServiceFactory().getSubscriptionService()
-						.resetRollup(device.getSerial());
-				PopupNotification.show("delete done");
-			}
+		MenuItem delete = menu.addItem(new Icon(VaadinIcon.TRASH), e -> {
+			subscriptionService
+					.resetRollup(device.getSerial());
+			PopupNotification.show("delete done");
 		});
-		delete.setDescription("delete");
+		//delete.setDescription("delete");
 
-		MenuItem chart = menu.addItem("", VaadinIcons.LINE_CHART, new Command() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 8346541839033375990L;
-			@Override
-			public void menuSelected(MenuItem selectedItem) {
-				DeviceRollupActivity details = new DeviceRollupActivity(device);
-				final Window dialog = createDialog(device.getSerial(), details, details.getWindowDimension(),
-						details.getWindowStyle());
+		// MenuItem chart = menu.addItem(new Icon(VaadinIcon.LINE_CHART), e -> {
+		// 	DeviceRollupActivity details = new DeviceRollupActivity(device);
+		// 	final Window dialog = createDialog(device.getSerial(), details, details.getWindowDimension(),
+		// 			details.getWindowStyle());
+		// 	details.addListener(new EntitySelectedListener() {
+		// 		/**
+		// 		 * 
+		// 		 */
+		// 		private static final long serialVersionUID = 1L;
+		// 		@Override
+		// 		public void entitySelected(EntitySelectedEvent<?> event) {
+		// 			dialog.close();
+		// 		}
+		// 	});
 
-				details.addListener(new EntitySelectedListener() {
-					/**
-					 * 
-					 */
-					private static final long serialVersionUID = 1L;
-					@Override
-					public void entitySelected(EntitySelectedEvent<?> event) {
-						dialog.close();
-					}
-				});
-
-				UI.getCurrent().addWindow(dialog);
-			}
-		});
-		chart.setDescription("chart");
+		// 	UI.getCurrent().addWindow(dialog);
+		// });
+		//chart.setDescription("chart");
 
 		HorizontalLayout menuLayout = new HorizontalLayout();
-		menuLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-		menuLayout.addComponent(menu);
-		menuLayout.addComponent(checkbox);
+		//menuLayout.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		menuLayout.add(menu);
+		menuLayout.add(checkbox);
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
-		layout.addComponent(menuLayout);
-		layout.addComponent(grid);
-		layout.setExpandRatio(grid, 1f);
+		layout.add(menuLayout);
+		layout.add(grid);
+		//layout.setExpandRatio(grid, 1f);
 
-		setCompositionRoot(layout);
+		setRootComposition(layout);
 	}
 
 	private Grid<MeasureStats> createGrid() {
 		dataProvider = new ListDataProvider<>(new java.util.ArrayList<MeasureStats>());
-		Grid<MeasureStats> table = new Grid<>(dataProvider);
+		Grid<MeasureStats> table = new Grid<>();
+		table.setDataProvider(dataProvider);
 		for (String columnId : COLUMNS) {
-			Grid.Column<MeasureStats, ?> column;
+			Grid.Column<MeasureStats> column;
 			switch (columnId) {
 			case "key":
-				column = table.addColumn(MeasureStats::getKey).setId(columnId);
+				column = table.addColumn(MeasureStats::getKey);
+				column.setKey(columnId);
 				break;
 			case "label":
-				column = table.addColumn(MeasureStats::getLabel).setId(columnId);
+				column = table.addColumn(MeasureStats::getLabel);
+				column.setKey(columnId);
 				break;
 			case "records":
-				column = table.addColumn(MeasureStats::getRecords).setId(columnId);
+				column = table.addColumn(MeasureStats::getRecords);
+				column.setKey(columnId);
 				break;
 			case "firstMeasureDate":
-				column = table.addColumn(MeasureStats::getFirstMeasureDate).setId(columnId);
+				column = table.addColumn(MeasureStats::getFirstMeasureDate);
+				column.setKey(columnId);
 				break;
 			case "lastMeasureDate":
-				column = table.addColumn(MeasureStats::getLastMeasureDate).setId(columnId);
+				column = table.addColumn(MeasureStats::getLastMeasureDate);
+				column.setKey(columnId);
 				break;
 			case "frequency":
-				column = table.addColumn(MeasureStats::getFrequency).setId(columnId);
+				column = table.addColumn(MeasureStats::getFrequency);
+				column.setKey(columnId);
 				break;
 			case "updated":
-				column = table.addColumn(MeasureStats::getUpdated).setId(columnId);
+				column = table.addColumn(MeasureStats::getUpdated);
+				column.setKey(columnId);
 				break;
 			case "running":
-				column = table.addColumn(MeasureStats::isRunning).setId(columnId);
+				column = table.addColumn(MeasureStats::isRunning);
+				column.setKey(columnId);
 				break;
 			case "since":
-				column = table.addColumn(MeasureStats::getSince).setId(columnId);
+				column = table.addColumn(MeasureStats::getSince);
+				column.setKey(columnId);
 				break;
 			default:
 				continue;
 			}
-			column.setCaption(getI18nLabel(columnId));
+			column.setHeader(getI18nLabel(columnId));
 		}
 		table.setSelectionMode(Grid.SelectionMode.NONE);
-		table.setStyleName(UIUtils.TABLE_STYLE);
+		//table.setClassName(UIUtils.TABLE_STYLE);
 		return table;
 	}
 
@@ -193,7 +186,7 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 	private List<MeasureStats> createContainer(Device device) {
 		Set<String> keys = new LinkedHashSet<>(device.feedKeys());
 		String sn = device.getSerial();
-		List<MeasureStats> stats = UIUtils.getCassandraService().getRollup()
+		List<MeasureStats> stats = cassandraService.getRollup()
 				.getRollupStats(sn);
 		for (MeasureStats stat : stats) {
 			keys.remove(stat.getKey());
@@ -218,15 +211,15 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 
 	@Override
 	public void lazyLoad() {
-		if (!isLoaded()) {
-			UI.getCurrent().access(new Runnable() {
-				@Override
-				public void run() {
-					refreshData();
-					UIUtils.push();
-				}
-			});
-		}
+		// if (!isLoaded()) {
+		// 	UI.getCurrent().access(new Runnable() {
+		// 		@Override
+		// 		public void run() {
+		// 			refreshData();
+		// 			UIUtils.push();
+		// 		}
+		// 	});
+		// }
 
 	}
 

@@ -9,7 +9,7 @@ public abstract class BaseView extends VerticalLayout {
 	public abstract String getI18nKey();
 
 	public String getI18nLabel(String key) {
-		return getTranslation(getI18nKey() + "."+ key, null);
+		return getTranslation(getI18nKey() + "."+ key);
 	}
 
 

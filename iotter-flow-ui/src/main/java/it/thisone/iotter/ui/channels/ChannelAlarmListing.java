@@ -277,4 +277,16 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 			dataProvider.refreshAll();
 		}
 	}
+
+	@Override
+	protected void openDetails(Channel item) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void openRemove(Channel item) {
+		// TODO Auto-generated method stub
+		
+	}
 }

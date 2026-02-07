@@ -3,49 +3,45 @@ package it.thisone.iotter.ui.devices;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.themes.ValoTheme;
+import org.springframework.context.annotation.Scope;
+
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Label;
+
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.cassandra.model.FeedAlarmEvent;
 import it.thisone.iotter.cassandra.model.IFeedAlarm;
+import it.thisone.iotter.integration.CassandraService;
 import it.thisone.iotter.persistence.model.Device;
-import it.thisone.iotter.ui.common.AbstractBaseEntityDetails;
-import it.thisone.iotter.ui.common.EditorConstraintException;
-import it.thisone.iotter.ui.common.UIUtils;
+
+
 import it.thisone.iotter.ui.model.ChannelAdapter;
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+@org.springframework.stereotype.Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+public class DeviceAlarmsDetails extends Composite<VerticalLayout> {
 
-@SuppressWarnings("serial")
-public class DeviceAlarmsDetails extends AbstractBaseEntityDetails<Device> {
+	@Autowired
+	private CassandraService cassandraService;
 	
 	public DeviceAlarmsDetails(Device item) {
-		super(item, Device.class, DeviceForm.NAME, new String[]{}, false);
-		getRemoveButton().setVisible(false);
-		getSelectButton().setVisible(false);
-		buildLayout(deviceAlarms(item));
+		super();
+		getContent().add(buildContent(item));
+	}
+
+	public String getI18nLabel(String key) {
+		return getTranslation(DeviceForm.NAME + "."+ key);
 	}
 
 
-	public String getWindowStyle() {
-		return "device-editor";
-	}
-
-
-	public float[] getWindowDimension() {
-		return UIUtils.L_DIMENSION;
-	}
-
-
-	@Override
-	protected void onRemove() throws EditorConstraintException {
-	}
-
-	private Component deviceAlarms(Device device) {
+	private Component buildContent(Device device) {
 		
-		List<FeedAlarmEvent> events = UIUtils.getCassandraService().getAlarms().getAlarmEvents(device.getSerial(), 30);
+		List<FeedAlarmEvent> events = cassandraService.getAlarms().getAlarmEvents(device.getSerial(), 30);
 		ChannelAdapterDataProvider ccontainer = new ChannelAdapterDataProvider();
 		ccontainer.addChannels(device.getChannels());
 		List<IFeedAlarm> alarms = new ArrayList<>();
@@ -55,39 +51,31 @@ public class DeviceAlarmsDetails extends AbstractBaseEntityDetails<Device> {
 		if (items.isEmpty()) {
 			VerticalLayout layout = new VerticalLayout();
 			layout.setSizeFull();
-			layout.setMargin(true);
-			layout.addComponent(new Label(getI18nLabel("no_alarm_events")));
+			layout.setPadding(true);
+			layout.add(new Label(getI18nLabel("no_alarm_events")));
 			return layout;
 		}
 		
 		
 		Grid<ChannelAdapter> grid = new Grid<>();
-		grid.addStyleName(ValoTheme.TABLE_SMALL);
-		grid.addStyleName(ValoTheme.TABLE_COMPACT);
+
 		grid.setSelectionMode(Grid.SelectionMode.NONE);
 		grid.setSizeFull();
 
 		grid.addColumn(ChannelAdapter::getAlarmStatus)
-			.setCaption(getI18nLabel("alarmStatus"))
-			.setExpandRatio(1);
+			.setHeader(getI18nLabel("alarmStatus"));
 		grid.addColumn(ChannelAdapter::getAlarmDate)
-			.setCaption(getI18nLabel("alarmDate"))
-			.setExpandRatio(1);
+			.setHeader(getI18nLabel("alarmDate"));
 		grid.addColumn(ChannelAdapter::getDisplayName)
-			.setCaption(getI18nLabel("displayName"))
-			.setExpandRatio(2);
+			.setHeader(getI18nLabel("displayName"));
 		grid.addColumn(ChannelAdapter::getAlarmValue)
-			.setCaption(getI18nLabel("alarmValue"))
-			.setExpandRatio(1);
+			.setHeader(getI18nLabel("alarmValue"));
 		grid.addColumn(ChannelAdapter::getMeasureUnit)
-			.setCaption(getI18nLabel("measureUnit"))
-			.setExpandRatio(1);
+			.setHeader(getI18nLabel("measureUnit"));
 		grid.addColumn(ChannelAdapter::getAlarmOperator)
-			.setCaption(getI18nLabel("alarmOperator"))
-			.setExpandRatio(1);
+			.setHeader(getI18nLabel("alarmOperator"));
 		grid.addColumn(ChannelAdapter::getAlarmMembers)
-			.setCaption(getI18nLabel("alarmMembers"))
-			.setExpandRatio(1);
+			.setHeader(getI18nLabel("alarmMembers"));
 
 		grid.setItems(items);
 		//grid.sort(Grid.SortDirection.DESCENDING, grid.getColumns().get(1));

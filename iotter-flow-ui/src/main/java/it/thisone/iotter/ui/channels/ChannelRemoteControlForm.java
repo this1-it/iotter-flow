@@ -125,4 +125,20 @@ public class ChannelRemoteControlForm extends AbstractBaseEntityForm<Channel> {
 		}
 		return permission;
 	}
+
+
+
+	@Override
+	protected void initializeFields() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	@Override
+	protected void bindFields() {
+		// TODO Auto-generated method stub
+		
+	}
 }
