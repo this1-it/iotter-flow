@@ -3,6 +3,7 @@ package it.thisone.iotter.ui.common.fields;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.TimeZone;
 
 import com.vaadin.flow.component.AbstractCompositeField;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
@@ -17,17 +18,17 @@ public class LegacyDateTimeField
     private final DateTimePicker internalField;
     private final ZoneId zoneId;
 
-    public LegacyDateTimeField() {
+    public LegacyDateTimeField(TimeZone tz) {
         super(null); // default value null, server-side
 
-        this.zoneId = UIUtils.getBrowserTimeZone().toZoneId();
+        this.zoneId = tz.toZoneId();
         this.internalField = getContent();
 
         internalField.addValueChangeListener(e -> updateModelValue());
     }
 
-    public LegacyDateTimeField(String label) {
-        this();
+    public LegacyDateTimeField(String label,TimeZone tz) {
+        this(tz);
         internalField.setLabel(label);
     }
 

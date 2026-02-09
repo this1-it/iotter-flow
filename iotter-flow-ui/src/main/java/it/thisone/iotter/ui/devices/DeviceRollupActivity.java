@@ -2,6 +2,7 @@ package it.thisone.iotter.ui.devices;
 
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.enums.ChartScaleType;
@@ -10,14 +11,13 @@ import it.thisone.iotter.persistence.model.Channel;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
-import it.thisone.iotter.ui.common.AbstractBaseEntityDetails;
 import it.thisone.iotter.ui.common.EditorConstraintException;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 
 
 public class DeviceRollupActivity 
-extends AbstractBaseEntityDetails<Device> {
+extends Composite<VerticalLayout>{
 	// TODO(flow-migration): manual refactor required for Vaadin 8 APIs removed in Flow (dialogs/tabs/legacy layout or UIUtils context access).
 
 	/**
@@ -26,28 +26,23 @@ extends AbstractBaseEntityDetails<Device> {
 	private static final long serialVersionUID = 5961351166441753740L;
 	
 	public DeviceRollupActivity(Device item) {
-		super(item, Device.class, DeviceForm.NAME, new String[] {}, false);
-		getSelectButton().setVisible(false);
-		getRemoveButton().setVisible(false);
-		getCancelButton().setCaption(getTranslation("basic.editor.close"));
-		setDetails(getContentLayout());
+
+		// super(item, Device.class, DeviceForm.NAME, new String[] {}, false);
+		// getSelectButton().setVisible(false);
+		// getRemoveButton().setVisible(false);
+		// getCancelButton().setCaption(getTranslation("basic.editor.close"));
+		getContent().add(getContentLayout(item));
 	}
 
 	
-	public float[] getWindowDimension() {
-		return UIUtils.L_DIMENSION;
-	}
-	
-	public String getWindowStyle() {
-		return "device-editor";
-	}
 
-	private Layout getContentLayout() {
+
+	private VerticalLayout getContentLayout(Device device) {
 		VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.setSpacing(true);
 		mainLayout.setPadding(true);
 		mainLayout.setSizeFull();
-		Device device = this.getBean();
+
 		
 		Channel chnl = null;
 		
@@ -89,10 +84,6 @@ extends AbstractBaseEntityDetails<Device> {
 	}
 
 
-	@Override
-	protected void onRemove() throws EditorConstraintException {
-		
-	}
 
 
 

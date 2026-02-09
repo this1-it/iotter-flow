@@ -40,17 +40,34 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 
 	private final Permissions permissions;
 	private final List<Channel> channels;
-	private final ChannelAdapterDataProvider adapterProvider = new ChannelAdapterDataProvider();
+	private final ChannelAdapterDataProvider adapterProvider;
 	private ListDataProvider<Channel> dataProvider;
 	private Grid<Channel> grid;
 	private boolean loaded;
 
-	public ChannelRemoteControlListing(Collection<Channel> items) {
+	public ChannelRemoteControlListing() {
 		super(Channel.class, DeviceForm.NAME, "channel.remote", false);
 		this.permissions = new Permissions(true);
-		this.channels = items == null ? new ArrayList<>() : new ArrayList<>(items);
+		this.channels = new ArrayList<>();
+		this.adapterProvider = new ChannelAdapterDataProvider();
 		buildLayout();
 	}
+
+	public void setItems(List<Channel> channels, ChoiceFormat cf) {
+		adapterProvider.setMeasureRenderer(cf);
+		List<Channel> remoteChannels = new ArrayList<>();
+		for (Channel channel : channels) {
+			if (isRemoteValid(channel) && channel.getConfiguration() != null
+					&& channel.getConfiguration().isActive()) {
+				remoteChannels.add(channel);
+			}
+		}
+		dataProvider.getItems().clear();
+		dataProvider.getItems().addAll(remoteChannels);
+
+
+	}
+
 
 	private void buildLayout() {
 		HorizontalLayout toolbar = new HorizontalLayout();

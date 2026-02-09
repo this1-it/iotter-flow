@@ -43,12 +43,18 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 	private Button users;
 	private boolean loaded;
 
-	public ChannelAlarmListing(List<Channel> items) {
+	public ChannelAlarmListing() {
 		super(Channel.class, "channel", "channel.alarm", false);
 		this.permissions = new Permissions(true);
-		this.channels = items == null ? new ArrayList<>() : new ArrayList<>(items);
+		this.channels = new ArrayList<>();
 		buildLayout();
 	}
+
+	public void setItems(List<Channel> channels) {
+		dataProvider.getItems().clear();
+		dataProvider.getItems().addAll(channels);
+	}
+
 
 	private void buildLayout() {
 		HorizontalLayout toolbar = new HorizontalLayout();

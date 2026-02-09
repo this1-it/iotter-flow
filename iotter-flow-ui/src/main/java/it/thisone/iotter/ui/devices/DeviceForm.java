@@ -1,5 +1,6 @@
 package it.thisone.iotter.ui.devices;
 
+import java.text.ChoiceFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -7,6 +8,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -19,10 +21,7 @@ import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.converter.StringToDoubleConverter;
 import com.vaadin.flow.component.checkbox.Checkbox;
 
-
 import com.vaadin.flow.component.formlayout.FormLayout;
-
-
 
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -41,6 +40,7 @@ import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
 import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.persistence.service.RoleService;
@@ -130,31 +130,81 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	@PropertyId("location.elevation")
 	private TextField locationElevation;
 
-
 	private ExportingConfigField exportingConfig;
 
 	private ChannelLastMeasuresListing lastValues;
 	private ChannelListing channelListing;
 	private ChannelAlarmListing alarmListing;
+	private ChannelRemoteControlListing remoteControls;
+	private DeviceRollup rollup;
 	private Collection<NetworkGroup> groups = new ArrayList<NetworkGroup>();
 
 	@Autowired
 	private DeviceService deviceService;
+
 	@Autowired
 	private AlarmService alarmService;
-	@Autowired
-    private  NetworkService networkService;
-	@Autowired
-    private NetworkGroupService networkGroupService;
-	@Autowired
-    private GroupWidgetService groupWidgetService;
-	@Autowired
-    private CassandraService cassandraService;
 
-	
 	@Autowired
-	public DeviceForm(Device entity, Network network,  UserDetailsAdapter currentUser, boolean readOnly) {
+	private NetworkService networkService;
+
+	@Autowired
+	private NetworkGroupService networkGroupService;
+
+	@Autowired
+	private GroupWidgetService groupWidgetService;
+
+	@Autowired
+	private CassandraService cassandraService;
+
+	@Autowired
+	private MeasureUnitTypeService measureUnitTypeService;
+
+	// @Autowired
+	// public DeviceForm(Device entity, Network network, UserDetailsAdapter
+	// currentUser, boolean readOnly,
+	// DeviceService deviceService, AlarmService alarmService, NetworkService
+	// networkService,
+	// NetworkGroupService networkGroupService, GroupWidgetService
+	// groupWidgetService,
+	// CassandraService cassandraService,MeasureUnitTypeService
+	// measureUnitTypeService) {
+	// super(entity, Device.class, NAME, network, currentUser, readOnly);
+	// this.deviceService = deviceService;
+	// this.alarmService = alarmService;
+	// this.networkService = networkService;
+	// this.networkGroupService = networkGroupService;
+	// this.groupWidgetService = groupWidgetService;
+	// this.cassandraService = cassandraService;
+	// this.measureUnitTypeService = measureUnitTypeService;
+	// if (isCreateBean()) {
+	// initializeDefaults();
+	// }
+	// populateFields();
+	// bindFields();
+	// }
+
+	// @Autowired
+	public DeviceForm(Device entity, Network network, UserDetailsAdapter currentUser, boolean readOnly
+	// DeviceService deviceService, AlarmService alarmService, NetworkService
+	// networkService,
+	// NetworkGroupService networkGroupService, GroupWidgetService
+	// groupWidgetService,
+	// CassandraService cassandraService,MeasureUnitTypeService
+	// measureUnitTypeService
+	) {
 		super(entity, Device.class, NAME, network, currentUser, readOnly);
+		// this.deviceService = deviceService;
+		// this.alarmService = alarmService;
+		// this.networkService = networkService;
+		// this.networkGroupService = networkGroupService;
+		// this.groupWidgetService = groupWidgetService;
+		// this.cassandraService = cassandraService;
+		// this.measureUnitTypeService = measureUnitTypeService;
+
+	}
+
+	public void initialize() {
 		if (isCreateBean()) {
 			initializeDefaults();
 		}
@@ -196,7 +246,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		label.setRequiredIndicatorVisible(true);
 		label.setLabel(getI18nLabel("label"));
 
-		model = new DeviceModelSelect(loadDeviceModels());
+		model = new DeviceModelSelect(new ArrayList<>());
 		model.setSizeFull();
 		model.setReadOnly(isReadOnly());
 		model.setRequiredIndicatorVisible(isCreateBean());
@@ -214,7 +264,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 			firmwareVersion.setReadOnly(true);
 		}
 
-		productionDate = new CustomDateField(UIUtils.getBrowserTimeZone());
+		productionDate = new CustomDateField(TimeZone.getTimeZone("Europe/Rome"));
 		productionDate.setSizeFull();
 		productionDate.setReadOnly(isReadOnly());
 		productionDate.setRequiredIndicatorVisible(isCreateBean());
@@ -223,7 +273,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 			productionDate.setReadOnly(true);
 		}
 
-		activationDate = new CustomDateField(UIUtils.getBrowserTimeZone());
+		activationDate = new CustomDateField(TimeZone.getTimeZone("Europe/Rome"));
 		activationDate.setSizeFull();
 		activationDate.setReadOnly(isReadOnly());
 		activationDate.setRequiredIndicatorVisible(isCreateBean());
@@ -243,7 +293,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		status.setLabel(getI18nLabel("status"));
 		status.setReadOnly(true);
 
-		lastContactDate = new LegacyDateTimeField();
+		lastContactDate = new LegacyDateTimeField(TimeZone.getTimeZone("Europe/Rome"));
 		lastContactDate.setReadOnly(isReadOnly());
 		lastContactDate.setReadOnly(true);
 
@@ -303,27 +353,73 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		locationElevation.setReadOnly(isReadOnly());
 		locationElevation.setLabel(getI18nLabel("location.elevation"));
 
-
-
 		exportingConfig = new ExportingConfigField();
 		exportingConfig.setReadOnly(isReadOnly());
 	}
 
+	/**
+	 * Initialized fields that require services (networks, groups).
+	 * 
+	 */
+	private void populateFields() {
 
-    /**
-     * Initialized fields that require services (networks, groups).
-     * 
-     */
-    private void populateFields() {
-		        Set<NetworkGroup> currentGroups = getEntity().getGroups();
+		List<Channel> channels = new ArrayList<Channel>(getEntity().getChannels());
+		// if (!supervisor) {
+		// List<Channel> filtered = new ArrayList<>();
+		// for (Channel channel : channels) {
+		// if (!channel.isCrucial()) {
+		// filtered.add(channel);
+		// }
+		// }
+		// channels = filtered;
+		// }
+		Collections.sort(channels, new ChannelComparator());
 
-		        // Populate network select
-        networkSelect.setItems(loadNetworks());
-        // Load and configure groups
-        List<NetworkGroup> availableGroups = loadNetworkGroups();
-        groupsSelect.setItems(availableGroups);
-        exclusiveGroups.setItems(availableGroups);
-        groupsSelect.asMultiSelect().setValue(currentGroups);
+		if (!channels.isEmpty()) {
+
+			channelListing.setItems(channels);
+
+			if (getEntity().isAlarmed()) {
+				alarmService.setUpFiredAlarms(getEntity());
+			}
+
+			List<Channel> alarms = new ArrayList<>();
+			for (Channel channel : channels) {
+				if (channel.getConfiguration().isActive()) {
+					if (Utils.messageBundleId(channel.getMetaData()) != null) {
+						if (ChannelUtils.isTypeAlarm(channel)) {
+							alarms.add(channel);
+						}
+					}
+				}
+			}
+
+			NetworkGroup group = deviceService.getDeviceAlarmGroup(getEntity());
+			alarmListing.setAlarmGroup(group);
+			alarmListing.setItems(alarms);
+			ChoiceFormat cf = measureUnitTypeService.getMeasureUnitChoiceFormat();
+			remoteControls.setItems(channels,cf);
+
+			lastValues.setItems(channels,cf);
+			rollup.refreshData();
+		}
+
+		Set<NetworkGroup> currentGroups = getEntity().getGroups();
+
+		model.setItems(loadDeviceModels());
+		// Populate network select
+		networkSelect.setItems(loadNetworks());
+		// Load and configure groups
+		List<NetworkGroup> availableGroups = loadNetworkGroups();
+		groupsSelect.setItems(availableGroups);
+		exclusiveGroups.setItems(availableGroups);
+		groupsSelect.asMultiSelect().setValue(currentGroups);
+
+		if (!isCreateBean()) {
+			Date lastContactDateValue = cassandraService.getFeeds().getLastContact(getEntity().getSerial());
+			getEntity().setLastContactDate(lastContactDateValue);
+			lastContactDate.setValue(lastContactDateValue);
+		}
 	}
 
 	private void registerFields() {
@@ -445,8 +541,6 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 				.bind(device -> device.getLocation().getElevation(),
 						(device, value) -> device.getLocation().setElevation(value != null ? value : 0d));
 
-
-
 		getBinder().forField(exportingConfig)
 				.bind(Device::getExportingConfig, Device::setExportingConfig);
 	}
@@ -454,7 +548,8 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	@Override
 	public VerticalLayout getFieldsLayout() {
 		// Ensure fields are initialized before building the layout
-		// This is necessary because getFieldsLayout() is called during super() constructor
+		// This is necessary because getFieldsLayout() is called during super()
+		// constructor
 		// before initializeFields() can be executed
 		if (serial == null) {
 			initializeFields();
@@ -466,7 +561,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		VerticalLayout mainLayout = buildMainLayout();
 
 		TabSheet multicomponent = new TabSheet();
-				multicomponent.setSizeFull();
+		multicomponent.setSizeFull();
 
 		mainLayout.add(multicomponent);
 
@@ -474,9 +569,6 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 
 		groups = new ArrayList<NetworkGroup>();
 		if (!isCreateBean()) {
-			Date lastContactDateValue = cassandraService.getFeeds().getLastContact(entity.getSerial());
-			entity.setLastContactDate(lastContactDateValue);
-			lastContactDate.setValue(lastContactDateValue);
 
 			boolean production = getCurrentUser().hasRole(Constants.ROLE_PRODUCTION);
 			boolean supervisor = getCurrentUser().hasRole(Constants.ROLE_SUPERVISOR);
@@ -507,54 +599,28 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 
 			boolean hasChannels = entity.getChannels() != null && !entity.getChannels().isEmpty();
 			if (hasChannels) {
-				List<Channel> channels = new ArrayList<Channel>(entity.getChannels());
-				if (!supervisor) {
-					List<Channel> filtered = new ArrayList<>();
-					for (Channel channel : channels) {
-						if (!channel.isCrucial()) {
-							filtered.add(channel);
-						}
-					}
-					channels = filtered;
-				}
-				Collections.sort(channels, new ChannelComparator());
 
 				if (!production) {
 					multicomponent.addTab(getI18nLabel("location_tab"), buildPanel(buildLocationForm()));
 				}
 
-				channelListing = new ChannelListing(channels);
+				channelListing = new ChannelListing();
 				multicomponent.addTab(getI18nLabel("channels_tab"), channelListing);
 
-				if (entity.isAlarmed()) {
-					alarmService.setUpFiredAlarms(entity);
-				}
-
-				List<Channel> alarms = new ArrayList<>();
-				for (Channel channel : channels) {
-					if (channel.getConfiguration().isActive()) {
-						if (Utils.messageBundleId(channel.getMetaData()) != null) {
-							if (ChannelUtils.isTypeAlarm(channel)) {
-								alarms.add(channel);
-							}
-						}
-					}
-				}
-
-				alarmListing = new ChannelAlarmListing(alarms);
-				NetworkGroup group = deviceService.getDeviceAlarmGroup(entity);
-				alarmListing.setAlarmGroup(group);
+				alarmListing = new ChannelAlarmListing();
 				multicomponent.addTab(getI18nLabel("alarms_tab"), alarmListing);
 
-				ChannelRemoteControlListing remote = new ChannelRemoteControlListing(channels);
-				multicomponent.addTab(getI18nLabel("remote_tab"), remote);
 
-				lastValues = new ChannelLastMeasuresListing(channels);
-				lastValues.setSizeFull();
+				remoteControls = new ChannelRemoteControlListing();
+				multicomponent.addTab(getI18nLabel("remote_tab"), remoteControls);
+
+				lastValues = new ChannelLastMeasuresListing();
 				multicomponent.addTab(getI18nLabel("lastvalues_tab"), lastValues);
 
+				rollup = new DeviceRollup(entity);
+
 				if (supervisor) {
-					DeviceRollup rollup = new DeviceRollup(entity);
+
 					multicomponent.addTab(getI18nLabel("rollup_tab"), rollup);
 
 				}
@@ -739,7 +805,5 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 			}
 		}
 	}
-
-
 
 }

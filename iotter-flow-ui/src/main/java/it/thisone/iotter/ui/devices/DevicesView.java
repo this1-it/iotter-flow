@@ -19,7 +19,7 @@ import it.thisone.iotter.ui.common.BaseView;
 public class DevicesView extends BaseView {
 	private static final long serialVersionUID = 1L;
 
-	public static final String NAME = "devices";
+	public static final String VIEW_NAME = "devices";
 	private final ObjectProvider<DevicesListing> listingProvider;
 	private final NetworkService networkService;
 	private final AuthenticatedUser authenticatedUser;
@@ -31,7 +31,7 @@ public class DevicesView extends BaseView {
 		this.networkService = networkService;
 		this.authenticatedUser = authenticatedUser;
 		setSizeFull();
-		addClassName(NAME);
+		addClassName(VIEW_NAME);
 	}
 
 	@Override
@@ -54,6 +54,6 @@ public class DevicesView extends BaseView {
 
 	@Override
 	public String getI18nKey() {
-		return NAME;
+		return VIEW_NAME;
 	}
 }

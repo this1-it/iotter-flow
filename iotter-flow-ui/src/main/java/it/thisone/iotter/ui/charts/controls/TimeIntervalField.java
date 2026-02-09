@@ -68,10 +68,10 @@ public class TimeIntervalField extends CustomField<TimeInterval> {
 		Span from = new Span(fromCaption);
 		Span to = new Span(toCaption);
 
-		fromDateField = new LegacyDateTimeField();
+		fromDateField = new LegacyDateTimeField(TimeZone.getTimeZone("Europe/Rome"));
 		//fromDateField.addClassName("small");
 
-		toDateField = new LegacyDateTimeField();
+		toDateField = new LegacyDateTimeField(TimeZone.getTimeZone("Europe/Rome"));
 		//toDateField.addClassName("small");
 		toDateField.setMax(new Date());
 

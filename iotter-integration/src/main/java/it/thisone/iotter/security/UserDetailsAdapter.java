@@ -136,6 +136,16 @@ public class UserDetailsAdapter implements UserDetails, Principal {
 		return networkId;
 	}
 
+	public boolean hasPermission(EntityPermission authority){
+				for (GrantedAuthority ga : getAuthorities()) {
+				if (ga.getAuthority().equals(authority.toString())) {
+					return true;
+				}
+			}
+			return false;
+	}
+
+
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return authorities;

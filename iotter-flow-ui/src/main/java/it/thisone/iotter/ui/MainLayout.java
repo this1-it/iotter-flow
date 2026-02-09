@@ -5,6 +5,8 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.IronIcon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.router.RouterLayout;
@@ -13,6 +15,7 @@ import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 import it.thisone.iotter.ui.about.AboutView;
+import it.thisone.iotter.ui.devices.DevicesView;
 import it.thisone.iotter.ui.users.UsersView;
 
 /**
@@ -34,7 +37,8 @@ public class MainLayout extends FlexLayout implements RouterLayout {
                 VaadinIcon.INFO_CIRCLE.create());
         menu.addView(UsersView.class, UsersView.VIEW_NAME,
                 VaadinIcon.USERS.create());
-
+        menu.addView(DevicesView.class, DevicesView.VIEW_NAME,
+                VaadinIcon.CONNECT.create());
         add(menu);
     }
 

@@ -54,7 +54,8 @@ public class ChannelUtils {
 		if (feed.getChannel() != null) {
 			return displayName(feed.getChannel());
 		}
-		return displayName(feed.getMetaData());
+		return feed.getLabel();
+		//return displayName(feed.getMetaData());
 	}
 	
 	public static String displayName(Channel chnl) {
@@ -69,47 +70,48 @@ public class ChannelUtils {
 	}
 	
 	public static String displayName(String metadata) {
-		String displayName = null;
-		String bundleId = Utils.messageBundleId(metadata);
-		if (bundleId != null) {
-			displayName = UIUtils.messageBundle(bundleId);
-		}
-		if (displayName!=null && displayName.isEmpty()) {
-			System.err.print("");
-		}
-		return displayName;
+		// String displayName = null;
+		// String bundleId = Utils.messageBundleId(metadata);
+		// if (bundleId != null) {
+		// 	displayName = UIUtils.messageBundle(bundleId);
+		// }
+		// if (displayName!=null && displayName.isEmpty()) {
+		// 	System.err.print("");
+		// }
+		// return displayName;
+		return metadata;
 	}
 	
 	public static ChoiceFormat enumChoiceFormat(String metadata, Locale locale) {
-		String bundleId = Utils.messageBundleId(metadata);
-		if (bundleId != null) {
-			String code =  bundleId + Constants.Provisioning.META_ENUM;
-			String defaultMessage = null;
-			if (isTypeDigital(metadata)) {
-				defaultMessage = "0=0;1=1";
-			}
-			String pattern = UIUtils.messageBundle(code, defaultMessage, locale);
-			if (pattern == null) {
-				return null; 
-			}
-			if (pattern.trim().isEmpty()) {
-				return null; 
-			}
+		// String bundleId = Utils.messageBundleId(metadata);
+		// if (bundleId != null) {
+		// 	String code =  bundleId + Constants.Provisioning.META_ENUM;
+		// 	String defaultMessage = null;
+		// 	if (isTypeDigital(metadata)) {
+		// 		defaultMessage = "0=0;1=1";
+		// 	}
+		// 	String pattern = UIUtils.messageBundle(code, defaultMessage, locale);
+		// 	if (pattern == null) {
+		// 		return null; 
+		// 	}
+		// 	if (pattern.trim().isEmpty()) {
+		// 		return null; 
+		// 	}
 
-			pattern = pattern.replaceAll("<", "");
-			pattern = pattern.replaceAll("#", "");
-			pattern = pattern.replaceAll("\u2264", "");
+		// 	pattern = pattern.replaceAll("<", "");
+		// 	pattern = pattern.replaceAll("#", "");
+		// 	pattern = pattern.replaceAll("\u2264", "");
 
-			pattern = pattern.replaceAll("=", "#");
-			pattern = pattern.replaceAll(";", "|");
+		// 	pattern = pattern.replaceAll("=", "#");
+		// 	pattern = pattern.replaceAll(";", "|");
 			
-			try {
-				return new ChoiceFormat(pattern);
-			} catch (Throwable e) {
-				logger.error(pattern,e);
-			}
+		// 	try {
+		// 		return new ChoiceFormat(pattern);
+		// 	} catch (Throwable e) {
+		// 		logger.error(pattern,e);
+		// 	}
 
-		}
+		// }
 		return null;
 	}
 	

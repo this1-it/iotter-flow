@@ -26,6 +26,7 @@
 		   <version>0.5.1</version>
 		</dependency>
 
+
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>iotter-flow-ui-shim</artifactId>

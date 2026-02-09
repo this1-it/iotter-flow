@@ -49,11 +49,16 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 	private Grid<Channel> grid;
 	private boolean loaded;
 
-	public ChannelListing(Collection<Channel> items) {
+	public ChannelListing() {
 		super(Channel.class, DeviceForm.NAME, "channel.listing", false);
 		this.permissions = new Permissions(true);
-		this.channels = items == null ? new ArrayList<>() : new ArrayList<>(items);
+		this.channels =  new ArrayList<Channel>();
 		buildLayout();
+	}
+
+	public void setItems(List<Channel> channels) {
+		dataProvider.getItems().clear();
+		dataProvider.getItems().addAll(channels);
 	}
 
 	private void buildLayout() {

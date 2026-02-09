@@ -1,5 +1,6 @@
 package it.thisone.iotter.ui.devices;
 
+import java.text.ChoiceFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -10,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -19,6 +21,7 @@ import com.google.common.eventbus.Subscribe;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -37,6 +40,7 @@ import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import it.thisone.iotter.cassandra.model.FeedAlarmEvent;
 import it.thisone.iotter.cassandra.model.Interpolation;
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.AlarmStatus;
@@ -46,6 +50,9 @@ import it.thisone.iotter.enums.ExportFormat;
 import it.thisone.iotter.exceptions.BackendServiceException;
 import it.thisone.iotter.exporter.ExportConfig;
 import it.thisone.iotter.exporter.ExportProperties;
+import it.thisone.iotter.integration.AlarmService;
+import it.thisone.iotter.integration.CassandraService;
+import it.thisone.iotter.integration.SubscriptionService;
 import it.thisone.iotter.lazyquerydataprovider.FilterableQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDataProvider;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDefinition;
@@ -59,6 +66,11 @@ import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.persistence.repository.DeviceRepository;
 import it.thisone.iotter.persistence.service.DeviceService;
+import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
+import it.thisone.iotter.persistence.service.NetworkGroupService;
+import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.provisioning.ProvisionedEvent;
 import it.thisone.iotter.security.EntityPermission;
 import it.thisone.iotter.security.Permissions;
@@ -87,6 +99,7 @@ import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
+import it.thisone.iotter.ui.users.UserForm;
 import it.thisone.iotter.util.PopupNotification;
 
 @org.springframework.stereotype.Component
@@ -114,9 +127,36 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	@Autowired
 	private UIEventBus uiEventBus;
 	@Autowired
+	private ObjectProvider<DeviceWidgetBox> deviceWidgetBoxProvider;
+	@Autowired
 	private DeviceRepository deviceRepository;
+
+	@Autowired
+	private ObjectProvider<DeviceForm> deviceFormProvider;
+
 	@Autowired
 	private DeviceService deviceService;
+
+	@Autowired
+	private GroupWidgetService groupWidgetService;
+	@Autowired
+	private AlarmService alarmService;
+	@Autowired
+	private NetworkService networkService;
+	@Autowired
+	private NetworkGroupService networkGroupService;
+
+	@Autowired
+	private CassandraService cassandraService;
+
+	@Autowired
+	private SubscriptionService subscriptionService;
+
+	@Autowired
+	private UserService userService;
+
+	@Autowired
+	private MeasureUnitTypeService measureUnitTypeService;
 
 	private Network network;
 	private boolean hasParameters = true;
@@ -148,7 +188,10 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 		this.network = network;
 		this.hasParameters = hasParameters;
-		currentUser = authenticatedUser.get().orElse(null);
+		currentUser = authenticatedUser.get()
+				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit devices"));
+		this.permissions = PermissionsUtils.getPermissionsForUserEntity(currentUser);
+
 		this.permissions = PermissionsUtils.getPermissionsForDeviceEntity(currentUser);
 		setPermissions(this.permissions);
 		this.supervisor = currentUser != null && currentUser.hasRole(Constants.ROLE_SUPERVISOR);
@@ -168,7 +211,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		queryDefinition.setOwner(authenticatedUser.getTenant().orElse(null));
 		queryDefinition.setPage(0, currentLimit);
 		queryDefinition.setQueryFilter(currentFilter);
-		dataProvider = new LazyQueryDataProvider<>(queryDefinition, new DevicesQueryFactory(deviceRepository));
+		dataProvider = new LazyQueryDataProvider<>(queryDefinition,
+				new DevicesQueryFactory(deviceRepository, cassandraService));
 		dataProvider.setCacheQueries(false);
 		dataProvider.setFilter(currentFilter);
 		setBackendDataProvider(dataProvider);
@@ -183,8 +227,10 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 		updateTotalCount();
 
-		getButtonsLayout().add(createExportDataButton(), createAlarmsButton(), createResetButton(), createRemoveButton(),
-				createModifyButton(), createActivateButton(), createViewButton(), createAddButton(), createImportButton());
+		getButtonsLayout().add(createExportDataButton(), createAlarmsButton(), createResetButton(),
+				createRemoveButton(),
+				createModifyButton(), createActivateButton(), createViewButton(), createAddButton(),
+				createImportButton());
 		if (hasParameters && UIUtils.isMobile()) {
 			getButtonsLayout().add(createDeviceWidgetButton());
 		}
@@ -195,7 +241,18 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	@Override
 	public AbstractBaseEntityForm<Device> getEditor(Device item, boolean readOnly) {
-		return new DeviceForm(item, network,currentUser,readOnly);
+		// return new DeviceForm(item, network,currentUser,readOnly);
+
+
+		DeviceForm editor = deviceFormProvider.getObject(item, network, currentUser, readOnly
+				// ,deviceService, alarmService, networkService,
+				// networkGroupService, groupWidgetService,
+				// cassandraService
+
+		);
+		editor.initialize();
+		return editor;
+
 	}
 
 	@Override
@@ -212,24 +269,22 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	@Override
 	protected void openRemove(Device item) {
-				if (item == null) {
+		if (item == null) {
 			return;
 		}
 
 		AbstractBaseEntityForm<Device> details = getEditor(item, true);
 		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("remove_dialog"), details);
 
-
-			details.setDeleteHandler(entity -> {
-				try {
-					deviceService.delete(entity);
-					dialog.close();
-					refreshCurrentPage();
-				} catch (Exception e) {
-					PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
-				}
-			});
-		
+		details.setDeleteHandler(entity -> {
+			try {
+				deviceService.delete(entity);
+				dialog.close();
+				refreshCurrentPage();
+			} catch (Exception e) {
+				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+			}
+		});
 
 	}
 
@@ -246,7 +301,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	private long getTotalCount() {
-		return new DevicesQuery(deviceRepository, queryDefinition).countTotal();
+		return new DevicesQuery(deviceRepository, cassandraService, queryDefinition).countTotal();
 	}
 
 	private void updateTotalCount() {
@@ -258,11 +313,11 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		table.setDataProvider(dataProvider);
 		table.setSelectionMode(Grid.SelectionMode.SINGLE);
 		table.setSizeFull();
-		//table.addClassName(UIUtils.TABLE_STYLE);
+		// table.addClassName(UIUtils.TABLE_STYLE);
 
 		List<Grid.Column<Device>> columns = new ArrayList<>();
 		columns.add(table.addColumn(this::formatLabel).setKey(LABEL));
-		columns.add(table.addColumn(this::formatProfile).setKey("profile"));
+		columns.add(table.addColumn(this::formatProfile).setKey("description"));
 		columns.add(table.addColumn(this::formatModel).setKey("model"));
 		columns.add(table.addColumn(this::formatAlarmStatus).setKey(ALARM_STATUS));
 
@@ -313,7 +368,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		alarmStatusCombo.setWidthFull();
 		alarmStatusCombo.setClearButtonVisible(true);
 		alarmStatusCombo.setItems(AlarmStatus.values());
-		alarmStatusCombo.setItemLabelGenerator(status -> getI18nLabel("enum.alarmstatus." + status.name().toLowerCase()));
+		alarmStatusCombo
+				.setItemLabelGenerator(status -> getI18nLabel("enum.alarmstatus." + status.name().toLowerCase()));
 		filterRow.getCell(table.getColumnByKey(ALARM_STATUS)).setComponent(alarmStatusCombo);
 		alarmStatusCombo.addValueChangeListener(event -> {
 			currentFilter.setAlarmStatus(event.getValue());
@@ -327,7 +383,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		deviceStatusCombo.setWidthFull();
 		deviceStatusCombo.setClearButtonVisible(true);
 		deviceStatusCombo.setItems(DeviceStatus.values());
-		deviceStatusCombo.setItemLabelGenerator(status -> getI18nLabel("enum.devicestatus." + status.name().toLowerCase()));
+		deviceStatusCombo
+				.setItemLabelGenerator(status -> getI18nLabel("enum.devicestatus." + status.name().toLowerCase()));
 		filterRow.getCell(table.getColumnByKey(DEVICE_STATUS)).setComponent(deviceStatusCombo);
 		deviceStatusCombo.addValueChangeListener(event -> {
 			currentFilter.setDeviceStatus(event.getValue());
@@ -439,17 +496,18 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		button.getElement().setProperty("title", getI18nLabel("activate_button"));
 		button.setId("activate_button" + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openActivation());
-		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.ACTIVATE));
+		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.ACTIVATE));
 		return button;
 	}
 
 	private Button createResetButton() {
 		Button button = new Button();
 		button.setIcon(supervisor ? VaadinIcon.REFRESH.create() : VaadinIcon.TRASH.create());
-		button.getElement().setProperty("title", supervisor ? getI18nLabel("reset_button") : getI18nLabel("remove_button"));
+		button.getElement().setProperty("title",
+				supervisor ? getI18nLabel("reset_button") : getI18nLabel("remove_button"));
 		button.setId(RESET_BUTTON);
 		button.addClickListener(event -> openReset(getCurrentValue()));
-		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.RESET));
+		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.RESET));
 		return button;
 	}
 
@@ -468,7 +526,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		button.getElement().setProperty("title", getI18nLabel("export_button"));
 		button.setId(DOWNLOAD_BUTTON);
 		button.addClickListener(event -> openDownload(getCurrentValue()));
-		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.EXPORT_DATA));
+		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.EXPORT_DATA));
 		return button;
 	}
 
@@ -478,7 +536,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		button.getElement().setProperty("title", getI18nLabel("import_production"));
 		button.setId("import_button" + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openImporter());
-		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.IMPORT));
+		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.IMPORT));
 		return button;
 	}
 
@@ -487,7 +545,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		button.setIcon(VaadinIcon.INFO.create());
 		button.getElement().setProperty("title", getI18nLabel("groupwidgetbox_button"));
 		button.addClickListener(event -> openGroupWidgetBox());
-		button.setVisible(UIUtils.hasPermission(EntityPermission.DEVICE.MODIFY));
+		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.MODIFY));
 		return button;
 	}
 
@@ -497,9 +555,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 		AbstractBaseEntityForm<Device> editor = getEditor(item, false);
 		Dialog dialog = createDialog(label, editor);
-		if (dialog instanceof SideDrawer) {
-			((SideDrawer) dialog).applyDimension(UIUtils.L_DIMENSION);
-		}
+
 		editor.setSavedHandler(entity -> {
 			try {
 				if (entity.isNew()) {
@@ -517,16 +573,16 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	private void openActivation() {
-		final DeviceActivatorForm content = new DeviceActivatorForm(network,currentUser);
+		final DeviceActivatorForm content = new DeviceActivatorForm(network, currentUser);
 		Dialog dialog = createDialog(getI18nLabel("device_activation"), content);
 		// if (dialog instanceof SideDrawer) {
-		// 	((SideDrawer) dialog).applyDimension(content.getWindowDimension());
+		// ((SideDrawer) dialog).applyDimension(content.getWindowDimension());
 		// }
 		content.setSavedHandler(item -> {
 			if (item != null) {
 				try {
-					UIUtils.getServiceFactory().getSubscriptionService().factoryReset(item.getSerial(), item.getActivationKey());
-					UIUtils.getServiceFactory().getUserService().deviceActivation(item.getSerial(), item.getActivationKey(),
+					subscriptionService.factoryReset(item.getSerial(), item.getActivationKey());
+					userService.deviceActivation(item.getSerial(), item.getActivationKey(),
 							currentUser.getUsername(), item.getNetwork());
 					refreshCurrentPage();
 					PopupNotification.show(getI18nLabel("device_activated"));
@@ -546,7 +602,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		final DeviceProductionImporter content = new DeviceProductionImporter();
 		Dialog dialog = createDialog(getI18nLabel("import_production"), content);
 		// if (dialog instanceof SideDrawer) {
-		// 	((SideDrawer) dialog).applyDimension(content.getWindowDimension());
+		// ((SideDrawer) dialog).applyDimension(content.getWindowDimension());
 		// }
 		content.addListener(new EditorSelectedListener() {
 			private static final long serialVersionUID = 1L;
@@ -576,16 +632,20 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (device == null) {
 			return;
 		}
-		final DeviceAlarmsDetails content = new DeviceAlarmsDetails(device);
+
+		List<FeedAlarmEvent> events = cassandraService.getAlarms().getAlarmEvents(device.getSerial(), 30);
+		ChoiceFormat cf = measureUnitTypeService.getMeasureUnitChoiceFormat();
+
+		final DeviceAlarmsDetails content = new DeviceAlarmsDetails(device, events, cf);
 		Dialog dialog = createDialog(getI18nLabel("device_alarms"), content);
 		// if (dialog instanceof SideDrawer) {
-		// 	((SideDrawer) dialog).applyDimension(content.getWindowDimension());
+		// ((SideDrawer) dialog).applyDimension(content.getWindowDimension());
 		// }
 		// content.addListener(new EntitySelectedListener() {
-		// 	@Override
-		// 	public void entitySelected(EntitySelectedEvent<?> event) {
-		// 		dialog.close();
-		// 	}
+		// @Override
+		// public void entitySelected(EntitySelectedEvent<?> event) {
+		// dialog.close();
+		// }
 		// });
 		dialog.open();
 	}
@@ -596,7 +656,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 		ExportProperties props = new ExportProperties();
 		props.setLegacy(false);
-		//props.setTimeZone(UIUtils.getBrowserTimeZone());
+		// props.setTimeZone(UIUtils.getBrowserTimeZone());
 		props.setFileMode(ExportFileMode.SINGLE);
 		props.setFormat(ExportFormat.EXCEL);
 		props.setLocale(UIUtils.getLocale());
@@ -604,13 +664,13 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		ExportConfig config = new ExportConfig();
 		config.setInterpolation(Interpolation.RAW);
 		String lockId = device.getSerial();
-		if (UIUtils.getCassandraService().getRollup().existLockSink(lockId)) {
+		if (cassandraService.getRollup().existLockSink(lockId)) {
 			PopupNotification.show(getTranslation("export.already_running_export"), PopupNotification.Type.ERROR);
 			return;
 		}
 
 		Range<Date> interval = props.isLegacy() ? getMeasuresRange(device)
-				: UIUtils.getCassandraService().getMeasures().getMeasuresSetRange(device.getSerial());
+				: cassandraService.getMeasures().getMeasuresSetRange(device.getSerial());
 		if (interval == null) {
 			PopupNotification.show("Export Data NOT available", PopupNotification.Type.ERROR);
 			return;
@@ -627,7 +687,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 
 		ExportDialog dialog = new ExportDialog(config, props, device, java.util.concurrent.ForkJoinPool.commonPool());
-		//dialog.setHeaderTitle("Export " + device.getLabel());
+		// dialog.setHeaderTitle("Export " + device.getLabel());
 		dialog.open();
 	}
 
@@ -637,14 +697,15 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 		VerticalLayout layout = new VerticalLayout();
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-		layout.add(new com.vaadin.flow.component.html.Span(supervisor ? getI18nLabel("reset_warning") : getI18nLabel("delete_warning")));
+		layout.add(new com.vaadin.flow.component.html.Span(
+				supervisor ? getI18nLabel("reset_warning") : getI18nLabel("delete_warning")));
 		Callback callback = result -> {
 			if (!result) {
 				return;
 			}
 			try {
-				UIUtils.getServiceFactory().getSubscriptionService().factoryReset(device.getSerial(), device.getActivationKey());
-				UIUtils.getServiceFactory().getSubscriptionService().provisioned(new ProvisionedEvent(device, ""));
+				subscriptionService.factoryReset(device.getSerial(), device.getActivationKey());
+				subscriptionService.provisioned(new ProvisionedEvent(device, ""));
 			} catch (BackendServiceException e) {
 				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
 			}
@@ -653,7 +714,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			}
 			refreshCurrentPage();
 		};
-		Dialog dialog = new ConfirmationDialog(supervisor ? getI18nLabel("device_reset") : getI18nLabel("remove_dialog"),
+		Dialog dialog = new ConfirmationDialog(
+				supervisor ? getI18nLabel("device_reset") : getI18nLabel("remove_dialog"),
 				layout, callback);
 		dialog.open();
 	}
@@ -664,7 +726,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"), boxes);
 		// if (dialog instanceof SideDrawer) {
-		// 	((SideDrawer) dialog).applyDimension(boxes.getWindowDimension());
+		// ((SideDrawer) dialog).applyDimension(boxes.getWindowDimension());
 		// }
 		dialog.open();
 	}
@@ -673,7 +735,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (bean == null) {
 			return;
 		}
-		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"), new GroupWidgetVisualizer(bean.getId().toString(), true));
+		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"),
+				new GroupWidgetVisualizer(bean.getId().toString(), true));
 		dialog.open();
 	}
 
@@ -681,79 +744,57 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (bean == null) {
 			return;
 		}
-		wizard = UIUtils.getUiFactory().getDeviceUiFactory().getProvisioningWizard(bean.getSerial());
-		if (wizard == null) {
-			return;
-		}
-		Dialog dialog = createDialog(getI18nLabel("device_provisioning"), (Component) wizard);
-		wizard.addListener(new EditorSavedListener() {
-			@Override
-			public void editorSaved(EditorSavedEvent event) {
-				if (event.getSavedItem() != null) {
-					refreshCurrentPage();
-				}
-				dialog.close();
-			}
-		});
-		dialog.open();
-	}
-
-	private void openDetails(Device item, String label, boolean remove) {
-		if (item == null) {
-			return;
-		}
-		AbstractBaseEntityDetails<Device> details = getDetails(item, remove);
-		Dialog dialog = createDialog(label, details);
-		details.addListener(new EntityRemovedListener() {
-			@Override
-			public void entityRemoved(EntityRemovedEvent<?> event) {
-				dialog.close();
-				if (event.getItem() != null) {
-					refreshCurrentPage();
-				}
-			}
-		});
-		details.addListener(new EntitySelectedListener() {
-			@Override
-			public void entitySelected(EntitySelectedEvent<?> event) {
-				dialog.close();
-			}
-		});
-		dialog.open();
+		// wizard =
+		// UIUtils.getUiFactory().getDeviceUiFactory().getProvisioningWizard(bean.getSerial());
+		// if (wizard == null) {
+		// return;
+		// }
+		// Dialog dialog = createDialog(getI18nLabel("device_provisioning"), (Component)
+		// wizard);
+		// wizard.addListener(new EditorSavedListener() {
+		// @Override
+		// public void editorSaved(EditorSavedEvent event) {
+		// if (event.getSavedItem() != null) {
+		// refreshCurrentPage();
+		// }
+		// dialog.close();
+		// }
+		// });
+		// dialog.open();
 	}
 
 	@Subscribe
 	public void refreshOnDeviceChanged(final DeviceChangedEvent event) {
-		UI ui = getUI().orElse(null);
-		if (ui != null) {
-			ui.access(() -> {
-				try {
-					dataProvider.refreshAll();
-					ui.push();
-				} catch (Exception e) {
-					logger.warn("refreshOnDeviceChanged", e);
-				}
-			});
-		}
+		// UI ui = getUI().orElse(null);
+		// if (ui != null) {
+		// ui.access(() -> {
+		// try {
+		// dataProvider.refreshAll();
+		// ui.push();
+		// } catch (Exception e) {
+		// logger.warn("refreshOnDeviceChanged", e);
+		// }
+		// });
+		// }
 	}
 
 	@Subscribe
 	public void refreshWithUiAccess(final WidgetRefreshEvent event) {
-		UI ui = getUI().orElse(null);
-		if (ui != null) {
-			ui.access(() -> {
-				try {
-					counter--;
-					if (counter <= 0) {
-						refreshCurrentPage();
-						ui.push();
-						counter = new Random().nextInt(ALARMED_LABEL_COUNT) + ALARMED_LABEL_COUNT;
-					}
-				} catch (Throwable e) {
-					logger.error("refreshWithUiAccess", e);
-				}
-			});
-		}
+		// UI ui = getUI().orElse(null);
+		// if (ui != null) {
+		// ui.access(() -> {
+		// try {
+		// counter--;
+		// if (counter <= 0) {
+		// refreshCurrentPage();
+		// ui.push();
+		// counter = new Random().nextInt(ALARMED_LABEL_COUNT) + ALARMED_LABEL_COUNT;
+		// }
+		// } catch (Throwable e) {
+		// logger.error("refreshWithUiAccess", e);
+		// }
+		// });
+		// }
 	}
 
 	@Override
@@ -775,25 +816,26 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 		// for (Component component : getButtonsLayout()) {
-		// 	if (!(component instanceof Button)) {
-		// 		continue;
-		// 	}
-		// 	Button button = (Button) component;
-		// 	String id = button.getId().orElse("");
-		// 	boolean activated = !item.isDeActivated();
-		// 	if (id.contains(MODIFY_BUTTON)) {
-		// 		button.setEnabled(activated);
-		// 	} else if (id.contains(ALARM_BUTTON)) {
-		// 		button.setEnabled(!DeviceStatus.PRODUCED.equals(item.getStatus()) && activated);
-		// 	} else if (id.contains(DOWNLOAD_BUTTON)) {
-		// 		button.setEnabled(item.isAvailableForVisualization() && activated);
-		// 	} else if (id.contains(RESET_BUTTON) || id.contains(REMOVE_BUTTON)) {
-		// 		boolean enabled = item.getNetwork() == null && item.getMaster() == null;
-		// 		if (enabled && id.contains(REMOVE_BUTTON) && item.isSticky()) {
-		// 			enabled = !supervisor || production;
-		// 		}
-		// 		button.setEnabled(enabled);
-		// 	}
+		// if (!(component instanceof Button)) {
+		// continue;
+		// }
+		// Button button = (Button) component;
+		// String id = button.getId().orElse("");
+		// boolean activated = !item.isDeActivated();
+		// if (id.contains(MODIFY_BUTTON)) {
+		// button.setEnabled(activated);
+		// } else if (id.contains(ALARM_BUTTON)) {
+		// button.setEnabled(!DeviceStatus.PRODUCED.equals(item.getStatus()) &&
+		// activated);
+		// } else if (id.contains(DOWNLOAD_BUTTON)) {
+		// button.setEnabled(item.isAvailableForVisualization() && activated);
+		// } else if (id.contains(RESET_BUTTON) || id.contains(REMOVE_BUTTON)) {
+		// boolean enabled = item.getNetwork() == null && item.getMaster() == null;
+		// if (enabled && id.contains(REMOVE_BUTTON) && item.isSticky()) {
+		// enabled = !supervisor || production;
+		// }
+		// button.setEnabled(enabled);
+		// }
 		// }
 	}
 
@@ -801,8 +843,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (!hasParameters) {
 			return;
 		}
-		boxes = new DeviceWidgetBox();
-
+		boxes = deviceWidgetBoxProvider.getObject();
 
 		table.addSelectionListener(event -> boxes.refresh(event.getFirstSelectedItem().orElse(null)));
 		boxes.addListener(new EditorSavedListener() {
@@ -819,16 +860,20 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			}
 		});
 
-		if (UIUtils.isMobile()) {
-			return;
-		}
+		// if (UIUtils.isMobile()) {
+		// return;
+		// }
 
 		SplitLayout splitPanel = new SplitLayout();
 		splitPanel.setSizeFull();
 		splitPanel.addToPrimary(table);
 		splitPanel.addToSecondary(boxes);
 		splitPanel.setSplitterPosition(60);
-		listingLayout.remove(table);
+		table.getParent().ifPresent(parent -> {
+			if (parent instanceof HasComponents) {
+				((HasComponents) parent).remove(table);
+			}
+		});
 		listingLayout.add(splitPanel);
 		listingLayout.setFlexGrow(1f, splitPanel);
 	}
@@ -839,18 +884,53 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		private DeviceStatus deviceStatus;
 		private String owner;
 
-		public String getLabel() { return label; }
-		public void setLabel(String label) { this.label = label; }
-		public boolean hasLabel() { return label != null && !label.trim().isEmpty(); }
-		public AlarmStatus getAlarmStatus() { return alarmStatus; }
-		public void setAlarmStatus(AlarmStatus alarmStatus) { this.alarmStatus = alarmStatus; }
-		public boolean hasAlarmStatus() { return alarmStatus != null; }
-		public DeviceStatus getDeviceStatus() { return deviceStatus; }
-		public void setDeviceStatus(DeviceStatus deviceStatus) { this.deviceStatus = deviceStatus; }
-		public boolean hasDeviceStatus() { return deviceStatus != null; }
-		public String getOwner() { return owner; }
-		public void setOwner(String owner) { this.owner = owner; }
-		public boolean hasOwner() { return owner != null && !owner.trim().isEmpty(); }
+		public String getLabel() {
+			return label;
+		}
+
+		public void setLabel(String label) {
+			this.label = label;
+		}
+
+		public boolean hasLabel() {
+			return label != null && !label.trim().isEmpty();
+		}
+
+		public AlarmStatus getAlarmStatus() {
+			return alarmStatus;
+		}
+
+		public void setAlarmStatus(AlarmStatus alarmStatus) {
+			this.alarmStatus = alarmStatus;
+		}
+
+		public boolean hasAlarmStatus() {
+			return alarmStatus != null;
+		}
+
+		public DeviceStatus getDeviceStatus() {
+			return deviceStatus;
+		}
+
+		public void setDeviceStatus(DeviceStatus deviceStatus) {
+			this.deviceStatus = deviceStatus;
+		}
+
+		public boolean hasDeviceStatus() {
+			return deviceStatus != null;
+		}
+
+		public String getOwner() {
+			return owner;
+		}
+
+		public void setOwner(String owner) {
+			this.owner = owner;
+		}
+
+		public boolean hasOwner() {
+			return owner != null && !owner.trim().isEmpty();
+		}
 	}
 
 	private static final class DevicesQueryDefinition extends LazyQueryDefinition<Device, DevicesFilter>
@@ -867,33 +947,71 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			this.permissions = permissions;
 		}
 
-		@Override public void setQueryFilter(DevicesFilter filter) { this.queryFilter = filter; }
-		@Override public DevicesFilter getQueryFilter() { return queryFilter; }
-		public Network getNetwork() { return network; }
-		public void setNetwork(Network network) { this.network = network; }
-		public Permissions getPermissions() { return permissions; }
-		public String getOwner() { return owner; }
-		public void setOwner(String owner) { this.owner = owner; }
-		public int getPageSize() { return pageSize; }
-		public void setPage(int pageIndex, int pageSize) { this.pageSize = pageSize; }
+		@Override
+		public void setQueryFilter(DevicesFilter filter) {
+			this.queryFilter = filter;
+		}
+
+		@Override
+		public DevicesFilter getQueryFilter() {
+			return queryFilter;
+		}
+
+		public Network getNetwork() {
+			return network;
+		}
+
+		public void setNetwork(Network network) {
+			this.network = network;
+		}
+
+		public Permissions getPermissions() {
+			return permissions;
+		}
+
+		public String getOwner() {
+			return owner;
+		}
+
+		public void setOwner(String owner) {
+			this.owner = owner;
+		}
+
+		public int getPageSize() {
+			return pageSize;
+		}
+
+		public void setPage(int pageIndex, int pageSize) {
+			this.pageSize = pageSize;
+		}
 	}
 
 	private static final class DevicesQueryFactory implements QueryFactory<Device, DevicesFilter> {
 		private final DeviceRepository deviceRepository;
-		private DevicesQueryFactory(DeviceRepository deviceRepository) { this.deviceRepository = deviceRepository; }
+		private final CassandraService cassandraService;
+
+		private DevicesQueryFactory(DeviceRepository deviceRepository, CassandraService cassandraService) {
+			this.deviceRepository = deviceRepository;
+			this.cassandraService = cassandraService;
+		}
+
 		@Override
 		public it.thisone.iotter.lazyquerydataprovider.Query<Device, DevicesFilter> constructQuery(
 				QueryDefinition<Device, DevicesFilter> queryDefinition) {
-			return new DevicesQuery(deviceRepository, (DevicesQueryDefinition) queryDefinition);
+			return new DevicesQuery(deviceRepository, cassandraService, (DevicesQueryDefinition) queryDefinition);
 		}
 	}
 
-	private static final class DevicesQuery implements it.thisone.iotter.lazyquerydataprovider.Query<Device, DevicesFilter> {
+	private static final class DevicesQuery
+			implements it.thisone.iotter.lazyquerydataprovider.Query<Device, DevicesFilter> {
 		private final DeviceRepository deviceRepository;
+		private final CassandraService cassandraService;
 		private final DevicesQueryDefinition queryDefinition;
 
-		private DevicesQuery(DeviceRepository deviceRepository, DevicesQueryDefinition queryDefinition) {
+		private DevicesQuery(DeviceRepository deviceRepository, CassandraService cassandraService,
+				DevicesQueryDefinition queryDefinition) {
 			this.deviceRepository = deviceRepository;
+			this.cassandraService = cassandraService;
 			this.queryDefinition = queryDefinition;
 		}
 
@@ -904,11 +1022,12 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 		@Override
 		public Stream<Device> loadItems(QueryDefinition<Device, DevicesFilter> queryDefinition, int offset, int limit) {
-			int size = queryDefinition.getLimit();
+			int size = limit > 0 ? limit : this.queryDefinition.getPageSize();
+			int page = size > 0 ? offset / size : 0;
 			if (size <= 0) {
 				size = this.queryDefinition.getPageSize() > 0 ? this.queryDefinition.getPageSize() : 100;
 			}
-			int page = size > 0 ? offset / size : 0;
+
 			org.springframework.data.domain.Page<Device> devices = findPage(page, size);
 			List<Device> deviceList = devices.getContent();
 			populateAlarmStatusBatch(deviceList);
@@ -922,7 +1041,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 		private org.springframework.data.domain.Page<Device> findPage(int page, int size) {
 			org.springframework.data.domain.Sort sort = buildSort();
-			org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, sort);
+			org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page,
+					size, sort);
 			DevicesFilter filter = queryDefinition.getQueryFilter();
 			String label = filter != null && filter.hasLabel() ? filter.getLabel().trim() : null;
 			DeviceStatus deviceStatus = filter != null && filter.hasDeviceStatus() ? filter.getDeviceStatus() : null;
@@ -932,9 +1052,11 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 				String owner = queryDefinition.getNetwork().getOwner();
 				String networkId = queryDefinition.getNetwork().getId();
 				if (label != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCaseAndStatus(owner, networkId, label, deviceStatus, pageable);
+					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCaseAndStatus(owner,
+							networkId, label, deviceStatus, pageable);
 				} else if (label != null) {
-					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCase(owner, networkId, label, pageable);
+					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCase(owner, networkId,
+							label, pageable);
 				} else if (deviceStatus != null) {
 					return deviceRepository.findByOwnerAndNetworkIdAndStatus(owner, networkId, deviceStatus, pageable);
 				}
@@ -943,11 +1065,14 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 			if (queryDefinition.getPermissions().isViewAllMode()) {
 				if (ownerFilter != null && label != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCaseAndStatus(ownerFilter, label, deviceStatus, pageable);
+					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCaseAndStatus(
+							ownerFilter, label, deviceStatus, pageable);
 				} else if (ownerFilter != null && label != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCase(ownerFilter, label, pageable);
+					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCase(ownerFilter,
+							label, pageable);
 				} else if (ownerFilter != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndStatus(ownerFilter, deviceStatus, pageable);
+					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndStatus(ownerFilter, deviceStatus,
+							pageable);
 				} else if (ownerFilter != null) {
 					return deviceRepository.findByOwnerStartingWithIgnoreCase(ownerFilter, pageable);
 				} else if (label != null && deviceStatus != null) {
@@ -962,7 +1087,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 			String owner = queryDefinition.getOwner();
 			if (label != null && deviceStatus != null) {
-				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCaseAndStatus(owner, label, deviceStatus, pageable);
+				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCaseAndStatus(owner, label, deviceStatus,
+						pageable);
 			} else if (label != null) {
 				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCase(owner, label, pageable);
 			} else if (deviceStatus != null) {
@@ -974,19 +1100,22 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		private org.springframework.data.domain.Sort buildSort() {
 			List<QuerySortOrder> sortOrders = queryDefinition.getSortOrders();
 			if (sortOrders == null || sortOrders.isEmpty()) {
-				return org.springframework.data.domain.Sort.by("serial").ascending().and(org.springframework.data.domain.Sort.by(LABEL).ascending());
+				return org.springframework.data.domain.Sort.by("serial").ascending()
+						.and(org.springframework.data.domain.Sort.by(LABEL).ascending());
 			}
 			List<org.springframework.data.domain.Sort.Order> orders = new ArrayList<>();
 			for (QuerySortOrder sortOrder : sortOrders) {
 				String property = sortOrder.getSorted();
-				org.springframework.data.domain.Sort.Direction direction = sortOrder.getDirection() == SortDirection.ASCENDING
-						? org.springframework.data.domain.Sort.Direction.ASC
-						: org.springframework.data.domain.Sort.Direction.DESC;
+				org.springframework.data.domain.Sort.Direction direction = sortOrder
+						.getDirection() == SortDirection.ASCENDING
+								? org.springframework.data.domain.Sort.Direction.ASC
+								: org.springframework.data.domain.Sort.Direction.DESC;
 				orders.add(new org.springframework.data.domain.Sort.Order(direction, property));
 			}
 			boolean hasLabelSorting = sortOrders.stream().anyMatch(so -> LABEL.equals(so.getSorted()));
 			if (!hasLabelSorting) {
-				orders.add(new org.springframework.data.domain.Sort.Order(org.springframework.data.domain.Sort.Direction.ASC, LABEL));
+				orders.add(new org.springframework.data.domain.Sort.Order(
+						org.springframework.data.domain.Sort.Direction.ASC, LABEL));
 			}
 			return org.springframework.data.domain.Sort.by(orders);
 		}
@@ -994,7 +1123,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		private void populateAlarmStatusBatch(List<Device> devices) {
 			for (Device device : devices) {
 				try {
-					Date lastContactDate = UIUtils.getCassandraService().getMeasures().getLastTick(device.getSerial(), null);
+					Date lastContactDate = cassandraService.getMeasures().getLastTick(device.getSerial(), null);
 					device.changedAlarmStatus(lastContactDate, device.isAlarmed(), hasActiveAlarms(device));
 				} catch (Exception e) {
 					logger.error("Error populating alarm status for device {}", device.getSerial(), e);
@@ -1006,8 +1135,9 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			if (device.getChannels() == null || device.getChannels().isEmpty()) {
 				return false;
 			}
-			return device.getChannels().stream().anyMatch(ch -> ch.getConfiguration() != null && ch.getConfiguration().isActive()
-					&& it.thisone.iotter.util.Utils.isTypeAlarm(ch.getMetaData()));
+			return device.getChannels().stream()
+					.anyMatch(ch -> ch.getConfiguration() != null && ch.getConfiguration().isActive()
+							&& it.thisone.iotter.util.Utils.isTypeAlarm(ch.getMetaData()));
 		}
 
 		private long countTotal() {

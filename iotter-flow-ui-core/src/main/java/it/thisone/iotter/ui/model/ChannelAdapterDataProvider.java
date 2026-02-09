@@ -31,7 +31,8 @@ import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.util.BacNet;
 import it.thisone.iotter.util.EncryptUtils;
 
-public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter> implements Serializable {
+public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter> {
+
 	public static final String EMPTY_VALUE = "...";
 	public static Logger logger = LoggerFactory.getLogger(ChannelAdapterDataProvider.class);
 	/**
@@ -43,41 +44,42 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 
 	private boolean hideUnits;
 
+	private ChoiceFormat measureRenderer;
+
 	public ChannelAdapterDataProvider() throws IllegalArgumentException {
 		super(new ArrayList<>());
 		lastDate = new Date(0);
+
 	}
 
 	public void addChannels(Collection<Channel> channels) {
 		Collection<ChannelAdapter> collection = new ArrayList<>();
-		String pattern = UIUtils.getMeasureUnitPattern();
-		ChoiceFormat measureRenderer = new ChoiceFormat(pattern);
 		for (Channel channel : channels) {
 			ChannelAdapter adapter = new ChannelAdapter(channel);
 			adapter.setDisplayName(ChannelUtils.displayName(channel));
-			adapt(adapter, channel, measureRenderer);
+			adapt(adapter, channel);
 			collection.add(adapter);
 		}
-		
+		getItems().clear();
 		getItems().addAll(collection);
 		// sort(new Object[] { "metaData" }, new boolean[] { true });
 		lastDate = new Date(0);
 	}
 
-	private void adapt(ChannelAdapter adapter, Channel channel, ChoiceFormat measureRenderer) {
+	private void adapt(ChannelAdapter adapter, Channel channel) {
 		adapter.setSelected(channel.getConfiguration().isSelected());
-		adapter.setMeasureUnit(measureRenderer.format((double) channel.getDefaultMeasure().getType()));
+		adapter.setMeasureUnit(getMeasureRenderer().format((double) channel.getDefaultMeasure().getType()));
 		ChoiceFormat cf = ChannelUtils.enumChoiceFormat(channel);
 		adapter.setRenderer(cf);
-		
+
 		if (cf != null && channel.getDefaultMeasure().getType().equals(BacNet.ADIM)) {
 			adapter.setMeasureUnit("");
 		}
-		
+
 		if (channel.getDefaultMeasure().getType().equals(BacNet.ADIM)) {
 			adapter.setMeasureUnit("");
 		}
-		
+
 		adapter.setMetaData(channel.getMetaData());
 		adapter.setKey(channel.getKey());
 		adapter.setNumber(channel.getNumber());
@@ -94,11 +96,11 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 	}
 
 	public void addFeeds(List<GraphicFeed> feeds) {
-		if (feeds == null) return;
+		if (feeds == null)
+			return;
 		hideUnits = true;
 		Collection<ChannelAdapter> collection = new ArrayList<>();
-		String pattern = UIUtils.getMeasureUnitPattern();
-		ChoiceFormat measureRenderer = new ChoiceFormat(pattern);
+
 		for (GraphicFeed feed : feeds) {
 			if (feed.getChannel() != null) {
 				ChannelAdapter adapter = new ChannelAdapter(feed.getChannel());
@@ -111,8 +113,8 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 				adapter.setLastMeasureValue(EMPTY_VALUE);
 				adapter.setLastMeasure(null);
 				adapter.setFillColor(feed.getOptions().getFillColor());
-				adapter.setChecked(feed.isChecked());				
-				adapt(adapter, feed.getChannel(), measureRenderer);
+				adapter.setChecked(feed.isChecked());
+				adapt(adapter, feed.getChannel());
 				collection.add(adapter);
 			}
 		}
@@ -124,21 +126,22 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 	 * refresh visible items
 	 */
 	public void refresh() {
-		List<IFeedKey> feeds = new ArrayList<>();
-		for (ChannelAdapter adapter : getItems()) {
-			if (adapter.getItem().getConfiguration().isActive()) {
-				feeds.add(adapter);
-			}
-		}
-		Map<IFeedKey, MeasureRaw> measures = UIUtils.getCassandraService().getFeeds().lastMeasures(feeds);
-		for (ChannelAdapter adapter : getItems()) {
-			MeasureRaw measure = measures.get(adapter);
-			try {
-				refresh(adapter, measure);
-			} catch (Throwable e) {
-				logger.error("refresh visible items " + adapter.getKey(), e);
-			}
-		}
+		// List<IFeedKey> feeds = new ArrayList<>();
+		// for (ChannelAdapter adapter : getItems()) {
+		// if (adapter.getItem().getConfiguration().isActive()) {
+		// feeds.add(adapter);
+		// }
+		// }
+		// Map<IFeedKey, MeasureRaw> measures =
+		// UIUtils.getCassandraService().getFeeds().lastMeasures(feeds);
+		// for (ChannelAdapter adapter : getItems()) {
+		// MeasureRaw measure = measures.get(adapter);
+		// try {
+		// refresh(adapter, measure);
+		// } catch (Throwable e) {
+		// logger.error("refresh visible items " + adapter.getKey(), e);
+		// }
+		// }
 	}
 
 	public void refresh(ChannelAdapter adapter, MeasureRaw measure) {
@@ -162,16 +165,16 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 				}
 			}
 
-
 		} else {
 			adapter.setLastMeasureValue(EMPTY_VALUE);
 			adapter.setLastMeasure(null);
 		}
-		
-		adapter.setLastMeasureValueUnit(String.format("%s %s", adapter.getLastMeasureValue(), adapter.getMeasureUnit()));
-//		if (hideUnits && adapter.getRenderer() != null) {
-//			adapter.setMeasureUnit("");
-//		}
+
+		adapter.setLastMeasureValueUnit(
+				String.format("%s %s", adapter.getLastMeasureValue(), adapter.getMeasureUnit()));
+		// if (hideUnits && adapter.getRenderer() != null) {
+		// adapter.setMeasureUnit("");
+		// }
 
 	}
 
@@ -273,16 +276,16 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 				String alarmValue = renderValue(number, adapter.getRenderer(), adapter.getItem().getDefaultMeasure());
 				AlarmStatus status = AlarmStatus.valueOf(event.getStatus());
 				switch (status) {
-				case FIRE_DOWN:
-				case FIRE_UP:
-					status = AlarmStatus.ON;
-					item.setAlarmFired(true);
-					item.setAlarmed(true);
-					break;
+					case FIRE_DOWN:
+					case FIRE_UP:
+						status = AlarmStatus.ON;
+						item.setAlarmFired(true);
+						item.setAlarmed(true);
+						break;
 
-				default:
-					item.setAlarmFired(false);
-					break;
+					default:
+						item.setAlarmFired(false);
+						break;
 				}
 				item.setKey(EncryptUtils.getUniqueId());
 				item.setDisplayName(adapter.getDisplayName());
@@ -306,16 +309,16 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 				AlarmStatus status = AlarmStatus.valueOf(event.getStatus());
 				String message = "";
 				switch (status) {
-				case ON:
-					item.setAlarmFired(true);
-					message = AlarmStatus.ONLINE.name() + "->" + AlarmStatus.OFFLINE.name();
-					break;
-				case REENTER:
-					item.setAlarmFired(false);
-					message = AlarmStatus.OFFLINE.name() + "->" + AlarmStatus.ONLINE.name();
-					break;
-				default:
-					break;
+					case ON:
+						item.setAlarmFired(true);
+						message = AlarmStatus.ONLINE.name() + "->" + AlarmStatus.OFFLINE.name();
+						break;
+					case REENTER:
+						item.setAlarmFired(false);
+						message = AlarmStatus.OFFLINE.name() + "->" + AlarmStatus.ONLINE.name();
+						break;
+					default:
+						break;
 				}
 				item.setAlarmStatus(status);
 				item.setDisplayName(message);
@@ -334,4 +337,14 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 
 	}
 
+	public ChoiceFormat getMeasureRenderer() {
+		if (measureRenderer == null) {
+			return new ChoiceFormat("");
+		}
+		return measureRenderer;
+	}
+
+	public void setMeasureRenderer(ChoiceFormat measureRenderer) {
+		this.measureRenderer = measureRenderer;
+	}
 }

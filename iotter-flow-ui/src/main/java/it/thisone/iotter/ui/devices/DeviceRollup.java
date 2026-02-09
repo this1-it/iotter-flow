@@ -1,5 +1,6 @@
 package it.thisone.iotter.ui.devices;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -173,7 +174,7 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 		return table;
 	}
 
-	private void refreshData() {
+	public void refreshData() {
 		if (device == null) {
 			return;
 		}
@@ -186,19 +187,20 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 	private List<MeasureStats> createContainer(Device device) {
 		Set<String> keys = new LinkedHashSet<>(device.feedKeys());
 		String sn = device.getSerial();
-		List<MeasureStats> stats = cassandraService.getRollup()
-				.getRollupStats(sn);
-		for (MeasureStats stat : stats) {
-			keys.remove(stat.getKey());
-			Date dt = stat.getLastMeasureDate();
-			if (lastContactDate == null) {
-				lastContactDate = dt;
-			} else {
-				if (dt != null && dt.after(lastContactDate)) {
-					lastContactDate = dt;
-				}
-			}
-		}
+		List<MeasureStats> stats = new ArrayList<>();
+		// List<MeasureStats> stats = cassandraService.getRollup()
+		// 		.getRollupStats(sn);
+		// for (MeasureStats stat : stats) {
+		// 	keys.remove(stat.getKey());
+		// 	Date dt = stat.getLastMeasureDate();
+		// 	if (lastContactDate == null) {
+		// 		lastContactDate = dt;
+		// 	} else {
+		// 		if (dt != null && dt.after(lastContactDate)) {
+		// 			lastContactDate = dt;
+		// 		}
+		// 	}
+		// }
 		for (String key : keys) {
 			stats.add(new MeasureStats(sn, key));
 		}

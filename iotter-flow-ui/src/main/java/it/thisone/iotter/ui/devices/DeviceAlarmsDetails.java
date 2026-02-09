@@ -1,5 +1,6 @@
 package it.thisone.iotter.ui.devices;
 
+import java.text.ChoiceFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,22 +17,19 @@ import it.thisone.iotter.cassandra.model.FeedAlarmEvent;
 import it.thisone.iotter.cassandra.model.IFeedAlarm;
 import it.thisone.iotter.integration.CassandraService;
 import it.thisone.iotter.persistence.model.Device;
-
-
+import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
 import it.thisone.iotter.ui.model.ChannelAdapter;
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-@org.springframework.stereotype.Component
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+
+
 public class DeviceAlarmsDetails extends Composite<VerticalLayout> {
 
-	@Autowired
-	private CassandraService cassandraService;
-	
-	public DeviceAlarmsDetails(Device item) {
+
+
+	public DeviceAlarmsDetails(Device device, List<FeedAlarmEvent> events,ChoiceFormat cf ) {
 		super();
-		getContent().add(buildContent(item));
+
+		getContent().add(buildContent(device, events,cf));
 	}
 
 	public String getI18nLabel(String key) {
@@ -39,10 +37,10 @@ public class DeviceAlarmsDetails extends Composite<VerticalLayout> {
 	}
 
 
-	private Component buildContent(Device device) {
+	private Component buildContent(Device device, List<FeedAlarmEvent> events,ChoiceFormat cf) {
 		
-		List<FeedAlarmEvent> events = cassandraService.getAlarms().getAlarmEvents(device.getSerial(), 30);
 		ChannelAdapterDataProvider ccontainer = new ChannelAdapterDataProvider();
+		ccontainer.setMeasureRenderer(cf);
 		ccontainer.addChannels(device.getChannels());
 		List<IFeedAlarm> alarms = new ArrayList<>();
 		alarms.addAll(events);
