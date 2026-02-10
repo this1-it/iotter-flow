@@ -44,15 +44,20 @@ public class ChannelLastMeasuresListing extends VerticalLayout implements IChann
 		grid.addColumn(ChannelAdapter::getPattern).setKey("pattern").setHeader(getTranslation("device.pattern"));
 		add(grid);
 		setFlexGrow(1f, grid);
+		grid.setHeight("400px");
 	}
 
 	public void setItems(List<Channel> channels, ChoiceFormat cf) {
+				this.channels.clear();
+		this.channels.addAll(channels);
 		provider.setMeasureRenderer(cf);
 		provider.addChannels(channels);
 		provider.refresh();
 		grid.setDataProvider(provider);
 
 	}
+
+
 
 	@SuppressWarnings("unchecked")
 	@Override

@@ -38,8 +38,6 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		if (this.permissions != null && this.permissions.isViewAllMode()) {
 			this.permissions.setViewMode(true);
 		}
-
-		
 	}
 
 	public AbstractBaseEntityListing(Class<T> itemType, String name, String id, boolean readOnly) {
@@ -61,7 +59,7 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		//counter.setStyleName(COUNTER_STYLE);
 		counter.setId(COUNTER_STYLE);
 		buttonsLayout.add(counter);
-		//setCompositionRoot(mainLayout);
+		setRootComposition(mainLayout);
 	}
 
 	protected abstract AbstractBaseEntityForm<T> getEditor(T item, boolean readOnly);

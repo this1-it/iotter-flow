@@ -57,8 +57,11 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 	}
 
 	public void setItems(List<Channel> channels) {
+		this.channels.clear();
+		this.channels.addAll(channels);
 		dataProvider.getItems().clear();
 		dataProvider.getItems().addAll(channels);
+		dataProvider.refreshAll();
 	}
 
 	private void buildLayout() {
@@ -140,6 +143,8 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 		}
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
+		grid.setHeight("400px");
+
 		return grid;
 	}
 

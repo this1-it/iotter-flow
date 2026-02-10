@@ -51,11 +51,12 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 	}
 
 	public void setItems(List<Channel> channels) {
+		this.channels.clear();
+		this.channels.addAll(channels);
 		dataProvider.getItems().clear();
 		dataProvider.getItems().addAll(channels);
+		dataProvider.refreshAll();
 	}
-
-
 	private void buildLayout() {
 		HorizontalLayout toolbar = new HorizontalLayout();
 		toolbar.setWidthFull();
@@ -111,6 +112,7 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 		grid.getColumnByKey("alarmed").setHeader("");
 		grid.getColumnByKey("notify").setHeader("");
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
+		grid.setHeight("400px");
 		return grid;
 	}
 

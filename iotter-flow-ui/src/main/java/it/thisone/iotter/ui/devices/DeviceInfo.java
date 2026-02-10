@@ -77,6 +77,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	public DeviceInfo(Device device) {
 		super("maps.devices.google", UUID.randomUUID().toString());
 		multicomponent = new Accordion();
+		multicomponent.setHeight("vh80");
 		// multicomponent.addClassName(ValoTheme.TABSHEET_FRAMED);
 		// multicomponent.addClassName(ValoTheme.TABSHEET_PADDED_TABBAR);
 		// multicomponent.addSelectedTabChangeListener(new TabSheet.SelectedTabChangeListener() {
@@ -93,6 +94,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 		// 	}
 		// });
 
+		setContent(device, new ArrayList<>());
 		setRootComposition(multicomponent);
 	}
 
@@ -433,13 +435,13 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 
 	@Override
 	public void setContent(Device device, Collection<GroupWidget> widgets) {
-		if (device.getStatus().equals(DeviceStatus.CONNECTED)) {
-			try {
-				device = updateContent(device.getSerial(), widgets);
-			} catch (BackendServiceException e) {
-				//logger.error(device.getSerial(), e);
-			}
-		}
+		// if (device.getStatus().equals(DeviceStatus.CONNECTED)) {
+		// 	try {
+		// 		device = updateContent(device.getSerial(), widgets);
+		// 	} catch (BackendServiceException e) {
+		// 		//logger.error(device.getSerial(), e);
+		// 	}
+		// }
 		
 		for (GroupWidget gwidget : widgets) {
 			if (gwidget.isExclusive()) {

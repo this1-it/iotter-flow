@@ -241,15 +241,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	@Override
 	public AbstractBaseEntityForm<Device> getEditor(Device item, boolean readOnly) {
-		// return new DeviceForm(item, network,currentUser,readOnly);
-
-
-		DeviceForm editor = deviceFormProvider.getObject(item, network, currentUser, readOnly
-				// ,deviceService, alarmService, networkService,
-				// networkGroupService, groupWidgetService,
-				// cassandraService
-
-		);
+		DeviceForm editor = deviceFormProvider.getObject(item, network, currentUser, readOnly);
 		editor.initialize();
 		return editor;
 
@@ -369,7 +361,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		alarmStatusCombo.setClearButtonVisible(true);
 		alarmStatusCombo.setItems(AlarmStatus.values());
 		alarmStatusCombo
-				.setItemLabelGenerator(status -> getI18nLabel("enum.alarmstatus." + status.name().toLowerCase()));
+				.setItemLabelGenerator(status -> status.toString());
 		filterRow.getCell(table.getColumnByKey(ALARM_STATUS)).setComponent(alarmStatusCombo);
 		alarmStatusCombo.addValueChangeListener(event -> {
 			currentFilter.setAlarmStatus(event.getValue());
@@ -384,7 +376,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		deviceStatusCombo.setClearButtonVisible(true);
 		deviceStatusCombo.setItems(DeviceStatus.values());
 		deviceStatusCombo
-				.setItemLabelGenerator(status -> getI18nLabel("enum.devicestatus." + status.name().toLowerCase()));
+				.setItemLabelGenerator(status ->getTranslation(status.getI18nKey()));
 		filterRow.getCell(table.getColumnByKey(DEVICE_STATUS)).setComponent(deviceStatusCombo);
 		deviceStatusCombo.addValueChangeListener(event -> {
 			currentFilter.setDeviceStatus(event.getValue());
@@ -430,12 +422,12 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	private String formatAlarmStatus(Device device) {
 		AlarmStatus status = device.getAlarmStatus();
-		return status != null ? getI18nLabel("enum.alarmstatus." + status.name().toLowerCase()) : "";
+		return status != null ? status.toString() : "";
 	}
 
 	private String formatDeviceStatus(Device device) {
 		DeviceStatus status = device.getStatus();
-		return status != null ? getI18nLabel("enum.devicestatus." + status.name().toLowerCase()) : "";
+		return status != null ? getTranslation(status.getI18nKey()) : "";
 	}
 
 	private String formatNetwork(Device device) {

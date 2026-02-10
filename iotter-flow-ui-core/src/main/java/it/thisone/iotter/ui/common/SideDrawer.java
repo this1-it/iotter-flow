@@ -46,15 +46,16 @@ public class SideDrawer extends Dialog {
         if (component != null) {
             content.add(component);
         }
+        
     }
 
-    public void applyDimension(float[] dimension) {
-        if (dimension == null || dimension.length < 2) {
-            setWidth("40vw");
-            setHeight("100vh");
-            return;
-        }
-        setWidth((dimension[0] * 100f) + "vw");
-        setHeight((dimension[1] * 100f) + "vh");
-    }
+    // public void applyDimension(float[] dimension) {
+    //     if (dimension == null || dimension.length < 2) {
+    //         setWidth("40vw");
+    //         setHeight("100vh");
+    //         return;
+    //     }
+    //     setWidth((dimension[0] * 100f) + "vw");
+    //     setHeight((dimension[1] * 100f) + "vh");
+    // }
 }

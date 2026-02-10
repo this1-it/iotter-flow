@@ -52,6 +52,9 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
         tabsContainer.getElement().getStyle().set("flexGrow", "1");
         tabsContainer.getElement().getStyle().set("flexShrink", "1");
         tabsContainer.setMinHeight("0");
+        // flex container so children with height:100% resolve against the flex-computed height
+        tabsContainer.getElement().getStyle().set("display", "flex");
+        tabsContainer.getElement().getStyle().set("flexDirection", "column");
         tabsContainer.addClassName("tabsheet-container");
 
         content.add(tabsComponent, tabsContainer);

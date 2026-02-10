@@ -53,7 +53,11 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 		buildLayout();
 	}
 
+
+
 	public void setItems(List<Channel> channels, ChoiceFormat cf) {
+						this.channels.clear();
+		this.channels.addAll(channels);
 		adapterProvider.setMeasureRenderer(cf);
 		List<Channel> remoteChannels = new ArrayList<>();
 		for (Channel channel : channels) {
@@ -62,6 +66,8 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 				remoteChannels.add(channel);
 			}
 		}
+
+
 		dataProvider.getItems().clear();
 		dataProvider.getItems().addAll(remoteChannels);
 
@@ -128,6 +134,7 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 		}
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
+		grid.setHeight("400px");
 		initFilters(grid);
 		return grid;
 	}
@@ -197,7 +204,8 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 			return "";
 		}
 		FeedKey feedKey = new FeedKey(channel.getDevice().getSerial(), channel.getKey());
-		MeasureRaw measure = ChartUtils.lastMeasure(feedKey);
+		//MeasureRaw measure = ChartUtils.lastMeasure(feedKey);
+		MeasureRaw measure = null;
 		if (measure == null || measure.getValue() == null) {
 			return ChannelAdapterDataProvider.EMPTY_VALUE;
 		}
@@ -224,7 +232,7 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 		layout.setSizeFull();
 		layout.setSpacing(true);
 		layout.add(grid);
-		layout.setFlexGrow(1f, grid);
+		//layout.setFlexGrow(1f, grid);
 		return layout;
 	}
 

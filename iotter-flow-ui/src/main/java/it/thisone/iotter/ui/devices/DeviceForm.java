@@ -52,7 +52,6 @@ import it.thisone.iotter.ui.channels.ChannelRemoteControlListing;
 import it.thisone.iotter.ui.charts.controls.CustomDateField;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.EditorConstraintException;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.fields.DeviceModelSelect;
 import it.thisone.iotter.ui.common.fields.DeviceStatusSelect;
@@ -132,8 +131,8 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 
 	private ExportingConfigField exportingConfig;
 
-	private ChannelLastMeasuresListing lastValues;
 	private ChannelListing channelListing;
+	private ChannelLastMeasuresListing lastValues;
 	private ChannelAlarmListing alarmListing;
 	private ChannelRemoteControlListing remoteControls;
 	private DeviceRollup rollup;
@@ -769,8 +768,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 					source.toString(), getCurrentUser().getName(), null);
 			alarmService.registerAlarms(source);
 			if (channelListing != null && !channelListing.getRemoved().isEmpty()) {
-				deviceService
-						.deleteChannels(getEntity(), channelListing.getRemoved());
+				deviceService.deleteChannels(getEntity(), channelListing.getRemoved());
 				conflicted = deviceService.findBySerial(source.getSerial());
 				refreshItem(conflicted);
 				getBinder().readBean(conflicted);

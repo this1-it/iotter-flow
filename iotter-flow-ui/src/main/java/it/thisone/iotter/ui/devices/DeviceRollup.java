@@ -62,7 +62,7 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 		super("device.rollup", "DeviceRollup");
 		device = item;
 		grid = createGrid();
-		grid.setSizeFull();
+		//grid.setSizeFull();
 
 		Checkbox checkbox = new Checkbox("rollup break");
 		checkbox.setValue(true);
@@ -171,6 +171,7 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 		}
 		table.setSelectionMode(Grid.SelectionMode.NONE);
 		//table.setClassName(UIUtils.TABLE_STYLE);
+		table.setHeight("400px");
 		return table;
 	}
 
@@ -182,6 +183,7 @@ public class DeviceRollup extends BaseComponent implements ITabContent {
 		dataProvider.getItems().clear();
 		dataProvider.getItems().addAll(stats);
 		dataProvider.refreshAll();
+		
 	}
 
 	private List<MeasureStats> createContainer(Device device) {

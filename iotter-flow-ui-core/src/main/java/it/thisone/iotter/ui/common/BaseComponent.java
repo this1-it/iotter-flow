@@ -24,7 +24,7 @@ import it.thisone.iotter.ui.main.UiConstants;
  * @author tisone
  *
  */
-public abstract class BaseComponent extends Composite<Div> implements UiConstants {
+public abstract class BaseComponent extends Composite<VerticalLayout> implements UiConstants {
 	private static final long serialVersionUID = -2527235916632043029L;
 	private String i18nkey;
 
@@ -44,7 +44,11 @@ public abstract class BaseComponent extends Composite<Div> implements UiConstant
 
 	public void setRootComposition(Component component) {
         getContent().removeAll();
+        getContent().setSizeFull();
+        getContent().setPadding(false);
+        getContent().setSpacing(false);
         getContent().add(component);
+        getContent().setFlexGrow(1, component);
 	}
 	
 	@Override

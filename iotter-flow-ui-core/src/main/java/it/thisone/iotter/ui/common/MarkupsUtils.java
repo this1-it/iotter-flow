@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -350,10 +351,9 @@ public class MarkupsUtils {
 	}
 
 	public static DateFormat dateformat() {
-		DateFormat f = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM,
-				UI.getCurrent().getLocale());
+		DateFormat f = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, UI.getCurrent().getLocale());
 		f.setLenient(false);
-		f.setTimeZone(((IMainUI) UI.getCurrent()).getTimeZone());
+		f.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
 		return f;
 
 	}

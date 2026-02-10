@@ -99,6 +99,7 @@ public class DeviceWidgetBox extends Composite<Div> {
 					}
 				}
 			});
+			info.buildContent();
 			mainLayout.add(info);
 		}
 

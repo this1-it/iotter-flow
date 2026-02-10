@@ -67,14 +67,14 @@ public abstract class AbstractWidgetVisualizer extends BaseComponent {
 	 */
 	public void calculateCssPosition() {
 		
-		int canvasWidth = ((IMainUI) UI.getCurrent()).getCanonicalWindowWidth();
-		int canvasHeight = ((IMainUI) UI.getCurrent()).getCanonicalWindowHeight();
+		// int canvasWidth = ((IMainUI) UI.getCurrent()).getCanonicalWindowWidth();
+		// int canvasHeight = ((IMainUI) UI.getCurrent()).getCanonicalWindowHeight();
 		
-		int height = resize(widget.getHeight(), canvasHeight);
-		int width = resize(widget.getWidth(), canvasWidth);
+		// int height = resize(widget.getHeight(), canvasHeight);
+		// int width = resize(widget.getWidth(), canvasWidth);
 		
-		y = resize(widget.getY(), canvasHeight);
-		x = resize(widget.getX(), canvasWidth);
+		// y = resize(widget.getY(), canvasHeight);
+		// x = resize(widget.getX(), canvasWidth);
 
 		
 //		logger.debug("placeholder id: {}, X: {}, Y: {}, Width: {}, Height {}", //
