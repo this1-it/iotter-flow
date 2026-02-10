@@ -728,7 +728,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"),
-				new GroupWidgetVisualizer(bean.getId().toString(), true));
+				new GroupWidgetVisualizer(bean.getId().toString(), true, groupWidgetService));
 		dialog.open();
 	}
 

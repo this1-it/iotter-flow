@@ -16,6 +16,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 
 import it.thisone.iotter.ui.about.AboutView;
 import it.thisone.iotter.ui.devices.DevicesView;
+import it.thisone.iotter.ui.groupwidgets.GroupWidgetsView;
 import it.thisone.iotter.ui.users.UsersView;
 
 /**
@@ -39,6 +40,8 @@ public class MainLayout extends FlexLayout implements RouterLayout {
                 VaadinIcon.USERS.create());
         menu.addView(DevicesView.class, DevicesView.VIEW_NAME,
                 VaadinIcon.CONNECT.create());
+                menu.addView(GroupWidgetsView.class, GroupWidgetsView.VIEW_NAME,
+                VaadinIcon.CHART_LINE.create());
         add(menu);
     }
 
