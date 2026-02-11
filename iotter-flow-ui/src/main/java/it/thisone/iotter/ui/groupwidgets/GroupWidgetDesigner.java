@@ -133,8 +133,8 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         mainLayout.setSizeFull();
         mainLayout.setWidth("100vw");
         mainLayout.setHeight("100vh");
-        mainLayout.setPadding(false);
-        mainLayout.setSpacing(false);
+        // mainLayout.setPadding(false);
+        // mainLayout.setSpacing(false);
 
         HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -165,6 +165,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
 
         mainLayout.add(toolbar);
         mainLayout.add(gridstackBoard);
+        //mainLayout.setMargin(true);
         mainLayout.setFlexGrow(1f, gridstackBoard);
 
         setRootComposition(mainLayout);
@@ -174,20 +175,20 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         if (entity.getLayout() == null && !entity.getWidgets().isEmpty()) {
             String migratedJson = GridstackLayoutUtils.convertLegacyToGridJson(entity.getWidgets());
             entity.setLayout(migratedJson);
-            logger.info("Migrated legacy layout to Gridstack JSON for GroupWidget {}", entity.getId());
+            logger.info("Migrated legacy layout to Gridstack JSON for GroupWidget {} {}", entity.getId(), migratedJson);
         }
     }
 
     private void loadWidgetsToGrid() {
-        // for (GraphicWidget widget : entity.getWidgets()) {
-        //     if (widget.getParent() == null) {
-        //         List<GraphicWidget> children = widget.findChildren(entity.getWidgets());
-        //         GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children);
-        //         placeHolderListeners(placeHolder);
-        //         int[] defaultSize = GridstackLayoutUtils.getDefaultGridSize(widget.getType());
-        //         gridstackBoard.addWidget(widget.getId(), placeHolder, 0, 0, defaultSize[0], defaultSize[1]);
-        //     }
-        // }
+        for (GraphicWidget widget : entity.getWidgets()) {
+            if (widget.getParent() == null) {
+                List<GraphicWidget> children = widget.findChildren(entity.getWidgets());
+                GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children);
+                placeHolderListeners(placeHolder);
+                int[] defaultSize = GridstackLayoutUtils.getDefaultGridSize(widget.getType());
+                gridstackBoard.addWidget(widget.getId(), placeHolder, 0, 0, defaultSize[0], defaultSize[1]);
+            }
+        }
         if (entity.getLayout() != null) {
             gridstackBoard.setLayout(entity.getLayout());
         }

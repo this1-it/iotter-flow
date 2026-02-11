@@ -16,6 +16,8 @@ import com.vaadin.flow.shared.Registration;
 @Tag("gridstack-board")
 @NpmPackage(value = "gridstack", version = "7.2.3")
 @JsModule("./src/gridstack-board.js")
+@CssImport("gridstack/dist/gridstack.min.css")
+@CssImport("gridstack/dist/gridstack-extra.min.css")
 @CssImport("./styles/gridstack-board.css")
 public class GridstackBoard extends Component implements HasSize {
 

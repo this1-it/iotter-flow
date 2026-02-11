@@ -1,5 +1,7 @@
-import 'gridstack/dist/gridstack.min.css';
-import 'gridstack/dist/gridstack-extra.min.css';
+// CSS is loaded via @CssImport on the Java side (GridstackBoard.java).
+// Importing CSS here does not work because Vaadin 14's webpack config
+// has css-loader but no style-loader, so CSS from JS imports is never
+// injected into the DOM.
 import { GridStack } from 'gridstack';
 
 class GridstackBoard extends HTMLElement {
@@ -14,9 +16,10 @@ class GridstackBoard extends HTMLElement {
         if (this._grid) {
             return;
         }
-        // If this element is re-attached, remove any stale children left from
-        // previous GridStack instances before re-initializing.
-        this.innerHTML = '';
+        // Do NOT clear innerHTML here. Vaadin Flow builds the full subtree
+        // (parent + children) before attaching to the DOM, so when
+        // connectedCallback fires the server-added .grid-stack-item children
+        // are already present. Clearing them would destroy all widgets.
         this.classList.add('grid-stack');
         if (this._editable) {
             this.classList.add('gs-editable');
@@ -24,21 +27,22 @@ class GridstackBoard extends HTMLElement {
             this.classList.remove('gs-editable');
         }
         this._grid = GridStack.init({
-            // column: 12,
-            // disableOneColumnMode: true,
-            // cellHeight: 70,
-            // float: false,
-            // animate: true,
-            // margin: 5,
-            // staticGrid: !this._editable
+            column: 12,
+            disableOneColumnMode: true,
+            cellHeight: 70,
+            float: false,
+            animate: true,
+            margin: 5,
+            staticGrid: !this._editable
         }, this);
         if (!this._grid) return;
 
-        var items = [
-            { content: 'my first widget' },
-            { w: 2, content: 'another longer widget!' }
-        ];
-        this._grid.load(items)
+        // Demo items for testing - remove once server-side addWidget() is wired
+        // var items = [
+        //     { id: 'demo-1', x: 0, y: 0, w: 4, h: 2, content: 'my first widget' },
+        //     { id: 'demo-2', x: 4, y: 0, w: 6, h: 3, content: 'another longer widget!' }
+        // ];
+        // this._grid.load(items);
 
         // Dialog overlays can attach while sizing; recalculate once painted.
         requestAnimationFrame(() => {
@@ -111,15 +115,15 @@ class GridstackBoard extends HTMLElement {
     }
 
     setEditable(editable) {
-        // this._editable = editable;
-        // if (!this._grid) return;
-        // this._grid.enableMove(editable);
-        // this._grid.enableResize(editable);
-        // if (editable) {
-        //     this.classList.add('gs-editable');
-        // } else {
-        //     this.classList.remove('gs-editable');
-        // }
+        this._editable = editable;
+        if (!this._grid) return;
+        this._grid.enableMove(editable);
+        this._grid.enableResize(editable);
+        if (editable) {
+            this.classList.add('gs-editable');
+        } else {
+            this.classList.remove('gs-editable');
+        }
     }
 }
 
