@@ -20,6 +20,15 @@
   flex-direction: column;
 }
 
+/* Fullscreen variant used by the GroupWidget designer */
+:host([theme~="side-drawer"][theme~="side-drawer-fullscreen"])::part(overlay) {
+  left: 0;
+  right: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+}
+
 /* HEADER */
 :host([theme~="side-drawer"]) .side-drawer-header {
   display: flex;

@@ -1,0 +1,34 @@
+gridstack-board {
+    display: block;
+    width: 100%;
+    min-height: 200px;
+}
+
+gridstack-board .grid-stack-item-content {
+    background: var(--lumo-base-color, #fff);
+    border: 1px solid var(--lumo-contrast-20pct, #e0e0e0);
+    border-radius: var(--lumo-border-radius-m, 4px);
+    box-shadow: var(--lumo-box-shadow-xs);
+    overflow: hidden;
+    padding: var(--lumo-space-xs);
+}
+
+gridstack-board.gs-editable .grid-stack-item-content {
+    cursor: move;
+}
+
+gridstack-board .grid-stack-item {
+    min-width: 60px;
+    min-height: 50px;
+}
+
+gridstack-board .grid-stack-placeholder > .placeholder-content {
+    background-color: var(--lumo-primary-color-10pct, rgba(0, 100, 200, 0.1));
+    border: 2px dashed var(--lumo-primary-color-50pct, rgba(0, 100, 200, 0.5));
+    border-radius: var(--lumo-border-radius-m, 4px);
+}
+
+gridstack-board .ui-resizable-handle {
+    position: absolute !important;
+    z-index: 1000 !important;
+}

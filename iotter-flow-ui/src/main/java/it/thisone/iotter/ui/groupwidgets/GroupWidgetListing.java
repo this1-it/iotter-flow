@@ -46,6 +46,7 @@ import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
 import it.thisone.iotter.ui.common.PermissionsUtils;
+import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.networkgroups.NetworkGroupBindings;
 import it.thisone.iotter.util.PopupNotification;
@@ -348,6 +349,11 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         GroupWidgetDesigner content = new GroupWidgetDesigner(item, groupWidgetService, networkService, networkGroupService,
                 authenticatedUser.get().orElse(null));
         Dialog dialog = createDialog(getI18nLabel("designer_action"), content);
+        if (dialog instanceof SideDrawer) {
+            dialog.addThemeName("side-drawer-fullscreen");
+        }
+        dialog.setWidth("100vw");
+        dialog.setHeight("100vh");
         dialog.open();
     }
 

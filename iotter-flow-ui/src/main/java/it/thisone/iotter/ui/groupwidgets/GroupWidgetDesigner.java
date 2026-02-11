@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -31,28 +30,23 @@ import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.BaseEditor;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
 import it.thisone.iotter.ui.common.EditorSelectedListener;
-import it.thisone.iotter.ui.designer.IParkingPlace;
-import it.thisone.iotter.ui.designer.IPlaceHolder;
-import it.thisone.iotter.ui.designer.PlaceHolderChangedEvent;
-import it.thisone.iotter.ui.designer.PlaceHolderChangedListener;
+import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.designer.PlaceHolderRemovedEvent;
 import it.thisone.iotter.ui.designer.PlaceHolderRemovedListener;
 import it.thisone.iotter.ui.designer.PlaceHolderSavedEvent;
 import it.thisone.iotter.ui.designer.PlaceHolderSavedListener;
-import it.thisone.iotter.ui.designer.WidgetDesigner;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
-import it.thisone.iotter.ui.graphicwidgets.GraphicWidgetFactory;
 import it.thisone.iotter.ui.graphicwidgets.GraphicWidgetPlaceHolder;
+import it.thisone.iotter.ui.gridstack.GridstackBoard;
+import it.thisone.iotter.ui.gridstack.GridstackLayoutUtils;
+import it.thisone.iotter.util.EncryptUtils;
 import it.thisone.iotter.util.PopupNotification;
 
 public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
 
     private static final long serialVersionUID = -9049540364011024970L;
     private static final Logger logger = LoggerFactory.getLogger(GroupWidgetDesigner.class);
-    private static final int MARGIN = 5;
-    private static final int DEFAULT_CANVAS_WIDTH = 1280;
-    private static final int DEFAULT_CANVAS_HEIGHT = 720;
 
     private final GroupWidgetService groupWidgetService;
     private final NetworkService networkService;
@@ -61,13 +55,10 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
     private final UIEventBus uiEventBus;
 
     private GroupWidget entity;
-    private IParkingPlace parkingPlace;
+    private GridstackBoard gridstackBoard;
     private final List<GraphicWidget> addedWidgets;
     private final List<String> removedWidgets;
     private VerticalLayout mainLayout;
-
-    private int canvasWidth;
-    private int canvasHeight;
     private Button saveButton;
 
     public GroupWidgetDesigner(GroupWidget sourceEntity,
@@ -98,12 +89,24 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
             throw new ApplicationRuntimeException(msg);
         }
 
-        canvasWidth = canonicalWidth();
-        canvasHeight = canonicalHeight();
-        parkingPlace = new WidgetDesigner(TOOLBAR_HEIGHT + TAB_HEIGHT);
+        // Force viewport-sized designer content so dialog overlay can expand
+        // without shrink-wrapping to inner content width.
+        getElement().getStyle().set("width", "100vw");
+        getElement().getStyle().set("height", "100vh");
+
+        gridstackBoard = new GridstackBoard();
+        gridstackBoard.setWidthFull();
+        gridstackBoard.setEditable(true);
+        gridstackBoard.addLayoutChangedListener(event -> {
+            entity.setLayout(event.getLayout());
+            if (uiEventBus != null) {
+                uiEventBus.post(new PendingChangesEvent());
+            }
+        });
 
         buildLayout();
-        initializePlaceholders();
+        migrateLayoutIfNeeded();
+        loadWidgetsToGrid();
     }
 
     private GroupWidget resolveEntity(GroupWidget sourceEntity) {
@@ -128,6 +131,8 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
     private void buildLayout() {
         mainLayout = new VerticalLayout();
         mainLayout.setSizeFull();
+        mainLayout.setWidth("100vw");
+        mainLayout.setHeight("100vh");
         mainLayout.setPadding(false);
         mainLayout.setSpacing(false);
 
@@ -159,24 +164,32 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         toolbar.setVerticalComponentAlignment(Alignment.CENTER, buttonbar);
 
         mainLayout.add(toolbar);
-        mainLayout.add((Component) parkingPlace);
-        mainLayout.setFlexGrow(1f, (Component) parkingPlace);
+        mainLayout.add(gridstackBoard);
+        mainLayout.setFlexGrow(1f, gridstackBoard);
 
         setRootComposition(mainLayout);
     }
 
-    private void initializePlaceholders() {
-        for (GraphicWidget widget : entity.getWidgets()) {
-            widget.setX(pixels(widget.getX(), canvasWidth));
-            widget.setWidth(pixels(widget.getWidth(), canvasWidth));
-            widget.setY(pixels(widget.getY(), canvasHeight));
-            widget.setHeight(pixels(widget.getHeight(), canvasHeight));
-            if (widget.getParent() == null) {
-                List<GraphicWidget> children = widget.findChildren(entity.getWidgets());
-                GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children);
-                placeHolderListeners(placeHolder);
-                addPlaceHolder(placeHolder);
-            }
+    private void migrateLayoutIfNeeded() {
+        if (entity.getLayout() == null && !entity.getWidgets().isEmpty()) {
+            String migratedJson = GridstackLayoutUtils.convertLegacyToGridJson(entity.getWidgets());
+            entity.setLayout(migratedJson);
+            logger.info("Migrated legacy layout to Gridstack JSON for GroupWidget {}", entity.getId());
+        }
+    }
+
+    private void loadWidgetsToGrid() {
+        // for (GraphicWidget widget : entity.getWidgets()) {
+        //     if (widget.getParent() == null) {
+        //         List<GraphicWidget> children = widget.findChildren(entity.getWidgets());
+        //         GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children);
+        //         placeHolderListeners(placeHolder);
+        //         int[] defaultSize = GridstackLayoutUtils.getDefaultGridSize(widget.getType());
+        //         gridstackBoard.addWidget(widget.getId(), placeHolder, 0, 0, defaultSize[0], defaultSize[1]);
+        //     }
+        // }
+        if (entity.getLayout() != null) {
+            gridstackBoard.setLayout(entity.getLayout());
         }
     }
 
@@ -202,46 +215,13 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         dialog.open();
     }
 
-    private int pixels(float size, int canonical) {
-        return Math.round(size * canonical);
-    }
-
-    private int canonicalWidth() {
-        int value = getUI().map(UI::getInternals)
-                .map(internals -> internals.getExtendedClientDetails())
-                .map(details -> details.getBodyClientWidth())
-                .orElse(0);
-        return value > 0 ? value : DEFAULT_CANVAS_WIDTH;
-    }
-
-    private int canonicalHeight() {
-        int value = getUI().map(UI::getInternals)
-                .map(internals -> internals.getExtendedClientDetails())
-                .map(details -> details.getBodyClientHeight())
-                .orElse(0);
-        return value > 0 ? value : DEFAULT_CANVAS_HEIGHT;
-    }
-
-    private void addPlaceHolder(IPlaceHolder placeHolder) {
-        parkingPlace.addPlaceHolder(placeHolder);
-    }
-
     @SuppressWarnings("serial")
-    private void placeHolderListeners(IPlaceHolder placeHolder) {
+    private void placeHolderListeners(GraphicWidgetPlaceHolder placeHolder) {
         placeHolder.addListener(new PlaceHolderRemovedListener() {
             @Override
             public void placeHolderRemoved(PlaceHolderRemovedEvent event) {
                 if (event.getSource() instanceof GraphicWidgetPlaceHolder) {
-                    removePlaceHolder((IPlaceHolder) event.getSource());
-                }
-            }
-        });
-
-        placeHolder.addListener(new PlaceHolderChangedListener() {
-            @Override
-            public void placeHolderChanged(PlaceHolderChangedEvent event) {
-                if (event.getSource() instanceof GraphicWidgetPlaceHolder) {
-                    changePlaceHolder((IPlaceHolder) event.getSource());
+                    removePlaceHolder((GraphicWidgetPlaceHolder) event.getSource());
                 }
             }
         });
@@ -256,14 +236,11 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         });
     }
 
-    private void changePlaceHolder(IPlaceHolder placeHolder) {
-        parkingPlace.changePlaceHolder(placeHolder);
-    }
-
-    private void removePlaceHolder(IPlaceHolder placeHolder) {
+    private void removePlaceHolder(GraphicWidgetPlaceHolder placeHolder) {
+        String id = placeHolder.getIdentifier();
         boolean found = false;
         for (GraphicWidget widget : addedWidgets) {
-            if (widget.getId().equals(placeHolder.getIdentifier())) {
+            if (widget.getId().equals(id)) {
                 found = true;
                 List<GraphicWidget> children = widget.findChildren(addedWidgets);
                 addedWidgets.remove(widget);
@@ -273,8 +250,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         }
         if (!found) {
             for (GraphicWidget widget : entity.getWidgets()) {
-                if (widget.getId().equals(placeHolder.getIdentifier())) {
-                    found = true;
+                if (widget.getId().equals(id)) {
                     List<GraphicWidget> children = widget.findChildren(entity.getWidgets());
                     for (GraphicWidget child : children) {
                         removedWidgets.add(child.getId().toString());
@@ -282,26 +258,9 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
                     break;
                 }
             }
-            removedWidgets.add(placeHolder.getIdentifier());
+            removedWidgets.add(id);
         }
-        parkingPlace.removePlaceHolder(placeHolder);
-    }
-
-    private int bottomPosition() {
-        int maxY = 0;
-        for (GraphicWidget widget : entity.getWidgets()) {
-            if (!removedWidgets.contains(widget.getId())) {
-                if (widget.getY() > maxY) {
-                    maxY = (int) widget.getY() + (int) widget.getHeight();
-                }
-            }
-        }
-        for (GraphicWidget widget : addedWidgets) {
-            if (widget.getY() > maxY) {
-                maxY = (int) widget.getY() + (int) widget.getHeight();
-            }
-        }
-        return maxY;
+        gridstackBoard.removeWidget(id);
     }
 
     @Override
@@ -319,10 +278,6 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
                     feed.setId(null);
                 }
             }
-            widget.setY(widget.getY() / canvasHeight);
-            widget.setHeight(widget.getHeight() / canvasHeight);
-            widget.setWidth(widget.getWidth() / canvasWidth);
-            widget.setX(widget.getX() / canvasWidth);
         }
 
         try {
@@ -350,20 +305,37 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
 
     public void managePlaceHolder(GraphicWidgetPlaceHolder placeHolder) {
         GraphicWidget widget = placeHolder.getWidget();
-        if (!parkingPlace.containPlaceHolder(placeHolder)) {
-            parkingPlace.setScrollTop((int) widget.getY());
+        boolean alreadyInGrid = false;
+        for (GraphicWidget existing : entity.getWidgets()) {
+            if (existing.getId().equals(widget.getId())) {
+                alreadyInGrid = true;
+                break;
+            }
+        }
+        for (GraphicWidget added : addedWidgets) {
+            if (added.getId().equals(widget.getId())) {
+                alreadyInGrid = true;
+                break;
+            }
+        }
+        if (!alreadyInGrid) {
             addedWidgets.add(widget);
             addedWidgets.addAll(placeHolder.getWidgetChildren());
-            addPlaceHolder(placeHolder);
+            int[] defaultSize = GridstackLayoutUtils.getDefaultGridSize(widget.getType());
+            gridstackBoard.addWidget(widget.getId(), placeHolder, 0, 0, defaultSize[0], defaultSize[1]);
         }
     }
 
     public void createPlaceHolder(GraphicWidgetType type, String provider) {
-        int fullWidth = canvasWidth - (MARGIN * 2);
-        int y = bottomPosition() + MARGIN;
-        int x = MARGIN;
-        GraphicWidgetPlaceHolder placeHolder = GraphicWidgetFactory.createPlaceHolder(type, provider, fullWidth, x, y);
-        placeHolder.getWidget().setGroupWidget(entity);
+        GraphicWidget widget = new GraphicWidget();
+        widget.setId(EncryptUtils.getUniqueId());
+        widget.setType(type);
+        widget.setProvider(provider);
+        widget.getOptions().setFillColor(ChartUtils.quiteRandomHexColor());
+        widget.setGroupWidget(entity);
+
+        List<GraphicWidget> children = new ArrayList<>();
+        GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children);
         placeHolderListeners(placeHolder);
         placeHolder.openEditor(placeHolder.getWidget(), true);
     }

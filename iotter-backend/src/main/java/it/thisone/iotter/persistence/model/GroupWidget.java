@@ -111,10 +111,20 @@ public class GroupWidget extends BaseEntity {
 	@OrderColumn(name = "POSITION")
 	private List<GraphicWidget> widgets;
 
-	
 	private GroupWidgetOptions options;
 
+	@javax.persistence.Lob
+	@Column(name = "LAYOUT")
+	private String layout;
 	
+	public String getLayout() {
+		return layout;
+	}
+
+	public void setLayout(String layout) {
+		this.layout = layout;
+	}
+
 	public String getName() {
 		return name;
 	}
