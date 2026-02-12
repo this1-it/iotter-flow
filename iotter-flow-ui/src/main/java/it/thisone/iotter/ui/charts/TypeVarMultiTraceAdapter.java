@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.vaadin.addon.charts.Chart;
-//import com.vaadin.addon.charts.ChartSelectionEvent;
-//import com.vaadin.addon.charts.ChartSelectionListener;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
@@ -66,13 +63,7 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 			vlayout.add(digitalChartAdapter.getChart());
 		}
 		
-		if (!digital.isEmpty() && !analog.isEmpty() && !UIUtils.isMobile()) {
-			Integer margin = 200;
-			digitalChartAdapter.getChart().getConfiguration().getChart().setMarginLeft(margin);
-			digitalChartAdapter.getChart().getConfiguration().getChart().setMarginRight(margin);
-			analogChartAdapter.getChart().getConfiguration().getChart().setMarginLeft(margin);
-			analogChartAdapter.getChart().getConfiguration().getChart().setMarginRight(margin);
-		}
+		// TODO(flow-chartjs): legacy Highcharts margin alignment between split charts is not available.
 		
 		return vlayout;
 	}
@@ -103,8 +94,6 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 		multitrace.setTimeInterval(interval);
 		multitrace.register();
 		
-//		multitrace.getChart().removeChartSelectionListener(multitrace.getChartSelectionListener());
-//		multitrace.getChart().addChartSelectionListener(createChartSelectionListener());
 		return multitrace;
 	}
 
@@ -173,35 +162,13 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 	}
 
 	@Override
-	public Chart getChart() {
+	public Component getChart() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected void setChart(Chart chart) {
+	protected void setChart(Component chart) {
 		throw new UnsupportedOperationException();
 	}
 	
-	
-//	private ChartSelectionListener createChartSelectionListener() {
-//		ChartSelectionListener chartSelectionListener = new ChartSelectionListener() {
-//			private static final long serialVersionUID = 325958356424593206L;
-//			@Override
-//			public void onSelection(ChartSelectionEvent event) {
-//				long start = event.getSelectionStart().longValue();
-//				long end = event.getSelectionEnd().longValue();
-//				Date startZoom = ChartUtils.toNetworkDate(start, getNetworkTimeZone());
-//				Date endZoom = ChartUtils.toNetworkDate(end, getNetworkTimeZone());
-//				if (analogChartAdapter != null) {
-//					analogChartAdapter.setTimeInterval(new TimeInterval(startZoom, endZoom));
-//				}
-//				if (digitalChartAdapter != null) {
-//					digitalChartAdapter.setTimeInterval(new TimeInterval(startZoom, endZoom));
-//				}
-//			}
-//		};
-//		return chartSelectionListener;
-//	}
-//
-
 }

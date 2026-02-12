@@ -1,8 +1,6 @@
 package it.thisone.iotter.ui.groupwidgets;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -18,8 +16,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -51,6 +47,8 @@ import it.thisone.iotter.ui.eventbus.TimePeriodEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.graphicwidgets.GraphicWidgetFactory;
+import it.thisone.iotter.ui.gridstack.GridstackBoard;
+import it.thisone.iotter.ui.gridstack.GridstackLayoutUtils;
 import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
@@ -60,8 +58,6 @@ public class GroupWidgetVisualizer extends BaseComponent {
 
     private static final long serialVersionUID = -6776667672616201904L;
     private static final int TIMECONTROLS_HEIGHT = 40;
-    private static final int DEFAULT_CANVAS_WIDTH = 1280;
-    private static final int DEFAULT_CANVAS_HEIGHT = 720;
 
     private final GroupWidgetService groupWidgetService;
     private final UIEventBus uiEventBus;
@@ -72,11 +68,7 @@ public class GroupWidgetVisualizer extends BaseComponent {
     private Registration optionsValueChangeRegistration;
 
     private GroupWidget entity;
-    private Div mainLayout;
-    private Div mainPanel;
-    private int canvasHeight;
-    private int canvasWidth;
-    private int unAvailableHeight;
+    private GridstackBoard gridstackBoard;
     private List<AbstractWidgetVisualizer> widgets;
     private TimeZone tz;
 
@@ -92,7 +84,7 @@ public class GroupWidgetVisualizer extends BaseComponent {
         this.uiEventBus = resolveUiEventBus();
         this.config = new GroupWidgetUiFactory();
 
-        this.entity = groupWidgetService.findOne(entityId);
+        this.entity = this.groupWidgetService.findOne(entityId);
         if (entity == null) {
             throw new IllegalArgumentException("GroupWidget not found: " + entityId);
         }
@@ -104,17 +96,13 @@ public class GroupWidgetVisualizer extends BaseComponent {
             tz = TimeZone.getDefault();
         }
 
-        canvasWidth = canonicalWidth();
-        unAvailableHeight = TIMECONTROLS_HEIGHT + (isTab ? TAB_HEIGHT : 0);
-        canvasHeight = calculateCanvasHeight();
         widgets = new ArrayList<>();
 
-        mainLayout = new Div();
-        mainLayout.getStyle().set("position", "relative");
-        mainLayout.setWidth(canvasWidth + "px");
-        mainLayout.setHeight(canvasHeight + "px");
+        gridstackBoard = new GridstackBoard();
+        gridstackBoard.setWidthFull();
+        gridstackBoard.setEditable(false); // Static/read-only mode for visualizer
 
-        Component content = buildContent(mainLayout);
+        Component content = buildContent();
         setRootComposition(content);
     }
 
@@ -126,29 +114,14 @@ public class GroupWidgetVisualizer extends BaseComponent {
         return ui.getSession().getAttribute(UIEventBus.class);
     }
 
-    private int canonicalWidth() {
-        int value = getUI().map(UI::getInternals)
-                .map(internals -> internals.getExtendedClientDetails())
-                .map(details -> details.getBodyClientWidth())
-                .orElse(0);
-        return value > 0 ? value : DEFAULT_CANVAS_WIDTH;
-    }
-
-    private int canonicalHeight() {
-        int value = getUI().map(UI::getInternals)
-                .map(internals -> internals.getExtendedClientDetails())
-                .map(details -> details.getBodyClientHeight())
-                .orElse(0);
-        return value > 0 ? value : DEFAULT_CANVAS_HEIGHT;
-    }
-
     private void addVisualizations() {
         if (!widgets.isEmpty()) {
             return;
         }
-        List<GraphicWidget> gwidgets = entity.getWidgets();
-        Collections.sort(gwidgets, Comparator.comparing(GraphicWidget::getY));
 
+        migrateLayoutIfNeeded();
+
+        List<GraphicWidget> gwidgets = entity.getWidgets();
         for (GraphicWidget widget : gwidgets) {
             if (widget.getParent() != null) {
                 continue;
@@ -160,58 +133,29 @@ public class GroupWidgetVisualizer extends BaseComponent {
             }
             widgets.add(component);
             component.setPosition(widgets.size());
+
+            // Add widget to grid with default size
+            int[] defaultSize = GridstackLayoutUtils.getDefaultGridSize(widget.getType());
+            gridstackBoard.addWidget(widget.getId(), component, 0, 0, defaultSize[0], defaultSize[1]);
         }
 
-        redrawMainLayout();
-    }
-
-    private int calculateCanvasHeight() {
-        int canonicalHeight = canonicalHeight();
-        int actualHeight = canonicalHeight;
-        for (GraphicWidget widget : entity.getWidgets()) {
-            int height = (int) ((widget.getY() + widget.getHeight()) * canonicalHeight);
-            if (height > actualHeight) {
-                actualHeight = height;
-            }
-        }
-        return actualHeight + 130;
-    }
-
-    private void changeCanvasSize(int canonicalWidth) {
-        logger.debug("changeCanvasSize width from {} to {}", canvasWidth, canonicalWidth);
-        canvasWidth = canonicalWidth;
-        canvasHeight = calculateCanvasHeight();
-        redrawMainLayout();
-    }
-
-    private void redrawMainLayout() {
-        mainLayout.removeAll();
-        mainLayout.setWidth(canvasWidth + "px");
-        mainLayout.setHeight(canvasHeight + "px");
-
-        for (AbstractWidgetVisualizer component : widgets) {
-            GraphicWidget widget = (GraphicWidget) component.getWidget();
-            int top = Math.round(widget.getY() * canvasHeight);
-            int left = Math.round(widget.getX() * canvasWidth);
-
-            Div child = new Div();
-            child.getStyle()
-                    .set("position", "absolute")
-                    .set("top", top + "px")
-                    .set("left", left + "px");
-
-            child.add(component);
-            mainLayout.add(child);
+        // Load layout JSON from entity
+        if (entity.getLayout() != null) {
+            gridstackBoard.setLayout(entity.getLayout());
         }
     }
 
-    private Component buildContent(Component scrollable) {
-        mainPanel = new Div();
-        mainPanel.getStyle().set("overflow", "auto");
-        mainPanel.setHeight(calculatePanelHeight() + "px");
-        mainPanel.addClassName("panel-borderless");
-        mainPanel.add(scrollable);
+    private void migrateLayoutIfNeeded() {
+        if (entity.getLayout() == null && !entity.getWidgets().isEmpty()) {
+            String migratedJson = GridstackLayoutUtils.convertLegacyToGridJson(entity.getWidgets());
+            entity.setLayout(migratedJson);
+            logger.info("Migrated legacy layout to Gridstack JSON for GroupWidget {} {}", entity.getId(), migratedJson);
+            // Note: This migration is performed in-memory only during visualization.
+            // The Designer is responsible for persisting migrated layouts.
+        }
+    }
 
+    private Component buildContent() {
         HorizontalLayout toolbar = new HorizontalLayout();
         toolbar.setHeight(TIMECONTROLS_HEIGHT + "px");
         toolbar.setWidthFull();
@@ -226,16 +170,11 @@ public class GroupWidgetVisualizer extends BaseComponent {
         content.setSpacing(false);
         content.setPadding(false);
         content.setSizeFull();
-        content.add(toolbar, mainPanel);
+        content.add(toolbar, gridstackBoard);
         content.setHorizontalComponentAlignment(Alignment.CENTER, toolbar);
-        content.setFlexGrow(1f, mainPanel);
+        content.setFlexGrow(1f, gridstackBoard);
         content.addClickListener(event -> postEvent(new CloseOpenWindowsEvent()));
         return content;
-    }
-
-    private int calculatePanelHeight() {
-        int height = unAvailableHeight + HEADER_HEIGHT + FOOTER_HEIGHT;
-        return canonicalHeight() - height;
     }
 
     private Component buildTimeControls() {
@@ -350,11 +289,6 @@ public class GroupWidgetVisualizer extends BaseComponent {
         super.onAttach(attachEvent);
         if (uiEventBus != null) {
             uiEventBus.register(this);
-        }
-
-        int latestWidth = canonicalWidth();
-        if (latestWidth != canvasWidth) {
-            changeCanvasSize(latestWidth);
         }
 
         addVisualizations();

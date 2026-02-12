@@ -1,99 +1,146 @@
 package it.thisone.iotter.ui.charts;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.vaadin.addons.chartjs.ChartJs;
+import org.vaadin.addons.chartjs.config.LineChartConfig;
+import org.vaadin.addons.chartjs.data.TimeLineDataset;
+import org.vaadin.addons.chartjs.options.Position;
+import org.vaadin.addons.chartjs.options.scale.Axis;
+import org.vaadin.addons.chartjs.options.scale.LinearScale;
+import org.vaadin.addons.chartjs.options.scale.TimeScale;
+import org.vaadin.addons.chartjs.utils.Pair;
+
 import com.google.common.collect.Range;
-import com.vaadin.addon.charts.Chart;
-import com.vaadin.addon.charts.model.AxisTitle;
-import com.vaadin.addon.charts.model.AxisType;
-import com.vaadin.addon.charts.model.Configuration;
-import com.vaadin.addon.charts.model.DataSeries;
-import com.vaadin.addon.charts.model.DataSeriesItem;
-import com.vaadin.addon.charts.model.PlotOptionsSpline;
-import com.vaadin.addon.charts.model.PointOptions;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.cassandra.model.Interpolation;
 import it.thisone.iotter.cassandra.model.MeasureAggregation;
-import it.thisone.iotter.enums.Period;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
+import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.model.TimePeriod;
-import it.thisone.iotter.ui.model.TimePeriod.TimePeriodEnum;
 
-	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
-public class RollupActivityChartAdapter extends MultiTraceChartAdapter {
+public class RollupActivityChartAdapter extends AbstractChartAdapter {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1879789719298795301L;
+    private static final long serialVersionUID = -1879789719298795301L;
 
-	public RollupActivityChartAdapter(GraphicWidget widget) {
-		super(widget);
-	}
+    private ChartJs chart;
+    private LineChartConfig chartConfig;
+    private TimeScale xScale;
 
-	@Override
-	protected Component buildVisualization() {
-		if (getGraphWidget().getFeeds().isEmpty()) {
-			return new VerticalLayout();
-		}
-		Chart chart = getRollupActivityChart();
-		setChart(chart);
-		return chart;
-	}
+    public RollupActivityChartAdapter(GraphicWidget widget) {
+        super(widget);
+        optionsField.getScale().setVisible(false);
+        optionsField.getShowMarkers().setVisible(false);
+        optionsField.getAutoScale().setVisible(false);
+    }
 
-	private Chart getRollupActivityChart() {
-		GraphicFeed feed = getGraphWidget().getFeeds().get(0);
-		
-		TimePeriod period = new TimePeriod(Period.WEEK, 1, TimePeriodEnum.LAST);
-		TimeInterval interval = intervalField.getHelper().period(new Date(), period);
-		Chart chart = new Chart();
-		chart.setId("detail-chart");
-//		chart.setHeight("100%");
-//		chart.setWidth("100%");
-		Configuration configuration = chart.getConfiguration();
-		configuration.getCredits().setEnabled(false);
-		configuration.setTitle("");
-		configuration.setSubTitle("");
-		configuration.getxAxis().setType(AxisType.DATETIME);
-		configuration.getyAxis().setTitle(new AxisTitle((String) null));
-		configuration.getyAxis().setMinRange(0.1);
-		configuration.getTooltip().setXDateFormat(ChartUtils.X_DATEFORMAT);
-		configuration.getTooltip().setShared(true);
-		configuration.getLegend().setEnabled(false);
-		configuration.setExporting(false);
-		DataSeries series = getRollupSeries(feed, interval);
-		configuration.addSeries(series);
-		chart.drawChart(configuration);
-		return chart;
-	}
+    @Override
+    protected Component buildVisualization() {
+        if (getGraphWidget().getFeeds().isEmpty()) {
+            return new VerticalLayout();
+        }
+        ChartJs chart = new ChartJs();
+        chart.setId("rollup-" + getWidget().getId());
+        setChart(chart);
+        chartConfig = createBaseConfiguration();
+        chart.configure(chartConfig);
+        return chart;
+    }
 
-	protected DataSeries getRollupSeries(GraphicFeed feed, TimeInterval interval) {
-		DataSeries series = new DataSeries();
-		PointOptions linePlotOptions = new PlotOptionsSpline();
-		linePlotOptions.setLineWidth(ChartUtils.PLOT_LINE_WIDTH);
-		linePlotOptions.setShadow(false);
-		linePlotOptions.setAnimation(false);
-		series.setPlotOptions(linePlotOptions);
-		
-		series.setId(feed.getKey());
-		Range<Date> range = Range.closedOpen(interval.getStartDate(), interval.getEndDate());
-		List<MeasureAggregation> measures = UIUtils.getCassandraService().getRollup().rollUpData(feed.getKey(),
-				Interpolation.MIN15, range);
-		for (MeasureAggregation measure : measures) {
-			DataSeriesItem item = new DataSeriesItem(measure.getDate(), measure.getRecords());
-			long timestamp = ChartUtils.toHighchartsTS(measure.getDate(), getNetworkTimeZone());
-			item.setX(timestamp);
-			series.add(item);
-		}
+    private LineChartConfig createBaseConfiguration() {
+        LineChartConfig config = new LineChartConfig();
+        config.options().responsive(true).maintainAspectRatio(false);
+        config.options().legend().display(false).position(Position.BOTTOM);
 
-		return series;
-	}
+        xScale = new TimeScale();
+        xScale.time().tooltipFormat(ChartUtils.X_DATEFORMAT);
+        LinearScale yScale = new LinearScale();
+        yScale.ticks().beginAtZero(true);
 
+        int grid = getGraphWidget().getOptions().getShowGrid() ? ((Number) ChartUtils.GRID_LINE_WIDTH).intValue() : 0;
+        xScale.gridLines().display(getGraphWidget().getOptions().getShowGrid()).lineWidth(grid);
+        yScale.gridLines().display(getGraphWidget().getOptions().getShowGrid()).lineWidth(grid);
+
+        config.options().scales().add(Axis.X, xScale).add(Axis.Y, yScale);
+        return config;
+    }
+
+    @Override
+    protected void createChartConfiguration(TimeInterval interval) {
+        if (getGraphWidget().getFeeds().isEmpty() || chart == null) {
+            return;
+        }
+
+        GraphicFeed feed = getGraphWidget().getFeeds().get(0);
+        chartConfig = createBaseConfiguration();
+        chartConfig.options().title().display(true).text(getWidget().getLabel());
+
+        TimeLineDataset dataset = new TimeLineDataset();
+        dataset.label(ChartUtils.getFeedLabel(feed));
+        dataset.borderColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
+        dataset.backgroundColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
+        dataset.fill(false);
+        dataset.pointRadius(0);
+
+        Range<Date> range = Range.closedOpen(interval.getStartDate(), interval.getEndDate());
+        List<MeasureAggregation> measures = UIUtils.getCassandraService().getRollup().rollUpData(feed.getKey(), Interpolation.MIN15, range);
+        List<Pair<java.time.LocalDateTime, Double>> data = new ArrayList<>();
+        for (MeasureAggregation measure : measures) {
+            data.add(Pair.of(toLocalDateTime(measure.getDate()), (double) measure.getRecords()));
+        }
+        dataset.dataAsList(data);
+
+        chartConfig.data().addDataset(dataset);
+        xScale.time().min(toLocalDateTime(interval.getStartDate())).max(toLocalDateTime(interval.getEndDate()));
+        chart.configure(chartConfig);
+    }
+
+    @Override
+    public void draw() {
+        TimeInterval interval = intervalField.getValue();
+        if (interval == null) {
+            return;
+        }
+        createChartConfiguration(interval);
+        if (chart != null) {
+            chart.update();
+        }
+    }
+
+    @Override
+    protected void setGraphWidgetOptionsOnChange(GraphicWidgetOptions options) {
+        changedLocalControls(options);
+    }
+
+    @Override
+    protected boolean isRealTime() {
+        return false;
+    }
+
+    @Override
+    public boolean refresh() {
+        return false;
+    }
+
+    @Override
+    protected boolean changedRealTime(GraphicWidgetOptions options) {
+        return false;
+    }
+
+    @Override
+    public Component getChart() {
+        return chart;
+    }
+
+    @Override
+    protected void setChart(Component chart) {
+        this.chart = (ChartJs) chart;
+    }
 }

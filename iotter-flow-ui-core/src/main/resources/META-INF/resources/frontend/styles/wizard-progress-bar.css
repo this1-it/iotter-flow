@@ -1,0 +1,24 @@
+.wizard-progress-bar vaadin-progress-bar {
+  height: 10px;
+}
+
+.wizard-progress-bar vaadin-progress-bar::part(value) {
+  background: linear-gradient(#20d4ff, #009cd0);
+  transition: width 0.5s ease-out 0s;
+}
+
+.wizard-progress-bar .step-caption {
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: center;
+  color: #bfbfbf;
+}
+
+.wizard-progress-bar .step-caption.current,
+.wizard-progress-bar .step-caption.completed {
+  color: #000000;
+}
+
+.wizard-progress-bar .step-caption.current {
+  font-weight: bold;
+}

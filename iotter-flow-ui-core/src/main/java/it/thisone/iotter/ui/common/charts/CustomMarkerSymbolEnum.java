@@ -1,9 +1,7 @@
 package it.thisone.iotter.ui.common.charts;
 
-import com.vaadin.addon.charts.model.ChartEnum;
-import com.vaadin.addon.charts.model.MarkerSymbol;
 
-public enum CustomMarkerSymbolEnum implements MarkerSymbol, ChartEnum {
+public enum CustomMarkerSymbolEnum  {
 	CIRCLE("circle"), //
 	SQUARE("square"), //
 	DIAMOND("diamond"), //

@@ -1,7 +1,6 @@
 package it.thisone.iotter.ui.charts;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,6 +8,7 @@ import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
+import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,18 +16,6 @@ import org.springframework.beans.BeanUtils;
 
 import com.google.common.collect.Range;
 import com.google.common.eventbus.Subscribe;
-import com.vaadin.addon.charts.Chart;
-import com.vaadin.addon.charts.model.AbstractPlotOptions;
-import com.vaadin.addon.charts.model.ChartType;
-import com.vaadin.addon.charts.model.DashStyle;
-import com.vaadin.addon.charts.model.DataSeries;
-import com.vaadin.addon.charts.model.DataSeriesItem;
-import com.vaadin.addon.charts.model.Marker;
-import com.vaadin.addon.charts.model.PlotOptionsAreaspline;
-import com.vaadin.addon.charts.model.PlotOptionsColumn;
-import com.vaadin.addon.charts.model.PlotOptionsSpline;
-import com.vaadin.addon.charts.model.PointOptions;
-import com.vaadin.addon.charts.model.style.SolidColor;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.UI;
@@ -44,14 +32,11 @@ import com.vaadin.flow.shared.Registration;
 
 import it.thisone.iotter.cassandra.model.FeedKey;
 import it.thisone.iotter.cassandra.model.Interpolation;
-import it.thisone.iotter.cassandra.model.MeasureRaw;
 import it.thisone.iotter.enums.ExportFileMode;
-import it.thisone.iotter.exceptions.MeasureException;
 import it.thisone.iotter.exporter.ExportConfig;
 import it.thisone.iotter.exporter.ExportProperties;
 import it.thisone.iotter.exporter.IExportable;
 import it.thisone.iotter.persistence.model.Channel;
-import it.thisone.iotter.persistence.model.ChartPlotOptions;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
@@ -66,14 +51,13 @@ import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.WidgetRefreshUIRunnable;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
-import it.thisone.iotter.ui.common.charts.CustomMarkerSymbolEnum;
 import it.thisone.iotter.ui.common.export.ExportDialog;
 import it.thisone.iotter.ui.eventbus.GraphWidgetOptionsEvent;
 import it.thisone.iotter.ui.eventbus.TimeIntervalEvent;
 import it.thisone.iotter.ui.eventbus.TimePeriodEvent;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
-import it.thisone.iotter.ui.main.IMainUI;
+
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
 import it.thisone.iotter.ui.uitask.UIRunnable;
@@ -143,13 +127,11 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 			networkTimeZone = UIUtils.getBrowserTimeZone();
 		}
 
-		int width = (int) (getCanonicalWindowWidth() * 0.8f);
-		boolean compact = Math.round(getWidget().getWidth() * getCanonicalWindowWidth()) < width;
 
 		intervalField = new TimeIntervalField(networkTimeZone, config.getPeriods());
-		intervalField.setCompact(compact);
+
 		periodField = new TimePeriodPopup();
-		periodField.setCompact(compact);
+
 
 		String lastMeasureCaption = getI18nLabel("lastMeasure");
 		timeControl = new TimeControl(intervalField, periodField, new TimeLastMeasureButton(lastMeasureCaption, this));
@@ -208,9 +190,9 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 
 	abstract protected boolean changedRealTime(GraphicWidgetOptions options);
 
-	public abstract Chart getChart();
+	public abstract Component getChart();
 
-	abstract protected void setChart(Chart chart);
+	abstract protected void setChart(Component chart);
 
 	
 	protected VerticalLayout createContentWrapper(Component visualization) {
@@ -409,199 +391,8 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 	}
 
 
-	protected DataSeries getTimeSeries(GraphicFeed feed, TimeInterval interval, boolean configure, Float ratio) {
-		DataSeries series = new DataSeries();
-		series.setId(feed.getKey());
-
-		if (feed.getChannel() == null) {
-			return series;
-		}
-		
-		Date from = interval.getStartDate();
-		Date to = interval.getEndDate();
-		Date now = new Date();
-		if (to.after(now)) {
-			to = now;
-		}
-		
-		if (to.before(from)) {
-			return series;
-		}
-		
-		
-		Map<Number, String> errors = new HashMap<Number, String>();
-		int points = Math.max(1, (int) Math.ceil(getWidget().getWidth() * 1000f));
-		if (ratio != null) {
-			// real time
-			points = (int) Math.ceil(points * ratio);
-		}
-		int step = 0;
-		
-		if (points > 0) {
-			step = (int) (to.getTime() -from.getTime()) / points;
-		}
-		
-		List<MeasureRaw> degrees = null;
-		MeasureUnit degreesMeausure = null;
-		List<Range<Date>> ranges = getValidities().get(feed.getKey());
-		FeedKey feedKey = new FeedKey(feed.getDevice().getSerial(), feed.getKey());
-		feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
-		List<MeasureRaw> measures = ChartUtils.getData(feedKey, from, to, points,step,
-				ranges, getNetworkTimeZone());
-
-		if (feed.getOptions().hasMarkerReference()) {
-			feedKey = new FeedKey(feed.getDevice().getSerial(), feed.getOptions().getFeedReference());
-			degrees = ChartUtils.getData(feedKey, interval.getStartDate(), interval.getEndDate(), points, step, ranges,
-					getNetworkTimeZone());
-			degreesMeausure = findMeasureUnit(feed.getOptions().getFeedReference(), feed);
-			// TODO handle different list size as error
-			if (degrees.size() < measures.size()) {
-				int diff = measures.size() - degrees.size();
-				for (int i = 0; i < diff; i++) {
-					degrees.add(new MeasureRaw(new Date(), 0f, "missing degrees"));
-				}
-			}
-		}
-		if (configure) {
-			String feedLabel = ChartUtils.getFeedLabel(feed);
-			AbstractPlotOptions plotOptions = getPlotOptions(feed);
-			series.setPlotOptions(plotOptions);
-			series.setName(feedLabel);
-		}
-		int index = 0;
-		Number timestamp = null;
-		for (MeasureRaw measure : measures) {
-			DataSeriesItem item = new DataSeriesItem(measure.getDate(), measure.getValue());
-			timestamp = ChartUtils.toHighchartsTS(measure.getDate(), getNetworkTimeZone());
-			item.setX(timestamp);
-
-			series.add(item);
-			if (measure.hasError()) {
-				errors.put(item.getX(), measure.getError());
-			}
-			try {
-				item.setY(ChartUtils.calculateMeasure((Float) item.getY(), feed.getMeasure()));
-				if (degrees != null) {
-					Number angle = ChartUtils.calculateAngle(degrees.get(index).getValue(), degreesMeausure);
-					if (angle != null) {
-						ChartUtils.setArrowMarker(item, angle);
-					}
-				}
-			} catch (MeasureException e) {
-				if (errors.containsKey(timestamp)) {
-					errors.put(item.getX(), e.getMessage());
-				}
-			}
-
-			index++;
-		}
-
-		ChartUtils.showErrors(AbstractWidgetVisualizer.NAME, series, errors, getNetworkTimeZone());
-
-		return series;
-	}
-
-	/**
-	 * default spline plot option
-	 * 
-	 * @param options
-	 * @return
-	 */
-	protected AbstractPlotOptions getPlotOptions(GraphicFeed feed) {
-		ChartPlotOptions options = feed.getOptions();
-		boolean enableMarkers = feed.getWidget().getOptions().getShowMarkers();
-		if (options.getChartType() == null) {
-			options.setChartType(ChartType.LINE.toString());
-		}
-		if (options.getFillColor() == null) {
-			options.setFillColor(ChartUtils.quiteRandomHexColor());
-		}
-		if (options.getDashStyle() == null) {
-			options.setDashStyle(DashStyle.SOLID.name());
-		}
-		AbstractPlotOptions plotOptions = null;
-		if (options.getChartType().equals(ChartType.COLUMN.toString())) {
-			PlotOptionsColumn plotColumn = new PlotOptionsColumn();
-			plotColumn.setColor(new SolidColor(options.getFillColor()));
-			plotOptions = plotColumn;
-		} else {
-			if (options.getChartType().equals(ChartType.AREASPLINE.toString())) {
-				PlotOptionsAreaspline plotAreaspline = new PlotOptionsAreaspline();
-				plotAreaspline.setColor(new SolidColor(options.getFillColor()));
-				plotAreaspline.setLineWidth(ChartUtils.PLOT_LINE_WIDTH);
-				plotAreaspline.setShadow(false);
-				
-				if (options.getMarkerSymbol() != null) {
-					Marker marker = new Marker(enableMarkers);
-					marker.setSymbol(CustomMarkerSymbolEnum.valueOf(options.getMarkerSymbol()));
-					plotAreaspline.setMarker(marker);
-				}
-				plotAreaspline.getTooltip().setValueDecimals(feed.getMeasure().getDecimals());
-				String xDateFormat = ChartUtils.X_DATEFORMAT + " - " + feed.getChannel().getDevice().getLabel();
-				plotAreaspline.getTooltip().setXDateFormat(xDateFormat);
-
-				plotOptions = plotAreaspline;
-			} else {
-				PointOptions plotSpline = new PlotOptionsSpline();
-				plotSpline.setLineWidth(ChartUtils.PLOT_LINE_WIDTH);
-				plotSpline.setShadow(false);
-				if (options.getFillColor() != null) {
-					plotSpline.setColor(new SolidColor(options.getFillColor()));
-				}
-				plotSpline.setDashStyle(DashStyle.valueOf(options.getDashStyle()));
-				if (options.getMarkerSymbol() != null) {
-					Marker marker = new Marker(enableMarkers);
-					marker.setSymbol(CustomMarkerSymbolEnum.valueOf(options.getMarkerSymbol()));
-					if (!marker.getSymbol().equals(CustomMarkerSymbolEnum.ARROW)) {
-						marker.setRadius(ChartUtils.MARKER_RADIUS);
-					}
-					plotSpline.setMarker(marker);
-				}
-
-				plotSpline.setAnimation(false);
-				plotSpline.getTooltip().setValueDecimals(feed.getMeasure().getDecimals());
-				String xDateFormat = ChartUtils.X_DATEFORMAT + " - " + feed.getChannel().getDevice().getLabel();
-				plotSpline.getTooltip().setXDateFormat(xDateFormat);
-
-				// linePlotOptions.getTooltip().setUseHTML(true);
-
-				plotOptions = plotSpline;
-			}
-
-		}
-
-		// String pointFormat =
-		// "<span
-		// style='color:{series.color}'>{series.name}</span>:<b>{point.y}</b><br/>";
-		// plotOptions.getTooltip().setPointFormat(pointFormat);
-
-		return plotOptions;
-	}
-
-	protected void optimizePlotOptions(AbstractPlotOptions plotOptions) {
-		// if (plotOptions instanceof AbstractLinePlotOptions) {
-		// // Showing points with thousands of data items looks odd (on top of
-		// // each other),
-		// // also renders faster without markers
-		// ((AbstractLinePlotOptions) plotOptions)
-		// .setMarker(new Marker(false));
-		// // To render shadow, library must create additional element, without
-		// // it
-		// // performance will be better
-		// ((AbstractLinePlotOptions) plotOptions).setShadow(false);
-		// }
-		/*
-		 * If developers need to use large data sets and point specific
-		 * settings, they can override the default turbo threshold. Here we set
-		 * it to 200000 (default 1000). Turbo threshold is Highcharts related
-		 * configuration that works as a "sanity threshold" so that old browsers
-		 * wont drop to their knees under load. Without this Highcharts might
-		 * not render chart if data items has e.g. name set.
-		 */
-		// if (plotOptions instanceof AbstractPointPlotOptions) {
-		// ((AbstractPointPlotOptions) plotOptions).setTurboThreshold(200000);
-		// }
-		// plotOptions.setAnimation(false);
+	protected LocalDateTime toLocalDateTime(Date date) {
+		return LocalDateTime.ofInstant(date.toInstant(), getNetworkTimeZone().toZoneId());
 	}
 
 	protected MeasureUnit findMeasureUnit(String feedKey, GraphicFeed feed) {
@@ -759,13 +550,7 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 		future = executeAndAccess(drawRunnable);
 	}
 
-	private int getCanonicalWindowWidth() {
-		UI ui = UI.getCurrent();
-		if (ui instanceof IMainUI) {
-			return ((IMainUI) ui).getCanonicalWindowWidth();
-		}
-		return 1200;
-	}
+
 
 	private Executor getBackgroundExecutor() {
 //		UI ui = UI.getCurrent();

@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Range;
-import com.vaadin.addon.charts.Chart;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
@@ -97,12 +96,12 @@ public class TableAdapter extends AbstractChartAdapter {
 	}
 
 	@Override
-	public Chart getChart() {
+	public Component getChart() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected void setChart(Chart chart) {
+	protected void setChart(Component chart) {
 		throw new UnsupportedOperationException();
 	}
 

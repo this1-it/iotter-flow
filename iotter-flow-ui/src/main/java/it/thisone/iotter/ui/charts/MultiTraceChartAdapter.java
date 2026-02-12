@@ -3,574 +3,371 @@ package it.thisone.iotter.ui.charts;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vaadin.addons.chartjs.ChartJs;
+import org.vaadin.addons.chartjs.config.LineChartConfig;
+import org.vaadin.addons.chartjs.data.TimeLineDataset;
+import org.vaadin.addons.chartjs.options.Position;
+import org.vaadin.addons.chartjs.options.scale.Axis;
+import org.vaadin.addons.chartjs.options.scale.BaseScale;
+import org.vaadin.addons.chartjs.options.scale.LinearScale;
+import org.vaadin.addons.chartjs.options.scale.LogarithmicScale;
+import org.vaadin.addons.chartjs.options.scale.TimeScale;
+import org.vaadin.addons.chartjs.utils.Pair;
 
-import com.vaadin.addon.charts.Chart;
-//import com.vaadin.addon.charts.ChartSelectionEvent;
-//import com.vaadin.addon.charts.ChartSelectionListener;
-//import com.vaadin.addon.charts.LegendItemClickEvent;
-//import com.vaadin.addon.charts.LegendItemClickListener;
-//import com.vaadin.addon.charts.XAxesExtremesChangeEvent;
-//import com.vaadin.addon.charts.XAxesExtremesChangeListener;
-import com.vaadin.addon.charts.model.AbstractPlotOptions;
-import com.vaadin.addon.charts.model.AxisTitle;
-import com.vaadin.addon.charts.model.AxisType;
-import com.vaadin.addon.charts.model.Configuration;
-import com.vaadin.addon.charts.model.DataSeries;
-import com.vaadin.addon.charts.model.DataSeriesItem;
-import com.vaadin.addon.charts.model.DateTimeLabelFormats;
-import com.vaadin.addon.charts.model.Label;
-import com.vaadin.addon.charts.model.Labels;
-import com.vaadin.addon.charts.model.LayoutDirection;
-import com.vaadin.addon.charts.model.Legend;
-import com.vaadin.addon.charts.model.PlotLine;
-import com.vaadin.addon.charts.model.PointOptions;
-import com.vaadin.addon.charts.model.Series;
-import com.vaadin.addon.charts.model.Title;
-import com.vaadin.addon.charts.model.VerticalAlign;
-import com.vaadin.addon.charts.model.XAxis;
-import com.vaadin.addon.charts.model.YAxis;
-import com.vaadin.addon.charts.model.ZoomType;
-import com.vaadin.addon.charts.model.style.SolidColor;
-import com.vaadin.addon.charts.model.style.Style;
-import com.vaadin.addon.charts.model.style.StylePosition;
 import com.vaadin.flow.component.Component;
 
+import it.thisone.iotter.cassandra.model.FeedKey;
 import it.thisone.iotter.cassandra.model.MeasureRaw;
-import it.thisone.iotter.persistence.model.ChartThreshold;
+import it.thisone.iotter.enums.ChartScaleType;
+import it.thisone.iotter.exceptions.MeasureException;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
-import it.thisone.iotter.persistence.model.MeasureRange;
-import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
 
-	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
 public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5817286715447264313L;
-	private static Logger logger = LoggerFactory.getLogger(MultiTraceChartAdapter.class);
-	private Map<String, Date> refreshed = new HashMap<String, Date>();
-	private List<String> hidden = new ArrayList<String>();
-	private boolean movedRealtime;
-	private Chart chart;
-	private String masterGrid;
-	//private ChartSelectionListener chartSelectionListener;
+    private static final long serialVersionUID = 5817286715447264313L;
+    private static final Logger logger = LoggerFactory.getLogger(MultiTraceChartAdapter.class);
 
-	public MultiTraceChartAdapter(GraphicWidget widget) {
-		super(widget);
-		optionsField.getAutoScale().setVisible(widget.hasExtremes());
-	}
+    private final Map<String, Date> refreshed = new HashMap<>();
+    private final Map<String, TimeLineDataset> datasetsByFeed = new LinkedHashMap<>();
 
-	@Override
-	protected Component buildVisualization() {
+    private ChartJs chart;
+    private LineChartConfig chartConfig;
+    private TimeScale xScale;
+    private BaseScale<?> yScale;
+    private TimeInterval currentInterval;
 
-		Chart chart = new Chart();
-		chart.setId(String.valueOf(getWidget().getId()));
+    public MultiTraceChartAdapter(GraphicWidget widget) {
+        super(widget);
+        optionsField.getAutoScale().setVisible(widget.hasExtremes());
+    }
 
-		Configuration configuration = chart.getConfiguration();
-		configuration.getChart().setShowAxes(true);
-		configuration.setExporting(getGraphWidget().getOptions().getExporting());
-		configuration.getExporting().setWidth(800);
+    @Override
+    protected Component buildVisualization() {
+        ChartJs chart = new ChartJs();
+        chart.setId(String.valueOf(getWidget().getId()));
+        setChart(chart);
+        chartConfig = createBaseConfiguration();
+        chart.configure(chartConfig);
+        return chart;
+    }
 
-		Title chartTitle = new Title(getWidget().getLabel());
-		chartTitle = new Title("");
-		chartTitle.setFloating(true);
-		Style cstyle = new Style();
-		cstyle.setPosition(StylePosition.ABSOLUTE);
-		cstyle.setFontSize("0px");
-		configuration.setTitle(chartTitle);
+    protected LineChartConfig createBaseConfiguration() {
+        LineChartConfig config = new LineChartConfig();
+        config.options().responsive(true).maintainAspectRatio(false);
+        config.options().legend().display(getGraphWidget().getOptions().getShowLegend()).position(Position.BOTTOM);
 
-		XAxis xAxis = new XAxis();
-		xAxis.setType(AxisType.DATETIME);
-		xAxis.setDateTimeLabelFormats(
-				new DateTimeLabelFormats(ChartUtils.MONTH_DATEFORMAT, ChartUtils.YEAR_DATEFORMAT));
-		// xAxis.setMinRange(5 * 60 * 1000);
+        xScale = new TimeScale();
+        xScale.time().tooltipFormat(ChartUtils.X_DATEFORMAT);
+        applyGridVisibility(getGraphWidget().getOptions().getShowGrid());
+        config.options().scales().add(Axis.X, xScale);
 
-		float gridLineWidth = getGraphWidget().getOptions().getShowGrid() ? (Float) ChartUtils.GRID_LINE_WIDTH : 0f;
-		xAxis.setGridLineWidth(gridLineWidth);
-		xAxis.setMinorGridLineWidth((double) gridLineWidth / 2);
-		configuration.addxAxis(xAxis);
+        yScale = buildYScale(getGraphWidget().getOptions().getScale());
+        applyGridVisibility(getGraphWidget().getOptions().getShowGrid());
+        config.options().scales().add(Axis.Y, yScale);
 
-		configureMultipleYAxis(configuration);
+        return config;
+    }
 
-		Legend legend = new Legend();
-		legend.setLayout(LayoutDirection.HORIZONTAL);
-		legend.setVerticalAlign(VerticalAlign.BOTTOM);
-		configuration.setLegend(legend);
-		legend.setEnabled(getGraphWidget().getOptions().getShowLegend());
+    private BaseScale<?> buildYScale(ChartScaleType scaleType) {
+        if (scaleType == ChartScaleType.LOGARITHMIC) {
+            LogarithmicScale log = new LogarithmicScale();
+            log.ticks().beginAtZero(false);
+            return log;
+        }
+        LinearScale linear = new LinearScale();
+        linear.ticks().beginAtZero(false);
+        return linear;
+    }
 
-		configuration.getTooltip().setXDateFormat(ChartUtils.X_DATEFORMAT);
-		configuration.getTooltip().setUseHTML(true);
+    private void applyGridVisibility(boolean showGrid) {
+        int width = showGrid ? ((Number) ChartUtils.GRID_LINE_WIDTH).intValue() : 0;
+        if (xScale != null) {
+            xScale.gridLines().display(showGrid).lineWidth(width);
+        }
+        if (yScale != null) {
+            yScale.gridLines().display(showGrid).lineWidth(width);
+        }
+    }
 
-		// Bug #1961
-		ZoomType zoomType = getGraphWidget().getOptions().getRealTime() ? null : ZoomType.X;
-		configuration.getChart().setZoomType(zoomType);
-		
-		//configuration.getChart().setZoomType(ZoomType.X);
-		
-//		setChartSelectionListener(createChartSelectionListener());
-//		chart.addChartSelectionListener(getChartSelectionListener());
-//
-//		chart.addLegendItemClickListener(createLegendItemClickListener());
-//		chart.setSeriesVisibilityTogglingDisabled(false);
+    @Override
+    public void createChartConfiguration(TimeInterval interval) {
+        currentInterval = interval;
+        chartConfig = createBaseConfiguration();
+        datasetsByFeed.clear();
 
-		chart.drawChart(configuration);
-		// chart.setImmediate(true);
-		setChart(chart);
-		return chart;
-	}
+        for (GraphicFeed feed : getGraphWidget().getFeeds()) {
+            TimeLineDataset dataset = createFeedDataset(feed, interval, null);
+            datasetsByFeed.put(feed.getKey(), dataset);
+            chartConfig.data().addDataset(dataset);
+        }
 
-	private void configureMultipleYAxis(Configuration configuration) {
-		if (getGraphWidget().hasExtremes()) {
-			configuration.getChart().setAlignTicks(false);
-			for (GraphicFeed feed : getGraphWidget().getFeeds()) {
-				MeasureRange extremes = feed.getOptions().getExtremes();
-				if (extremes != null) {
-					masterGrid = feed.getKey();
-					break;
-				}
-			}
-		}
+        getChart().configure(chartConfig);
+        applyExtremes(interval);
+    }
 
-		AxisType yAxisType = AxisType.LINEAR;
-		switch (getGraphWidget().getOptions().getScale()) {
-		case LOGARITHMIC:
-			yAxisType = AxisType.LOGARITHMIC;
-			break;
-		default:
-			break;
-		}
+    private TimeLineDataset createFeedDataset(GraphicFeed feed, TimeInterval interval, Float ratio) {
+        TimeLineDataset dataset = new TimeLineDataset();
+        dataset.label(ChartUtils.getFeedLabel(feed));
+        dataset.borderColor(resolveColor(feed));
+        dataset.backgroundColor(resolveColor(feed));
+        dataset.borderWidth(ChartUtils.PLOT_LINE_WIDTH.intValue());
+        dataset.fill(false);
+        int markerRadius = ((Number) ChartUtils.MARKER_RADIUS).intValue();
+        dataset.pointRadius(getGraphWidget().getOptions().getShowMarkers() ? markerRadius : 0);
 
-		float gridLineWidth = (float) configuration.getxAxis().getGridLineWidth();
+        List<Pair<java.time.LocalDateTime, Double>> points = loadPoints(feed, interval, ratio);
+        dataset.dataAsList(points);
+        return dataset;
+    }
 
-		for (int i = 0; i < getGraphWidget().getFeeds().size(); i++) {
-			GraphicFeed feed = getGraphWidget().getFeeds().get(i);
-			String feedColor = feed.getOptions().getFillColor();
-			if (feedColor == null) {
-				feedColor = ChartUtils.quiteRandomHexColor();
-			}
-			String feedLabel = ChartUtils.getFeedLabel(feed);
-			YAxis yAxis = new YAxis();
-			yAxis.setId(feed.getKey());
-			yAxis.setType(yAxisType);
-			if (yAxisType.equals(AxisType.LOGARITHMIC))
-				yAxis.setMinorTickInterval("0.1");
-			else {
-				yAxis.setMinorTickInterval("auto");
-			}
+    private String resolveColor(GraphicFeed feed) {
+        if (feed.getOptions().getFillColor() == null) {
+            feed.getOptions().setFillColor(ChartUtils.quiteRandomHexColor());
+        }
+        return feed.getOptions().getFillColor();
+    }
 
-			ChartUtils.setAxisExtremes(feed, yAxis);
-			// yAxis.setMasterGrid(masterGrid == i);
+    private List<Pair<java.time.LocalDateTime, Double>> loadPoints(GraphicFeed feed, TimeInterval interval, Float ratio) {
+        List<Pair<java.time.LocalDateTime, Double>> data = new ArrayList<>();
+        if (feed.getChannel() == null) {
+            return data;
+        }
 
-			yAxis.setGridLineWidth(gridLineWidth);
-			yAxis.setMinorGridLineWidth((double) gridLineWidth / 2);
+        Date from = interval.getStartDate();
+        Date to = interval.getEndDate();
+        Date now = new Date();
+        if (to.after(now)) {
+            to = now;
+        }
+        if (to.before(from)) {
+            return data;
+        }
 
-			if (masterGrid != null && !masterGrid.equals(yAxis.getId())) {
-				yAxis.setGridLineWidth(0);
-				yAxis.setMinorGridLineWidth(0);
-			}
-			/*
-			
-			*/
+        int points = Math.max(1, (int) Math.ceil(getWidget().getWidth() * 1000f));
+        if (ratio != null) {
+            points = (int) Math.ceil(points * ratio);
+        }
+        int step = points > 0 ? (int) (to.getTime() - from.getTime()) / points : 0;
 
-			Style style = new Style();
-			style.setColor(new SolidColor(feedColor));
-			
-			if (!feed.getOptions().isAxisTitle()) {
-				feedLabel = null;
-			}
+        FeedKey feedKey = new FeedKey(feed.getDevice().getSerial(), feed.getKey());
+        feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
+        List<MeasureRaw> measures = ChartUtils.getData(feedKey, from, to, points, step,
+                getValidities().get(feed.getKey()), getNetworkTimeZone());
 
-			AxisTitle title = new AxisTitle(feedLabel);
-			title.setStyle(style);
-			yAxis.setTitle(title);
+        for (MeasureRaw measure : measures) {
+            if (measure == null || !measure.isValid() || measure.getValue() == null) {
+                continue;
+            }
+            try {
+                Number value = ChartUtils.calculateMeasure(measure.getValue(), feed.getMeasure());
+                data.add(Pair.of(toLocalDateTime(measure.getDate()), value.doubleValue()));
+            } catch (MeasureException e) {
+                logger.debug("Invalid measure for feed {}: {}", feed.getKey(), e.getMessage());
+            }
+        }
 
-			Labels labels = new Labels();
-			labels.setStyle(style);
+        // TODO(flow-chartjs): marker-reference arrow symbols are not available in Chart.js addon.
+        return data;
+    }
 
-			yAxis.setLabels(labels);
-			yAxis.setOpposite((i & 1) != 0);
+    @Override
+    public void draw() {
+        TimeInterval interval = intervalField.getValue();
+        if (interval == null) {
+            return;
+        }
 
-			if (feed.getThresholds().size() > 0) {
-				PlotLine[] plotLines = new PlotLine[feed.getThresholds().size()];
-				int index = 0;
-				for (ChartThreshold threshold : feed.getThresholds()) {
-					Number value = ChartUtils.calculateThreshold(threshold.getValue(), feed);
-					plotLines[index] = new PlotLine(value, ChartUtils.THRESHOLD_LINE_WIDTH,
-							new SolidColor(threshold.getFillColor()));
-					plotLines[index].setWidth(ChartUtils.THRESHOLD_LINE_WIDTH);
-					style = new Style();
-					style.setColor(new SolidColor(threshold.getFillColor()));
-					Label label = new Label(threshold.getLabel());
-					label.setStyle(style);
-					plotLines[index].setLabel(label);
-					index++;
-				}
-				yAxis.setPlotLines(plotLines);
-			}
+        if (currentInterval == null || !currentInterval.equals(interval)) {
+            createChartConfiguration(interval);
+        }
 
-			/*
-			 * For numeric values, a subset of C printf formatting specifiers is
-			 * supported. For example, " {point.y:%02.2f} would display a
-			 * floating-point value with two decimals and two leading zeroes,
-			 * such as 02.30.
-			 */
-			// precision on decimal label should be the same of measure
-			if (feed.getMeasure() != null) {
-				String format = String.format("{value:%%.%df}", feed.getMeasure().getDecimals());
-				yAxis.getLabels().setFormat(format);
-				yAxis.setAllowDecimals(feed.getMeasure().getDecimals() > 0);
-			}
+        applyExtremes(interval);
+        getChart().update();
+    }
 
-			if (ChannelUtils.isTypeDigital(feed.getChannel())) {
-				yAxis.getLabels().setFormat(null);
-				yAxis.setAllowDecimals(false);
-				yAxis.setMin(0f);
-			}
-			//yAxis.setVisible(!UIUtils.isMobile());
-			configuration.addyAxis(yAxis);
+    private void applyExtremes(TimeInterval interval) {
+        if (xScale == null) {
+            return;
+        }
+        Date start = interval.getStartDate();
+        Date end = interval.getEndDate();
 
-		}
-	}
+        if (isRealTime()) {
+            long quarter = periodField.getValue().getTime() / 4;
+            end = new Date(end.getTime() + quarter);
+        }
 
-	@Override
-	public void createChartConfiguration(TimeInterval interval) {
-		List<Series> series = new ArrayList<Series>();
-		for (int i = 0; i < getGraphWidget().getFeeds().size(); i++) {
-			GraphicFeed feed = getGraphWidget().getFeeds().get(i);
-			DataSeries feedSeries = getTimeSeries(feed, interval, true, null);
-			feedSeries.setId(feed.getKey());
-			feedSeries.setVisible(!hidden.contains(feed.getKey()));
-			series.add(feedSeries);
-		}
-		getChart().getConfiguration().setSeries(series);
-	}
+        xScale.time().min(toLocalDateTime(start)).max(toLocalDateTime(end));
+    }
 
-	@Override
-	public void draw() {
-		TimeInterval interval = intervalField.getValue();
+    @Override
+    public boolean refresh() {
+        if (((GraphicWidget) getWidget()).getFeeds().isEmpty()) {
+            return false;
+        }
 
-		Long start = ChartUtils.toHighchartsTS(interval.getStartDate(), getNetworkTimeZone());
-		Long end = ChartUtils.toHighchartsTS(interval.getEndDate(), getNetworkTimeZone());
+        if (refreshed.isEmpty()) {
+            createRefreshed();
+        }
 
-		if (isRealTime()) {
-			if (movedRealtime) {
-				interval = intervalField.getHelper().movingPeriod(new Date(), periodField.getValue());
-				changeRealTimeInterval(interval);
-				start = ChartUtils.toHighchartsTS(interval.getStartDate(), getNetworkTimeZone());
-				end = ChartUtils.toHighchartsTS(interval.getEndDate(), getNetworkTimeZone());
-				movedRealtime = false;
-			}
-			long quarter = periodField.getValue().getTime() / 4;
-			end = end + quarter;
-		}
+        boolean redraw = false;
+        Date now = new Date();
 
-		getChart().getConfiguration().getxAxis().setExtremes(start, end);
-		getChart().drawChart(getChart().getConfiguration());
-	}
+        for (GraphicFeed feed : getGraphWidget().getFeeds()) {
+            TimeLineDataset dataset = datasetsByFeed.get(feed.getKey());
+            if (dataset == null) {
+                continue;
+            }
 
-	@Override
-	public boolean refresh() {
-		if (((GraphicWidget) getWidget()).getFeeds().isEmpty())
-			return false;
-		if (refreshed.isEmpty()) {
-			createRefreshed();
-		}
-		Long max = (Long) getChart().getConfiguration().getxAxis().getMax();
-		long period = periodField.getValue().getTime() / 4;
-		if (max == null)
-			max = period;
-		Date to = new Date();
-		Long endX = 0l;
-		boolean redraw = false;
-		for (int i = 0; i < getGraphWidget().getFeeds().size(); i++) {
-			GraphicFeed feed = getGraphWidget().getFeeds().get(i);
-			List<Series> chartSeries = getChart().getConfiguration().getSeries();
-			if (chartSeries.isEmpty() || i >= chartSeries.size()) {
-				refreshed.put(feed.getKey(), new Date());
-				continue;
-			}
-			Series series = chartSeries.get(i);
-			Date from = refreshed.get(feed.getKey());
-			if (from == null) {
-				from = refreshedDate(feed);
-				refreshed.put(feed.getKey(), from);
-			}
-			if (from.before(to)) {
-				float ratio = (float) periodField.getValue().getTime() / (float) (to.getTime() - from.getTime());
-				DataSeries feedSeries = getTimeSeries(feed, new TimeInterval(from, to), false, ratio);
-				if (!feedSeries.getData().isEmpty()) {
-					redraw = true;
-					boolean updateImmediately = false;
-					boolean shift = ((DataSeries) series).size() > 360;
-					int size = ((DataSeries) series).size();
-					if (size > 1) {
-						DataSeriesItem end = ((DataSeries) series).get(size - 1);
-						endX = (Long) end.getX();
-					}
-					for (DataSeriesItem item : feedSeries.getData()) {
-						Long x = (Long) item.getX();
-						if (x > endX) {
-							endX = x;
-							((DataSeries) series).add(item, updateImmediately, shift);
-							to = ChartUtils.toNetworkDate(x, getNetworkTimeZone());
-						}
-					}
-					refreshed.get(feed.getKey()).setTime(to.getTime() + 1);
-				}
-			}
+            Date from = refreshed.get(feed.getKey());
+            if (from == null) {
+                from = refreshedDate(feed);
+                refreshed.put(feed.getKey(), from);
+            }
+            if (!from.before(now)) {
+                continue;
+            }
 
-		}
+            float ratio = (float) periodField.getValue().getTime() / (float) Math.max(1L, (now.getTime() - from.getTime()));
+            List<Pair<java.time.LocalDateTime, Double>> points = loadPoints(feed, new TimeInterval(from, now), ratio);
 
-		if (endX > (max - period)) {
-			movedRealtime = true;
-			redraw = true;
-		} else {
-			movedRealtime = false;
-		}
+            long lastMillis = getLastMillis(dataset);
+            for (Pair<java.time.LocalDateTime, Double> point : points) {
+                long millis = point.getFirst().atZone(getNetworkTimeZone().toZoneId()).toInstant().toEpochMilli();
+                if (millis > lastMillis) {
+                    dataset.addData(point);
+                    lastMillis = millis;
+                    redraw = true;
+                }
+            }
+            refreshed.put(feed.getKey(), new Date(now.getTime() + 1));
+        }
 
-		return redraw;
-	}
+        return redraw;
+    }
 
-	@Override
-	public void setGraphWidgetOptionsOnChange(GraphicWidgetOptions options) {
-		Configuration configuration = getChart().getConfiguration();
-		boolean redraw = false;
-		boolean changeShowGrid = getGraphWidget().getOptions().getShowGrid() != options.getShowGrid();
-		if (changeShowGrid) {
-			redraw = true;
-			float gridLineWidth = options.getShowGrid() ? (Float) ChartUtils.GRID_LINE_WIDTH : 0;
-			configuration.getxAxis().setGridLineWidth(gridLineWidth);
-			configuration.getxAxis().setMinorGridLineWidth((double) gridLineWidth / 2);
-			for (int i = 0; i < configuration.getNumberOfyAxes(); i++) {
-				YAxis yAxis = (YAxis) configuration.getyAxes().getAxis(i);
-				yAxis.setGridLineWidth(gridLineWidth);
-				yAxis.setMinorGridLineWidth((double) gridLineWidth / 2);
-				if (masterGrid != null && masterGrid.equals(yAxis.getId())) {
-					yAxis.setGridLineWidth(0);
-					yAxis.setMinorGridLineWidth(0);
-				}
-			}
-			getGraphWidget().getOptions().setShowGrid(options.getShowGrid());
-		}
+    private long getLastMillis(TimeLineDataset dataset) {
+        List<Pair<java.time.LocalDateTime, Double>> data = dataset.getData();
+        if (data == null || data.isEmpty()) {
+            return Long.MIN_VALUE;
+        }
+        Pair<java.time.LocalDateTime, Double> last = data.get(data.size() - 1);
+        return last.getFirst().atZone(getNetworkTimeZone().toZoneId()).toInstant().toEpochMilli();
+    }
 
-		boolean changeScale = options.getScale() != null
-				&& getGraphWidget().getOptions().getScale() != options.getScale();
+    @Override
+    public void setGraphWidgetOptionsOnChange(GraphicWidgetOptions options) {
+        boolean redraw = false;
 
-		if (changeScale) {
-			redraw = true;
-			getGraphWidget().getOptions().setScale(options.getScale());
-			AxisType yAxisType = AxisType.LINEAR;
-			switch (getGraphWidget().getOptions().getScale()) {
-			case LOGARITHMIC:
-				yAxisType = AxisType.LOGARITHMIC;
-				break;
-			default:
-				break;
-			}
+        if (getGraphWidget().getOptions().getShowGrid() != options.getShowGrid()) {
+            getGraphWidget().getOptions().setShowGrid(options.getShowGrid());
+            applyGridVisibility(options.getShowGrid());
+            redraw = true;
+        }
 
-			for (int i = 0; i < configuration.getNumberOfyAxes(); i++) {
-				configuration.getyAxes().getAxis(i).setType(yAxisType);
-				if (yAxisType.equals(AxisType.LOGARITHMIC)) {
-					/*
-					 * TODO Bug #126: [VAADIN] [HIGHCHART] logaritmic scale is
-					 * not working
-					 */
-					options.setAutoScale(true);
-					YAxis yAxis = (YAxis) configuration.getyAxes().getAxis(i);
+        if (options.getScale() != null && getGraphWidget().getOptions().getScale() != options.getScale()) {
+            getGraphWidget().getOptions().setScale(options.getScale());
+            if (intervalField.getValue() != null) {
+                createChartConfiguration(intervalField.getValue());
+            }
+            redraw = true;
+        }
 
-					yAxis.setType(AxisType.LOGARITHMIC);
-					try {
-						// yAxis.setExtremes((Number) yAxis.getMax(), (Number)
-						// yAxis.getMin());
-						// yAxis.setMin((Number) null);
-						// yAxis.setMax((Number) null);
-					} catch (Exception e) {
-						logger.error("TODO Bug #126: [VAADIN] [HIGHCHART] logaritmic scale is not working", e);
-					}
-					yAxis.setMinorTickInterval("0.1");
-					// yAxis.setPlotLines((PlotLine[]) null);
-					// yAxis.setTickPositions(null);
-				} else {
-					configuration.getyAxes().getAxis(i).setMinorTickInterval(null);
-				}
-			}
-		}
+        if (getGraphWidget().getOptions().getShowLegend() != options.getShowLegend()) {
+            getGraphWidget().getOptions().setShowLegend(options.getShowLegend());
+            chartConfig.options().legend().display(options.getShowLegend());
+            redraw = true;
+        }
 
-		boolean changeAutoScale = getGraphWidget().getOptions().getAutoScale() != options.getAutoScale();
-		if (changeAutoScale) {
-			redraw = true;
-			getGraphWidget().getOptions().setAutoScale(options.getAutoScale());
-			for (int i = 0; i < configuration.getNumberOfyAxes(); i++) {
-				if (options.getAutoScale()) {
-					try {
-						configuration.getyAxes().getAxis(i).setExtremes((Number) null, (Number) null);
-					} catch (Exception e) {
-					}
-					GraphicFeed feed = getGraphWidget().getFeeds().get(i);
-					if (feed.getOptions().getExtremes() != null) {
-						((YAxis) configuration.getyAxes().getAxis(i)).setTickPositions(null);
-					}
-				} else {
-					ChartUtils.setAxisExtremes(getGraphWidget().getFeeds().get(i),
-							(YAxis) configuration.getyAxes().getAxis(i));
-				}
-			}
-		}
+        if (getGraphWidget().getOptions().getShowMarkers() != options.getShowMarkers()) {
+            getGraphWidget().getOptions().setShowMarkers(options.getShowMarkers());
+            int markerRadius = ((Number) ChartUtils.MARKER_RADIUS).intValue();
+            for (TimeLineDataset ds : datasetsByFeed.values()) {
+                ds.pointRadius(options.getShowMarkers() ? markerRadius : 0);
+            }
+            redraw = true;
+        }
 
-		boolean changeShowMarkers = getGraphWidget().getOptions().getShowMarkers() != options.getShowMarkers();
-		if (changeShowMarkers) {
-			redraw = true;
-			getGraphWidget().getOptions().setShowMarkers(options.getShowMarkers());
-			for (Series series : configuration.getSeries()) {
-				if (series instanceof DataSeries) {
-					AbstractPlotOptions plotOptions = ((DataSeries) series).getPlotOptions();
-					if (plotOptions instanceof PointOptions) {
-						((PointOptions) plotOptions).getMarker().setEnabled(options.getShowMarkers());
-					}
-				}
-			}
-		}
-		changedLocalControls(options);
-		if (changedRealTime(options)) {
-			redraw = true;
-		}
-		if (redraw) {
-			getChart().drawChart(configuration);
-		}
+        changedLocalControls(options);
+        if (changedRealTime(options)) {
+            redraw = true;
+        }
 
-	}
+        if (redraw) {
+            getChart().update();
+        }
+    }
 
-	@Override
-	public boolean isRealTime() {
-		return (getGraphWidget() != null) && getGraphWidget().getOptions().getRealTime();
-	}
+    @Override
+    public boolean isRealTime() {
+        return (getGraphWidget() != null) && getGraphWidget().getOptions().getRealTime();
+    }
 
-	public boolean changedRealTime(GraphicWidgetOptions options) {
-		boolean changeRealTime = getGraphWidget().getOptions().getRealTime() != options.getRealTime();
-		if (changeRealTime) {
-			refreshed.clear();
-			boolean enabled = !options.getRealTime() && options.getLocalControls();
-			exportButton.setEnabled(enabled);
-			timeControl.setEnabled(enabled);
-			timeControl.activeLocalControl(options.getLocalControls());
-			createRefreshed();
-			getGraphWidget().getOptions().setRealTime(options.getRealTime());
-			if (options.getRealTime() && options.getLocalControls()) {
-				intervalField.setValue(intervalField.getHelper().movingPeriod(new Date(), periodField.getValue()));
-			}
-			Configuration configuration = getChart().getConfiguration();
-			if (getGraphWidget().getOptions().getRealTime()) {
-				configuration.getChart().setZoomType(null);
-			} else {
-				configuration.getChart().setZoomType(ZoomType.X);
-			}
-		}
-		return changeRealTime;
-	}
+    @Override
+    public boolean changedRealTime(GraphicWidgetOptions options) {
+        boolean changeRealTime = getGraphWidget().getOptions().getRealTime() != options.getRealTime();
+        if (changeRealTime) {
+            refreshed.clear();
+            boolean enabled = !options.getRealTime() && options.getLocalControls();
+            exportButton.setEnabled(enabled);
+            timeControl.setEnabled(enabled);
+            timeControl.activeLocalControl(options.getLocalControls());
+            createRefreshed();
+            getGraphWidget().getOptions().setRealTime(options.getRealTime());
+            if (options.getRealTime() && options.getLocalControls()) {
+                intervalField.setValue(intervalField.getHelper().movingPeriod(new Date(), periodField.getValue()));
+            }
+        }
+        return changeRealTime;
+    }
 
-	/**
-	 * re-create refreshed list needed for real-time display
-	 * 
-	 * @return
-	 */
-	private void createRefreshed() {
-		refreshed.clear();
-		for (GraphicFeed feed : getGraphWidget().getFeeds()) {
-			refreshed.put(feed.getKey(), refreshedDate(feed));
-		}
-	}
+    private void createRefreshed() {
+        refreshed.clear();
+        for (GraphicFeed feed : getGraphWidget().getFeeds()) {
+            refreshed.put(feed.getKey(), refreshedDate(feed));
+        }
+    }
 
-	private Date refreshedDate(GraphicFeed feed) {
-		Date date = null;
-		if (feed != null && feed.getChannel() != null) {
-			date = ChartUtils.lastTick(feed.getChannel().getDevice().getSerial());
-		}
+    private Date refreshedDate(GraphicFeed feed) {
+        Date date = null;
+        if (feed != null && feed.getChannel() != null) {
+            date = ChartUtils.lastTick(feed.getChannel().getDevice().getSerial());
+        }
+        if (date == null) {
+            date = new Date(System.currentTimeMillis() - 1);
+        }
+        return date;
+    }
 
-		if (date == null) {
-			date = new Date(System.currentTimeMillis() - 1);
-		}
+    public void addMeasure(MeasureRaw measure) {
+        if (measure == null) {
+            return;
+        }
+        TimeLineDataset dataset = datasetsByFeed.get(measure.getKey());
+        if (dataset == null || measure.getValue() == null) {
+            return;
+        }
+        dataset.addData(toLocalDateTime(measure.getDate()), measure.getValue().doubleValue());
+        getChart().update();
+    }
 
-		return date;
+    @Override
+    public ChartJs getChart() {
+        return chart;
+    }
 
-	}
-
-
-
-//	protected ChartSelectionListener createChartSelectionListener() {
-//		ChartSelectionListener chartSelectionListener = new ChartSelectionListener() {
-//			private static final long serialVersionUID = 325958356424593206L;
-//
-//			@Override
-//			public void onSelection(ChartSelectionEvent event) {
-//				long start = event.getSelectionStart().longValue();
-//				long end = event.getSelectionEnd().longValue();
-//				Date startZoom = ChartUtils.toNetworkDate(start, getNetworkTimeZone());
-//				Date endZoom = ChartUtils.toNetworkDate(end, getNetworkTimeZone());
-//				intervalField.setValue(new TimeInterval(startZoom, endZoom));
-//			}
-//		};
-//		return chartSelectionListener;
-//	}
-//
-//	protected LegendItemClickListener createLegendItemClickListener() {
-//		return new LegendItemClickListener() {
-//			private static final long serialVersionUID = 1L;
-//
-//			@Override
-//			public void onClick(LegendItemClickEvent event) {
-//				String seriesId = event.getSeries().getId();
-//				DataSeries series = (DataSeries) event.getSeries();
-//				if (!hidden.contains(seriesId)) {
-//					series.setVisible(false);
-//					hidden.add(seriesId);
-//				} else {
-//					series.setVisible(true);
-//					hidden.remove(seriesId);
-//				}
-//
-//			}
-//		};
-//
-//	}
-
-	public void addMeasure(MeasureRaw measure) {
-		for (Series series : getChart().getConfiguration().getSeries()) {
-			if (series.getId().equals(measure.getKey())) {
-				DataSeriesItem item = new DataSeriesItem(measure.getDate(), measure.getValue());
-				item.setX(ChartUtils.toHighchartsTS(measure.getDate(), getNetworkTimeZone()));
-				((DataSeries) series).add(item, false, false);
-				break;
-			}
-		}
-	}
-
-	@Override
-	public Chart getChart() {
-		return chart;
-	}
-
-	@Override
-	protected void setChart(Chart chart) {
-		this.chart = chart;
-	}
-
-//	public ChartSelectionListener getChartSelectionListener() {
-//		return chartSelectionListener;
-//	}
-//
-//	public void setChartSelectionListener(ChartSelectionListener chartSelectionListener) {
-//		this.chartSelectionListener = chartSelectionListener;
-//	}
-
-
-
+    @Override
+    protected void setChart(Component chart) {
+        this.chart = (ChartJs) chart;
+    }
 }

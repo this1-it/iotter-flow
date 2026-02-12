@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.vaadin.addon.charts.model.ChartType;
-import com.vaadin.addon.charts.model.DashStyle;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -44,20 +42,20 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 	};
 
 	public static final String[] DASH_STYLES = { //
-			DashStyle.SOLID.name(), //
-			DashStyle.DASH.name(), //
-			DashStyle.DOT.name(), //
-			DashStyle.SHORTDASH.name(), //
-			DashStyle.LONGDASH.name(), //
-			DashStyle.SHORTDASHDOT.name(), //
-			DashStyle.LONGDASHDOT.name() //
+			"SOLID", //
+			"DASH", //
+			"DOT", //
+			"SHORTDASH", //
+			"LONGDASH", //
+			"SHORTDASHDOT", //
+			"LONGDASHDOT" //
 	};
 	public static final String[] CHART_TYPES = { //
-			ChartType.AREASPLINE.toString(), //
-			ChartType.SPLINE.toString(), //
-			ChartType.LINE.toString() //
-			// ChartType.COLUMN.toString() //
+			"line", //
+			"bar" //
 	};
+	private static final String CHART_TYPE_BAR = "bar";
+	private static final String LEGACY_CHART_TYPE_COLUMN = "column";
 
 	public static final String[] AXIS = { //
 			ChartAxis.X.name(), //
@@ -192,7 +190,7 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 			/**
 			 * preset compatible values
 			 */
-			chartType.setValue(ChartType.COLUMN.toString());
+			chartType.setValue(CHART_TYPE_BAR);
 			// markerSymbol.setValue(CustomMarkerSymbolEnum.ARROW.name());
 			markerReference.setEnabled(true);
 			configureColumns(1);
@@ -206,7 +204,7 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 			/**
 			 * preset compatible values
 			 */
-			chartType.setValue(ChartType.COLUMN.toString());
+			chartType.setValue(CHART_TYPE_BAR);
 			configureColumns(1);
 			gridLayout.setPadding(true);
 			gridLayout.setSpacing(true);
@@ -355,7 +353,8 @@ public class ChartPlotOptionsField extends AbstractCompositeField<GridLayout, Ch
 
 		case CUSTOM:
 		case MULTI_TRACE:
-			boolean column = getValue().getChartType().equals(ChartType.COLUMN.toString());
+			boolean column = CHART_TYPE_BAR.equalsIgnoreCase(getValue().getChartType())
+					|| LEGACY_CHART_TYPE_COLUMN.equalsIgnoreCase(getValue().getChartType());
 			boolean arrow = getValue().getMarkerSymbol().equals(CustomMarkerSymbolEnum.ARROW.name());
 			markerReference.setVisible(arrow);
 			markerReference.setRequiredIndicatorVisible(arrow);
