@@ -30,3 +30,7 @@ Use Maven from the repo root.
 
 mvn -pl iotter-flow-ui spring-boot:run \
   -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+
+mvn -pl iotter-flow-rest -am -DskipTests compile
+
+mvn -pl iotter-flow-rest spring-boot:run

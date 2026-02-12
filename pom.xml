@@ -30,6 +30,9 @@
 
         <!-- Boot (USED ONLY BY VAADIN MODULE) -->
         <spring.boot.version>2.7.18</spring.boot.version>
+        <jaxrs.version>2.1.1</jaxrs.version>
+        <jersey2.version>2.35</jersey2.version>
+        <jersey2.scope>compile</jersey2.scope>
 
 		<hibernate-validator.version>6.2.5.Final</hibernate-validator.version>
 		<jackson.version>2.17.2</jackson.version>
@@ -132,6 +135,12 @@
         <module>iotter-cassandra-model</module>
         <module>iotter-core</module>
         <module>iotter-backend</module>
+        <module>iotter-rest-endpoints</module>
+        <module>iotter-rest-billings</module>
+        <module>iotter-rest-client-endpoints</module>
+        <!-- <module>iotter-rest-cod-endpoints</module>
+        <module>iotter-rest-sat-endpoints</module> -->
+        <module>iotter-flow-rest</module>
 
         <module>iotter-flow-ui-core</module>
         <module>iotter-flow-ui-shim</module>
