@@ -18,7 +18,8 @@ Use Maven from the repo root.
 
   mvn -pl iotter-flow-ui clean compile
 
-  mvn -pl iotter-flow-ui -am -DskipTests compile
+  mvn -pl iotter-flow-ui -am -DskipTests clean compile
+ 
   mvn -pl iotter-flow-ui -am clean package
 
   Run the UI after build:

@@ -363,6 +363,11 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         }
         GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true, groupWidgetService);
         Dialog dialog = createDialog(getI18nLabel("view_action"), visualizer);
+        if (dialog instanceof SideDrawer) {
+            dialog.addThemeName("side-drawer-fullscreen");
+        }
+        dialog.setWidth("100vw");
+        dialog.setHeight("100vh");
         dialog.open();
     }
 

@@ -1,4 +1,4 @@
-package it.thisone.iotter.ui;
+package it.thisone.iotter.rest;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,9 +24,9 @@ import it.thisone.iotter.config.SecurityConfig;
 	        classes = SecurityConfig.class
 	    )
 	)
-public class Application {
+public class JerseyApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(JerseyApplication.class, args);
     }
 }

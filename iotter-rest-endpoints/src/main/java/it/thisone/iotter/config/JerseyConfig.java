@@ -100,23 +100,19 @@ public class JerseyConfig {
 
 	// @Bean(name = "gzipMapper")
 	// public ObjectMapper gzipMapper() {
-
 	// 	ObjectMapper mapper = new ObjectMapper(new JsonFactory().setInputDecorator(new InputDecorator() {
 	// 		/**
 	// 		 * 
 	// 		 */
 	// 		private static final long serialVersionUID = 1L;
-
 	// 		@Override
 	// 		public InputStream decorate(IOContext context, InputStream inputStream) throws IOException {
 	// 			return new GZIPInputStream(inputStream);
 	// 		}
-
 	// 		@Override
 	// 		public InputStream decorate(IOContext context, byte[] bytes, int offset, int length) throws IOException {
 	// 			return new GZIPInputStream(new ByteArrayInputStream(bytes, offset, length));
 	// 		}
-
 	// 		@Override
 	// 		public Reader decorate(IOContext context, Reader reader) throws IOException {
 	// 			return new InputStreamReader(new GZIPInputStream(new ReaderInputStream(reader)),
@@ -127,12 +123,10 @@ public class JerseyConfig {
 	// 		 * 
 	// 		 */
 	// 		private static final long serialVersionUID = 1L;
-
 	// 		@Override
 	// 		public OutputStream decorate(IOContext context, OutputStream outputStream) throws IOException {
 	// 			return new GZIPOutputStream(outputStream);
 	// 		}
-
 	// 		@Override
 	// 		public Writer decorate(IOContext context, Writer writer) throws IOException {
 	// 			return new OutputStreamWriter(
