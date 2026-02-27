@@ -35,3 +35,18 @@ mvn -pl iotter-flow-ui spring-boot:run \
 mvn -pl iotter-flow-rest -am -DskipTests compile
 
 mvn -pl iotter-flow-rest spring-boot:run
+
+
+
+
+
+
+
+$vaadin-flow-migration migrate package iotter-flow-ui/src/main/java/it/thisone/iotter/ui/networkgroups
+
+
+
+
+
+
+npm install maplibre-gl

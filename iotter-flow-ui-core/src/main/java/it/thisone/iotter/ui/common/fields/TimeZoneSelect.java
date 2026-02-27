@@ -9,20 +9,18 @@ import java.util.TimeZone;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.combobox.ComboBox;
 
-import it.thisone.iotter.ui.common.UIUtils;
-
-public class TimeZoneSelect extends ComboBox<TimeZone> {
+public class TimeZoneSelect extends ComboBox<String> {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static List<TimeZone> getTimeZones() {
-		List<TimeZone> timeZones = new ArrayList<>();
+	public static List<String> getTimeZones() {
+		List<String> timeZones = new ArrayList<>();
 		String[] ids = TimeZone.getAvailableIDs();
 		for (String id : ids) {
-			timeZones.add(TimeZone.getTimeZone(id));
+			timeZones.add(id);
 		}
 		return timeZones;
 	}
@@ -43,7 +41,8 @@ public class TimeZoneSelect extends ComboBox<TimeZone> {
 //		setPageLength(10);
 	}
 
-	private String formatTimeZone(TimeZone timeZone) {
+	private String formatTimeZone(String zoneId) {
+		TimeZone timeZone = TimeZone.getTimeZone(zoneId);
 		SimpleDateFormat sdf = new SimpleDateFormat("XXX");
 		sdf.setTimeZone(timeZone);
 		Date now = new Date();

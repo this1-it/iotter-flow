@@ -1,8 +1,12 @@
 package org.vaadin.flow.components;
 
 import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
@@ -86,6 +90,42 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
         update();
         return tab;
     }
+
+
+    public Tab addCloseableTab(String title, Component contents) {
+        // final Tab tab = createTab();
+        // if (label != null) {
+        //     tab.setLabel(label);
+        // }
+
+        Span label = new Span(title);
+
+        Button close = new Button(VaadinIcon.CLOSE_SMALL.create());
+        close.getElement().getStyle().set("margin-left", "6px");
+        close.getElement().getStyle().set("padding", "0");
+        close.getElement().getStyle().set("min-width", "auto");
+
+        HorizontalLayout header = new HorizontalLayout(label, close);
+        header.setPadding(false);
+        header.setSpacing(false);
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+
+        Tab tab = new Tab(header);
+
+        close.addClickListener(e -> {
+            tabsComponent.remove(tab);
+            tabsToContents.remove(tab);
+            update();
+        });
+
+
+        tabsComponent.add(tab);
+        tabsToContents.put(tab, contents);
+        update();
+        return tab;
+    }
+
+
 
     /**
      * Adds a new tab to the tab host, with optional <code>label</code> and no <code>contents</code>.

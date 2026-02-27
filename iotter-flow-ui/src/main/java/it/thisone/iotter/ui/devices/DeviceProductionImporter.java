@@ -233,7 +233,7 @@ public class DeviceProductionImporter extends BaseComponent {
 		
 		// Add checkbox component column
 		// grid.addComponentColumn(device -> {
-		// 	CheckBox checkBox = new CheckBox();
+		// 	Checkbox checkBox = new Checkbox();
 		// 	checkBox.setValue(device.isSticky());
 		// 	checkBox.addValueChangeListener(event -> {
 		// 		device.setSticky(event.getValue());

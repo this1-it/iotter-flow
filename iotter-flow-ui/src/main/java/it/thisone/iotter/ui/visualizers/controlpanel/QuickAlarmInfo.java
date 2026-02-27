@@ -190,7 +190,7 @@ public class QuickAlarmInfo extends VerticalLayout implements ITabContent {
 
         UI ui = getUI().orElse(null);
         if (ui != null) {
-            ui.access(update);
+            //ui.access(update);
         } else {
             update.run();
         }

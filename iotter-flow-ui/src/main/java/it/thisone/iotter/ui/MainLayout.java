@@ -17,45 +17,49 @@ import com.vaadin.flow.theme.lumo.Lumo;
 import it.thisone.iotter.ui.about.AboutView;
 import it.thisone.iotter.ui.devices.DevicesView;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetsView;
+import it.thisone.iotter.ui.networks.NetworksView;
 import it.thisone.iotter.ui.users.UsersView;
 
 /**
  * The main layout. Contains the navigation menu.
  */
-@Theme(value=Lumo.class)
-//@Theme(themeFolder = "iotter-flow")
-//@PWA(name = "Iotter Flow", shortName = "Iotter")
+@Theme(value = Lumo.class)
+// @Theme(themeFolder = "iotter-flow")
+// @PWA(name = "Iotter Flow", shortName = "Iotter")
 @CssImport("./styles/shared-styles.css")
 public class MainLayout extends FlexLayout implements RouterLayout {
-    private Menu menu;
+        private Menu menu;
 
-    public MainLayout() {
-        setSizeFull();
-        setClassName("main-layout");
+        public MainLayout() {
+                setSizeFull();
+                setClassName("main-layout");
 
-        menu = new Menu();
-        menu.addView(AboutView.class, AboutView.VIEW_NAME,
-                VaadinIcon.INFO_CIRCLE.create());
-        menu.addView(UsersView.class, UsersView.VIEW_NAME,
-                VaadinIcon.USERS.create());
-        menu.addView(DevicesView.class, DevicesView.VIEW_NAME,
-                VaadinIcon.CONNECT.create());
+                menu = new Menu();
+                menu.addView(AboutView.class, AboutView.VIEW_NAME,
+                                VaadinIcon.INFO_CIRCLE.create());
+                menu.addView(UsersView.class, UsersView.VIEW_NAME,
+                                VaadinIcon.USERS.create());
+                menu.addView(DevicesView.class, DevicesView.VIEW_NAME,
+                                VaadinIcon.CONNECT.create());
                 menu.addView(GroupWidgetsView.class, GroupWidgetsView.VIEW_NAME,
-                VaadinIcon.CHART_LINE.create());
-        add(menu);
-    }
+                                VaadinIcon.CHART_LINE.create());
+                menu.addView(NetworksView.class, NetworksView.VIEW_NAME,
+                                VaadinIcon.FILE_TREE_SUB.create());
+ 
+                                add(menu);
+        }
 
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        super.onAttach(attachEvent);
+        @Override
+        protected void onAttach(AttachEvent attachEvent) {
+                super.onAttach(attachEvent);
 
-        attachEvent.getUI()
-                .addShortcutListener(
-                        () -> {
-                            VaadinSession.getCurrent().getSession().invalidate();
-                            UI.getCurrent().navigate("login");
-                        },
-                        Key.KEY_L, KeyModifier.CONTROL);
+                attachEvent.getUI()
+                                .addShortcutListener(
+                                                () -> {
+                                                        VaadinSession.getCurrent().getSession().invalidate();
+                                                        UI.getCurrent().navigate("login");
+                                                },
+                                                Key.KEY_L, KeyModifier.CONTROL);
 
-    }
+        }
 }
