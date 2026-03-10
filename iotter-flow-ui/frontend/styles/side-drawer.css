@@ -1,7 +1,6 @@
 /* Target del dialog overlay */
 :host([theme~="side-drawer"])::part(overlay) {
 
-  outline: 4px solid red;  
   position: fixed;
   top: 0;
   right: 0;
@@ -59,9 +58,4 @@
   color: var(--lumo-primary-text-color);
 }
 
-/* CONTENT */
-:host([theme~="side-drawer"]) .side-drawer-content {
-  flex: 1;
-  overflow: auto;
-  padding: var(--lumo-space-m);
-}
+/* CONTENT - layout handled via Java inline styles and side-drawer-global.css */

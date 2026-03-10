@@ -255,7 +255,6 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 		AbstractBaseEntityForm<Device> details = getEditor(item, true);
 		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("view_dialog"), details);
-
 		dialog.open();
 	}
 

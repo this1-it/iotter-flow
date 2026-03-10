@@ -74,8 +74,8 @@ public class NetworkGroupForm extends AbstractBaseEntityForm<NetworkGroup> {
         NetworkGroup entity = getEntity();
         Binder<NetworkGroup> binder = getBinder();
         binder.forField(name)
-                .asRequired(UIUtils.localize("validators.fieldgroup_errors"))
-                .withValidator(new StringLengthValidator(UIUtils.localize("validators.fieldgroup_errors"), 1, 255))
+                .asRequired(getTranslation("validators.fieldgroup_errors"))
+                .withValidator(new StringLengthValidator(getTranslation("validators.fieldgroup_errors"), 1, 255))
                 .withValidator(new UniqueNetworkGroupNameValidator(entity.getName(), network))
                 .bind(NetworkGroup::getName, NetworkGroup::setName);
 

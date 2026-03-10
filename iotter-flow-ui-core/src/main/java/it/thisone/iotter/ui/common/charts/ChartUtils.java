@@ -473,7 +473,7 @@ public class ChartUtils {
 				label = String.format("%s [%s]", label, feedUnit);
 			}
 		} else if (feed.getMetaData() != null) {
-			label = UIUtils.messageBundle(feed.getMetaData());
+			label = feed.getMetaData();
 		}
 		if (label == null) {
 			label = feed.getLabel();

@@ -1,0 +1,19 @@
+/* Global CSS for SideDrawer layout fixes.
+ * These elements are in the overlay's light DOM so shadow-DOM @CssImport(themeFor=...)
+ * cannot reach them. This file is imported without themeFor to apply globally.
+ */
+
+/* Vaadin Dialog's internal draggable container - make it a flex column
+   so side-drawer-content can fill the remaining height after the header */
+vaadin-dialog-overlay[theme~="side-drawer"] .draggable {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* The FLOW renderer wraps each server-side component in an extra <div>.
+   Give it flex:1 + height:100% so it fills .side-drawer-content */
+vaadin-dialog-overlay[theme~="side-drawer"] .side-drawer-content > div {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}

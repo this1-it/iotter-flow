@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 
 @CssImport(value = "./styles/side-drawer.css", themeFor = "vaadin-dialog-overlay")
+@CssImport("./styles/side-drawer-global.css")
 public class SideDrawer extends Dialog {
 
     private static final long serialVersionUID = 1L;
@@ -35,6 +36,12 @@ public class SideDrawer extends Dialog {
         // CONTENT
         content = new Div();
         content.addClassName("side-drawer-content");
+        content.getStyle().set("display", "flex");
+        content.getStyle().set("flex-direction", "column");
+        content.getStyle().set("flex", "1");
+        content.getStyle().set("min-height", "0");
+        content.getStyle().set("overflow", "auto");
+        content.getStyle().set("padding", "var(--lumo-space-m)");
 
         add(header, content);
     }
@@ -44,9 +51,10 @@ public class SideDrawer extends Dialog {
     public void setDrawerContent(Component component) {
         content.removeAll();
         if (component != null) {
+            component.getElement().getStyle().set("height", "100%");
+            component.getElement().getStyle().set("min-height", "0");
             content.add(component);
         }
-        
     }
 
     // public void applyDimension(float[] dimension) {

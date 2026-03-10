@@ -15,9 +15,11 @@ import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
 import it.thisone.iotter.ui.about.AboutView;
+import it.thisone.iotter.ui.deviceconfigurations.DeviceConfigurationsView;
 import it.thisone.iotter.ui.devices.DevicesView;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetsView;
 import it.thisone.iotter.ui.networks.NetworksView;
+import it.thisone.iotter.ui.tracing.TracingView;
 import it.thisone.iotter.ui.users.UsersView;
 
 /**
@@ -45,7 +47,11 @@ public class MainLayout extends FlexLayout implements RouterLayout {
                                 VaadinIcon.CHART_LINE.create());
                 menu.addView(NetworksView.class, NetworksView.VIEW_NAME,
                                 VaadinIcon.FILE_TREE_SUB.create());
- 
+                menu.addView(DeviceConfigurationsView.class, DeviceConfigurationsView.VIEW_NAME,
+                                VaadinIcon.COGS.create());
+                menu.addView(TracingView.class, TracingView.VIEW_NAME,
+                                VaadinIcon.ARCHIVES.create());
+                                
                                 add(menu);
         }
 
