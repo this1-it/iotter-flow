@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -20,6 +21,7 @@ import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.data.provider.ListDataProvider;
 
 import it.thisone.iotter.cassandra.model.Feed;
+import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.DeviceStatus;
 import it.thisone.iotter.exceptions.BackendServiceException;
 import it.thisone.iotter.integration.AlarmService;
@@ -29,11 +31,14 @@ import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
+import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
 import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.ItemSelectedEvent;
 import it.thisone.iotter.ui.common.ItemSelectedListener;
@@ -71,8 +76,10 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
     private GroupWidgetService groupWidgetService;
 	@Autowired
     private CassandraService cassandraService;
-@Autowired
+    @Autowired
 	private MeasureUnitTypeService measureUnitTypeService;
+	@Autowired
+	private AuthenticatedUser authenticatedUser;
 
 	public DeviceInfo(Device device) {
 		super("maps.devices.google", UUID.randomUUID().toString());
@@ -414,17 +421,17 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	
 	// Bug #2053
 	public Collection<GroupWidget> filteredWidgetsByUser(Collection<GroupWidget> widgets) {
-		// UserDetailsAdapter details = ((IMainUI) UI.getCurrent()).getUserDetails();
-		// if (details.hasRole(Constants.ROLE_ADMINISTRATOR) || details.hasRole(Constants.ROLE_SUPERVISOR) ) {
-		// 	return widgets;
-		// }
+		UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+		if (details.hasRole(Constants.ROLE_ADMINISTRATOR) || details.hasRole(Constants.ROLE_SUPERVISOR) ) {
+			return widgets;
+		}
 		Collection<GroupWidget> filtered = new ArrayList<GroupWidget>();
-		// User user = UIUtils.getServiceFactory().getUserService().findOne(details.getUserId());
-		// for (GroupWidget gw : widgets) {
-		// 	if (user.getGroups().contains(gw.getGroup())) {
-		// 		filtered.add(gw);
-		// 	}
-		// }
+		User user = UIUtils.getServiceFactory().getUserService().findOne(details.getUserId());
+		for (GroupWidget gw : widgets) {
+			if (user.getGroups().contains(gw.getGroup())) {
+				filtered.add(gw);
+			}
+		}
 		return filtered;
 	}
 

@@ -22,14 +22,14 @@ import it.thisone.iotter.persistence.model.ModbusRegister;
 import it.thisone.iotter.persistence.model.ResourceData;
 import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
 import it.thisone.iotter.persistence.service.ModbusProfileService;
-import it.thisone.iotter.provisioning.IProvisioningProvider;
-import it.thisone.iotter.provisioning.ProvisioningFactory;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.EditorConstraintException;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.fields.EditableResourceData;
 import it.thisone.iotter.ui.common.fields.TemplateStateSelect;
 import it.thisone.iotter.ui.modbusregisters.ModbusRegisterGrid;
+import it.thisone.iotter.ui.provisioning.IProvisioningProvider;
+import it.thisone.iotter.ui.provisioning.ProvisioningFactory;
 import it.thisone.iotter.util.BacNet;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -156,23 +156,20 @@ public class ModbusProfileForm extends AbstractBaseEntityForm<ModbusProfile> {
 		registers = new ModbusRegisterGrid();
 		registers.setRows(getEntity().getRegisters());
 
-		fieldsLayout = new VerticalLayout();
-		fieldsLayout.setSpacing(true);
-		fieldsLayout.setWidthFull();
-		fieldsLayout.getElement().getStyle().set("height", "0");
-		fieldsLayout.getElement().getStyle().set("min-height", "0");
-
 		HorizontalLayout header = new HorizontalLayout();
 		header.setWidthFull();
 		header.setSpacing(true);
 		header.add(displayName, revision, state);
 		header.setFlexGrow(1f, displayName, revision, state);
 
-		fieldsLayout.add(header, registers);
-		fieldsLayout.setFlexGrow(1f, registers);
+		fieldsLayout = new VerticalLayout();
+		fieldsLayout.setSpacing(false);
+		fieldsLayout.setPadding(false);
+		fieldsLayout.setWidthFull();
+		fieldsLayout.add(header);
 
-		mainLayout.add(fieldsLayout);
-		mainLayout.setFlexGrow(1f, fieldsLayout);
+		mainLayout.add(fieldsLayout, registers);
+		mainLayout.setFlexGrow(1f, registers);
 
 		return mainLayout;
 	}

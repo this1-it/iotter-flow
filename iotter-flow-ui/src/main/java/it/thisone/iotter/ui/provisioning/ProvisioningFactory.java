@@ -1,4 +1,4 @@
-package it.thisone.iotter.provisioning;
+package it.thisone.iotter.ui.provisioning;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,12 +11,7 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 
-import it.thisone.iotter.enums.Priority;
 import it.thisone.iotter.integration.IClassPathScanner;
-import it.thisone.iotter.persistence.model.ModbusProfile;
-import it.thisone.iotter.persistence.model.ModbusRegister;
-import it.thisone.iotter.rest.model.ModbusProvisioning;
-import it.thisone.iotter.util.BacNet;
 
 public class ProvisioningFactory implements Serializable, IClassPathScanner {
 

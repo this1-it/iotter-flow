@@ -339,10 +339,10 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 				break;
 			case CUSTOM:
 				content = new GroupWidgetsCustomMap(item.getId(), false, networkService, deviceService,
-						networkGroupService, groupWidgetService, uiEventBus, devicesImageOverlayMapProvider);
+						networkGroupService, groupWidgetService, authenticatedUser,uiEventBus, devicesImageOverlayMapProvider);
 				break;
 			default:
-				content = new GroupWidgetsDevicesListing(network, groupWidgetService, uiEventBus,
+				content = new GroupWidgetsDevicesListing(network, groupWidgetService, authenticatedUser, uiEventBus,
 						groupWidgetsListingBoxProvider);
 				break;
 		}

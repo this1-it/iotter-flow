@@ -163,9 +163,10 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
     @Override
     protected Component createContent() {
     	VerticalLayout fieldsLayout = getFieldsLayout();
-        // Override height:100% (set by setSizeFull in subclass) so flex-grow:1 works correctly
+        // flex-grow:1 + height:0 fills remaining space above the footer
         fieldsLayout.getElement().getStyle().set("height", "0");
         fieldsLayout.getElement().getStyle().set("min-height", "0");
+        fieldsLayout.getElement().getStyle().set("overflow", "auto");
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
@@ -186,7 +187,8 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 
         VerticalLayout layout = new VerticalLayout();
         layout.setSizeFull();
-        layout.setSpacing(true);
+        layout.setSpacing(false);
+        layout.setPadding(false);
         layout.add(fieldsLayout);
         layout.setFlexGrow(1f, fieldsLayout);
         layout.add(footer);

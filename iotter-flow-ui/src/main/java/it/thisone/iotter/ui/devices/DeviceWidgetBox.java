@@ -67,14 +67,13 @@ public class DeviceWidgetBox extends Composite<Div> {
 			deviceGrid.setItems(slaves);
 			deviceGrid.setSizeFull();
 			deviceGrid.setSelectionMode(Grid.SelectionMode.NONE);
-			deviceGrid.addColumn(Device::getLabel).setHeader(getI18nLabel("label"));
-			deviceGrid.addColumn(Device::getDescription).setHeader(getI18nLabel("description"));
-			deviceGrid.addColumn(this::formatStatus).setHeader(getI18nLabel("status"));
+			deviceGrid.addColumn(Device::getLabel).setHeader(getTranslation("device.view.label"));
+			deviceGrid.addColumn(Device::getDescription).setHeader(getTranslation("device.view.description"));
+			deviceGrid.addColumn(this::formatStatus).setHeader(getTranslation("device.view.status"));
 
-			Button provisioning = new Button();
-			// provisioning.setClassName(ValoTheme.BUTTON_PRIMARY);
-			// provisioning.setCaption(getI18nLabel("provisioning_button"));
-			// provisioning.setIcon(VaadinIcon.TAGS);
+			Button provisioning = new Button(getI18nLabel("provisioning_button"));
+
+			provisioning.setIcon(VaadinIcon.TAGS.create());
 			provisioning.addClickListener(event -> fireEvent(
 					new EditorSavedEvent(DeviceWidgetBox.this, device)));
 			provisioning.setEnabled(!device.isDeActivated());
@@ -82,7 +81,6 @@ public class DeviceWidgetBox extends Composite<Div> {
 			//mainLayout.setDefaultComponentAlignment(Alignment.TOP_CENTER);
 			mainLayout.setSpacing(true);
 			mainLayout.add(deviceGrid);
-			//mainLayout.setExpandRatio(deviceGrid, 1f);
 			mainLayout.add(provisioning);
 		}
 

@@ -21,6 +21,7 @@ public interface UiConstants {
 	public static final int FOOTER_HEIGHT = 30; // div#footer
 	public static final int HEADER_HEIGHT = 90; // div#header
 	public static final int TAB_HEIGHT = 36 + 10;
+	public static final int SIDE_DRAWER_HEADER_HEIGHT = 48;
 	public static final int TOOLBAR_HEIGHT = 40;
 	public static final int SMALL_HEADER_HEIGHT = 24;
 	public static final boolean WITH_FOOTER = true;

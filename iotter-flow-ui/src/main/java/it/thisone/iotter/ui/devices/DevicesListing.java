@@ -99,6 +99,7 @@ import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
+import it.thisone.iotter.ui.provisioning.ProvisioningWizard;
 import it.thisone.iotter.ui.users.UserForm;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -735,23 +736,20 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (bean == null) {
 			return;
 		}
-		// wizard =
-		// UIUtils.getUiFactory().getDeviceUiFactory().getProvisioningWizard(bean.getSerial());
-		// if (wizard == null) {
-		// return;
-		// }
-		// Dialog dialog = createDialog(getI18nLabel("device_provisioning"), (Component)
-		// wizard);
-		// wizard.addListener(new EditorSavedListener() {
-		// @Override
-		// public void editorSaved(EditorSavedEvent event) {
-		// if (event.getSavedItem() != null) {
-		// refreshCurrentPage();
-		// }
-		// dialog.close();
-		// }
-		// });
-		// dialog.open();
+		wizard = new ProvisioningWizard(bean.getSerial());
+
+		Dialog dialog = createDialog(getI18nLabel("device_provisioning"), (Component)
+		wizard);
+		wizard.addListener(new EditorSavedListener() {
+		@Override
+		public void editorSaved(EditorSavedEvent event) {
+		if (event.getSavedItem() != null) {
+		refreshCurrentPage();
+		}
+		dialog.close();
+		}
+		});
+		dialog.open();
 	}
 
 	@Subscribe

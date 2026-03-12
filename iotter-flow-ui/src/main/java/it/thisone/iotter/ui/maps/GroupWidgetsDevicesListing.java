@@ -23,6 +23,8 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
@@ -58,13 +60,17 @@ public class GroupWidgetsDevicesListing extends BaseComponent {
     }
 
     public GroupWidgetsDevicesListing(Network network) {
-        this(network, null, null, null);
+        this(network, null, null, null, null);
     }
 
-    public GroupWidgetsDevicesListing(Network network, GroupWidgetService groupWidgetService, UIEventBus uiEventBus,
+    public GroupWidgetsDevicesListing(Network network, 
+        GroupWidgetService groupWidgetService, 
+        AuthenticatedUser authenticatedUser,
+        UIEventBus uiEventBus,
             ObjectProvider<GroupWidgetsListingBox> listingBoxProvider) {
         super("groupwidgets.deviceslisting", network != null ? network.toString() : UUID.randomUUID().toString());
-        this.map = network != null ? MapUtils.mappableDevices(network) : new HashMap<>();
+        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+        this.map = network != null ? MapUtils.mappableDevices(network,details) : new HashMap<>();
         this.groupWidgetService = groupWidgetService;
         this.uiEventBus = uiEventBus;
         this.listingBoxProvider = listingBoxProvider;

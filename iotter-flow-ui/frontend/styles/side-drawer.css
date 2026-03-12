@@ -1,5 +1,11 @@
-/* Target del dialog overlay */
+/* Disable default dialog animation to prevent bounce on close */
+:host([theme~="side-drawer"]) {
+  --_vaadin-dialog-overlay-bounds-top: 0;
+  --_vaadin-dialog-overlay-bounds-right: 0;
+}
+
 :host([theme~="side-drawer"])::part(overlay) {
+  --side-drawer-header-height: 48px;
 
   position: fixed;
   top: 0;
@@ -17,6 +23,15 @@
 
   display: flex;
   flex-direction: column;
+
+  /* Disable open/close animation that causes bouncing */
+  animation: none !important;
+  transition: none !important;
+}
+
+:host([theme~="side-drawer"])::part(content) {
+  animation: none !important;
+  transition: none !important;
 }
 
 /* Fullscreen variant used by the GroupWidget designer */
@@ -34,6 +49,8 @@
   align-items: center;
   justify-content: space-between;
 
+  height: var(--side-drawer-header-height);
+  box-sizing: border-box;
   padding: var(--lumo-space-m);
   border-bottom: 1px solid var(--lumo-contrast-10pct);
 
@@ -58,4 +75,22 @@
   color: var(--lumo-primary-text-color);
 }
 
-/* CONTENT - layout handled via Java inline styles and side-drawer-global.css */
+/* CONTENT AREA - part="content" must flex-grow to fill part="overlay" after the header */
+:host([theme~="side-drawer"]) [part="content"] {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* The slotted .side-drawer-content fills [part="content"] */
+:host([theme~="side-drawer"]) ::slotted(.side-drawer-content) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}

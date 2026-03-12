@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.flow.components.TabSheet;
 
 import com.google.common.eventbus.Subscribe;
@@ -35,6 +36,8 @@ import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseEditor;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
 import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
@@ -56,6 +59,9 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
     private final UIEventBus uiEventBus;
     private final ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
 
+    @Autowired
+	private AuthenticatedUser authenticatedUser;
+
     private Network network;
     private Map<Device, Set<GroupWidget>> map;
 
@@ -66,7 +72,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
     private VerticalLayout imageLayout;
 
     public GroupWidgetsCustomMap(String networkId, boolean editable) {
-        this(networkId, editable, null, null, null, null, null, null);
+        this(networkId, editable, null, null, null, null, null, null, null);
     }
 
     public GroupWidgetsCustomMap(String networkId, boolean editable,
@@ -74,6 +80,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
             DeviceService deviceService,
             NetworkGroupService networkGroupService,
             GroupWidgetService groupWidgetService,
+            AuthenticatedUser authenticatedUser,
             UIEventBus uiEventBus,
             ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider) {
         super("groupwidgets.custommap");
@@ -95,7 +102,8 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
         }
         setItem(network);
 
-        map = network.getId() != null ? MapUtils.mappableDevices(network) : new HashMap<>();
+        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+        map = network.getId() != null ? MapUtils.mappableDevices(network,details) : new HashMap<>();
 
         buildLayout();
         init();

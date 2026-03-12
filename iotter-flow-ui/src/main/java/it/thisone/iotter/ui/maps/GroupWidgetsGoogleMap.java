@@ -24,6 +24,8 @@ import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
@@ -46,14 +48,22 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
     private TabSheet tabsheet;
 
     public GroupWidgetsGoogleMap(Network network) {
-        this(network, null, null, null, null, "");
+        this(network, null, null, null, null, null, "");
     }
 
-    public GroupWidgetsGoogleMap(Network network, GroupWidgetService groupWidgetService, UIEventBus uiEventBus,
-            DeviceService deviceService, NetworkService networkService, String googleMapApiKey) {
+    public GroupWidgetsGoogleMap(Network network, 
+        GroupWidgetService groupWidgetService, 
+        
+            DeviceService deviceService, 
+            NetworkService networkService, 
+            AuthenticatedUser authenticatedUser,
+            UIEventBus uiEventBus,
+            String googleMapApiKey) {
         super("groupwidgets.googlemap");
         setId(network != null ? network.toString() : UUID.randomUUID().toString());
-        this.map = network != null ? MapUtils.mappableDevices(network) : new HashMap<>();
+
+        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+        this.map = network != null ? MapUtils.mappableDevices(network, details) : new HashMap<>();
         this.groupWidgetService = groupWidgetService;
         this.uiEventBus = uiEventBus;
         this.deviceService = deviceService;

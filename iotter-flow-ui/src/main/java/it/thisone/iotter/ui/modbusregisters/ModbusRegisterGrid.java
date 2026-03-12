@@ -55,14 +55,16 @@ public class ModbusRegisterGrid extends BaseComponent {
         grid.addClassName("smallgrid");
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
 
+
         dataProvider = new ListDataProvider<>(new ArrayList<>());
         grid.setDataProvider(dataProvider);
 
         initColumns();
         initColumnAlignments();
         initFilters();
-        //grid.setFrozenColumnCount(3);
 
+
+        //grid.setHeight("calc(100vh - 260px)");
         setRootComposition(grid);
     }
 

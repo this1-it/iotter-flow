@@ -1,4 +1,4 @@
-package it.thisone.iotter.provisioning;
+package it.thisone.iotter.ui.provisioning;
 
 import java.util.Arrays;
 import java.util.Locale;

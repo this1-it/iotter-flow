@@ -52,7 +52,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 	@Deprecated
 	public static UserDetailsAdapter getUserDetails() {
 		throw new UnsupportedOperationException("vaadin8 legacy");
-		//UserDetailsAdapter details = ((IMainUI) UI.getCurrent()).getUserDetails();
+		//UserDetailsAdapter details = authenticatedUser.get().orElse(null);
 		// UserDetailsAdapter details = null;
 		// if (details == null) {
 		// 	User anonymous = new User();

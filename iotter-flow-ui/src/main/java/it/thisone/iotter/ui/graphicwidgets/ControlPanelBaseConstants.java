@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.ModbusRegister;
-import it.thisone.iotter.provisioning.AernetXLSXParserConstants;
+import it.thisone.iotter.ui.provisioning.AernetXLSXParserConstants;
 
 public interface ControlPanelBaseConstants {
 	public static final String CONTROL_PANEL_WIDGET_PROVIDER = "AernetPro";

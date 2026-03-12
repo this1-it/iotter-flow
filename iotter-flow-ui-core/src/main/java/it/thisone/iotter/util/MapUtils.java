@@ -8,6 +8,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.googlecode.jatl.Html;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.UI;
@@ -21,6 +23,7 @@ import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.UIUtils;
 //import it.thisone.iotter.ui.main.IMainUI;
 import it.thisone.iotter.ui.main.IMainUI;
@@ -36,7 +39,7 @@ public class MapUtils implements Serializable {
 	private static final String RED_DOT = "https://aernet.aermec.com/VAADIN/themes/aernet/micons/red-dot.png";
 	private static final String YELLOW_DOT = "https://aernet.aermec.com/VAADIN/themes/aernet/micons/red-dot.png";
 
-	
+
 	
 	/**
 	 * 
@@ -68,9 +71,9 @@ public class MapUtils implements Serializable {
 		return icon;
 	}
 
-	public static Map<Device, Set<GroupWidget>> mappableDevices(Network network) {
+	public static Map<Device, Set<GroupWidget>> mappableDevices(Network network, UserDetailsAdapter details) {
 		Collection<NetworkGroup> groups = new ArrayList<NetworkGroup>();
-		UserDetailsAdapter details = ((IMainUI) UI.getCurrent()).getUserDetails();
+
 		if (details == null) {
 			if (network.isAnonymous()) {
 				groups = UIUtils.getServiceFactory().getNetworkGroupService().findByNetwork(network);

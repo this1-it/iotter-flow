@@ -1,4 +1,4 @@
-package it.thisone.iotter.provisioning;
+package it.thisone.iotter.ui.provisioning;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
