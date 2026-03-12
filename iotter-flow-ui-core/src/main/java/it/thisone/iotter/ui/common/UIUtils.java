@@ -20,16 +20,20 @@ import com.vaadin.flow.component.UI;
 
 import it.thisone.iotter.config.Constants;
 
-import it.thisone.iotter.integration.CassandraService;
-import it.thisone.iotter.integration.ServiceFactory;
-import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.main.UiConstants;
 
 public final class UIUtils implements Serializable, UiConstants, Constants {
 	// https://vaadin.com/book/-/page/layout.orderedlayout.html
 
 	/**
-	 * 
+	 ## Phase 3: Vaadin Components (constructor injection with individual services)
+
+### Simple field components
+- **ChannelSelect.java** → add `DeviceService` to constructor
+- **ChannelTreeSelect.java** → add `DeviceService` to constructor
+- **DeviceSerialSelect.java** → add `DeviceService` to constructor
+- **UniqueUsernameValidator.java** → add `UserService` to constructor
+
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -48,33 +52,6 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 
 
-
-	@Deprecated
-	public static UserDetailsAdapter getUserDetails() {
-		throw new UnsupportedOperationException("vaadin8 legacy");
-		//UserDetailsAdapter details = authenticatedUser.get().orElse(null);
-		// UserDetailsAdapter details = null;
-		// if (details == null) {
-		// 	User anonymous = new User();
-		// 	anonymous.setUsername("anonymous");
-		// 	anonymous.setOwner("anonymous");
-		// 	details = new UserDetailsAdapter(anonymous);
-		// }
-		// return details;
-	}
-
-
-	@Deprecated
-	public static ServiceFactory getServiceFactory() {
-		//return ((IMainUI) UI.getCurrent()).getServiceFactory();
-		throw new UnsupportedOperationException("vaadin8 legacy");
-	}
-
-	@Deprecated
-	public static CassandraService getCassandraService() {
-		//return ((IMainUI) UI.getCurrent()).getCassandraService();
-		throw new UnsupportedOperationException("vaadin8 legacy");
-	}
 
 
 

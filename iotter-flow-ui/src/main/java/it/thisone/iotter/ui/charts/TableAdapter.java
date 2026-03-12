@@ -17,11 +17,13 @@ import it.thisone.iotter.enums.Order;
 import it.thisone.iotter.exporter.DataFormat;
 import it.thisone.iotter.exporter.cassandra.CassandraExportDataProvider;
 import it.thisone.iotter.exporter.cassandra.CassandraExportQuery;
+import it.thisone.iotter.cassandra.CassandraMeasures;
+import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
 public class TableAdapter extends AbstractChartAdapter {
@@ -32,9 +34,15 @@ public class TableAdapter extends AbstractChartAdapter {
 	private static final long serialVersionUID = 4605827865960616327L;
 	private SimpleDateFormat sdf;
 	private CassandraExportDataProvider container;
+	private final IMeasureExporter exporter;
+	private final CassandraRollup rollup;
+	private final CassandraMeasures cassandraMeasures;
 
-	public TableAdapter(GraphicWidget widget) {
-		super(widget);
+	public TableAdapter(GraphicWidget widget, IMeasureExporter exporter, VisualizerServices visualizerServices) {
+		super(widget, visualizerServices);
+		this.exporter = exporter;
+		this.rollup = visualizerServices.getCassandraRollup();
+		this.cassandraMeasures = visualizerServices.getCassandraMeasures();
 		optionsField.getScale().setVisible(false);
 		optionsField.getShowGrid().setVisible(false);
 		optionsField.getRealTime().setVisible(false);
@@ -50,11 +58,11 @@ public class TableAdapter extends AbstractChartAdapter {
 		
 		DataFormat dataFormat = new DataFormat(UIUtils.getLocale(), getNetworkTimeZone());
 		
-		List<CassandraExportFeed> feeds = ChartUtils.createExportFeeds(getGraphWidget().getFeeds());
+		List<CassandraExportFeed> feeds = ChartUtils.createExportFeeds(getGraphWidget().getFeeds(), visualizerServices.getExportProvider());
 		
 		boolean ascending = getGraphWidget().getOptions().getOrder().equals(Order.ASCENDING);
 		
-		IMeasureExporter exporter = UIUtils.getCassandraService().getExport();
+		IMeasureExporter exporter = this.exporter;
 		container = new CassandraExportDataProvider(exporter, feeds, dataFormat, CassandraExportQuery.BATCH_SIZE, ascending);
 		container.getQueryDefinition().setInterpolation(Interpolation.RAW);
 		
@@ -74,8 +82,8 @@ public class TableAdapter extends AbstractChartAdapter {
 	protected void createChartConfiguration(TimeInterval interval) {
 		Range<Date> range = Range.closed(interval.getStartDate(), interval.getEndDate());
 		container.getQueryDefinition().setInterval(range);
-		if (!UIUtils.getCassandraService().getRollup().isFullyAvailableInterpolation(Interpolation.RAW, range , null, null)){
-			container.getQueryDefinition().setInterpolation(UIUtils.getCassandraService().getMeasures().minimalInterpolation());
+		if (!rollup.isFullyAvailableInterpolation(Interpolation.RAW, range , null, null)){
+			container.getQueryDefinition().setInterpolation(cassandraMeasures.minimalInterpolation());
 		}
 		container.refreshAll();
 	}

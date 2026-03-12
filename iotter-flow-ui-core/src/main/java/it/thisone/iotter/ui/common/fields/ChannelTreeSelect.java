@@ -23,7 +23,7 @@ import it.thisone.iotter.persistence.model.ChannelComparator;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.MeasureUnit;
 import it.thisone.iotter.persistence.model.NetworkGroup;
-import it.thisone.iotter.ui.common.UIUtils;
+import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.util.PopupNotification;
 
 /* ------------------------------------------------------------------
@@ -61,7 +61,6 @@ public class ChannelTreeSelect
         extends AbstractCompositeField<HorizontalLayout, ChannelTreeSelect, Channel> {
 
     private static final long serialVersionUID = 1L;
- 
 
     private static final String I18N_KEY = "channel.select";
 
@@ -70,9 +69,11 @@ public class ChannelTreeSelect
     private final ContextMenu popup;
     private final TreeGrid<TreeNode> tree;
     private final ComboBox<MeasureUnit> measures;
+    private final DeviceService deviceService;
 
-    public ChannelTreeSelect() {
+    public ChannelTreeSelect(DeviceService deviceService) {
         super(null);
+        this.deviceService = deviceService;
 
         HorizontalLayout layout = getContent();
         layout.setSpacing(true);
@@ -155,10 +156,7 @@ public class ChannelTreeSelect
     private void buildTreeData(TreeData<TreeNode> treeData,
                                NetworkGroup group) {
 
-        List<Device> devices =
-            UIUtils.getServiceFactory()
-                   .getDeviceService()
-                   .findByGroup(group);
+        List<Device> devices = deviceService.findByGroup(group);
 
         for (Device device : devices) {
 
@@ -178,10 +176,7 @@ public class ChannelTreeSelect
                     MeasureUnit mu = channel.getDefaultMeasure();
 
                     if (mu != null) {
-                        String unit =
-                            UIUtils.getServiceFactory()
-                                   .getDeviceService()
-                                   .getUnitOfMeasureName(mu.getType());
+                        String unit = deviceService.getUnitOfMeasureName(mu.getType());
                         label = label + " [" + unit + "]";
                     }
 
@@ -211,9 +206,7 @@ public class ChannelTreeSelect
     private void populateMeasures(Channel channel, MeasureUnit value) {
         measures.setItems(channel.getMeasures());
         measures.setItemLabelGenerator(mu ->
-            UIUtils.getServiceFactory()
-                   .getDeviceService()
-                   .getUnitOfMeasureName(mu.getType())
+            deviceService.getUnitOfMeasureName(mu.getType())
         );
         measures.setEnabled(true);
         measures.setValue(value);

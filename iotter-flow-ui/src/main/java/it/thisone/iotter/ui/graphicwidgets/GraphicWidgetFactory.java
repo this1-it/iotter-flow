@@ -20,6 +20,7 @@ import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.ui.providers.GraphicWidgetProvider;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.util.EncryptUtils;
 
 public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
@@ -63,11 +64,11 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	public static AbstractWidgetVisualizer createWidgetVisualizer(
-			GraphicWidget widget) {
+			GraphicWidget widget, VisualizerServices services) {
 		AbstractWidgetVisualizer visualizer = null;
 		if (widget != null) {
 			if (GraphicWidgetType.CUSTOM.equals(widget.getType())) {
-				visualizer = customWidgetVisualizer(widget);
+				visualizer = customWidgetVisualizer(widget, services);
 			}
 
 			widget.removeOrphanFeeds();
@@ -82,7 +83,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	public static GraphicWidgetPlaceHolder createPlaceHolder(
-			GraphicWidgetType type, String provider, int fullWidth, int x, int y) {
+			GraphicWidgetType type, String provider, int fullWidth, int x, int y, VisualizerServices visualizerServices) {
 		float height = 550;
 		float width = 550;
 		switch (type) {
@@ -130,18 +131,18 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 
 
 		GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(
-				widget, children);
+				widget, children, visualizerServices);
 
 		return placeHolder;
 	}
 
 	public static AbstractBaseEntityForm<GraphicWidget> createWidgetEditor(
-			GraphicWidget entity) {
+			GraphicWidget entity, VisualizerServices services) {
 		AbstractBaseEntityForm<GraphicWidget> editor = null;
 		if (entity != null) {
 			switch (entity.getType()) {
 			case CUSTOM:
-				editor = customWidgetEditor(entity);
+				editor = customWidgetEditor(entity, services);
 				break;
 			default:
 				editor = new GraphicWidgetForm(entity);
@@ -244,23 +245,23 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	// }
 
 	private static AbstractWidgetVisualizer customWidgetVisualizer(
-			GraphicWidget widget) {
+			GraphicWidget widget, VisualizerServices services) {
 		AbstractWidgetVisualizer visualizer = null;
 		for (GraphicWidgetProvider provider : findProviders("it.thisone.iotter.ui")) {
 			if (provider != null && provider.getName().equalsIgnoreCase(widget.getProvider())) {
-				visualizer = provider.getVisualizer(widget);
+				visualizer = provider.getVisualizer(widget, services);
 				break;
 			}
 		}
 		return visualizer;
 	}
-	
+
 	private static AbstractBaseEntityForm<GraphicWidget> customWidgetEditor(
-			GraphicWidget widget) {
+			GraphicWidget widget, VisualizerServices services) {
 		AbstractBaseEntityForm<GraphicWidget> editor = null;
 		for (GraphicWidgetProvider provider : findProviders("it.thisone.iotter.ui")) {
 			if (provider != null && provider.getName().equalsIgnoreCase(widget.getProvider())) {
-				editor = provider.getForm(widget);
+				editor = provider.getForm(widget, services);
 				break;
 			}
 		}

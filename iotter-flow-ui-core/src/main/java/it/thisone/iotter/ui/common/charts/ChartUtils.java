@@ -19,6 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Range;
 
+import it.thisone.iotter.cassandra.CassandraFeeds;
+import it.thisone.iotter.cassandra.CassandraMeasures;
+import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.cassandra.model.CassandraExportFeed;
 import it.thisone.iotter.cassandra.model.FeedKey;
 import it.thisone.iotter.cassandra.model.IFeedKey;
@@ -26,10 +29,12 @@ import it.thisone.iotter.cassandra.model.Interpolation;
 import it.thisone.iotter.cassandra.model.MeasureRaw;
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.exceptions.MeasureException;
+import it.thisone.iotter.exporter.IExportProvider;
 import it.thisone.iotter.persistence.model.Channel;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.MeasureUnit;
+import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.util.BacNet;
 
@@ -165,9 +170,8 @@ public class ChartUtils {
 		return angle;
 	}
 
-	public static String getUnitOfMeasure(GraphicFeed feed) {
-		String feedUnit = UIUtils.getServiceFactory().getDeviceService()
-				.getUnitOfMeasureName(feed.getMeasure().getType());
+	public static String getUnitOfMeasure(GraphicFeed feed, DeviceService deviceService) {
+		String feedUnit = deviceService.getUnitOfMeasureName(feed.getMeasure().getType());
 		return feedUnit;
 	}
 
@@ -229,11 +233,11 @@ public class ChartUtils {
 	}
 
 
-	public static MeasureRaw lastMeasure(IFeedKey feedKey) {
+	public static MeasureRaw lastMeasure(IFeedKey feedKey, CassandraFeeds feeds) {
 		if (feedKey == null) return null;
-		
-		
-		MeasureRaw measure = UIUtils.getCassandraService().getFeeds().getLastMeasure(feedKey);
+
+
+		MeasureRaw measure = feeds.getLastMeasure(feedKey);
 //		Feed feed = UIUtils.getCassandraService().getFeeds().getFeed(feedKey.getSerial(), feedKey.getKey());
 //		if (feed != null && feed.getValue() != null) {
 //			measure = new MeasureRaw(feed.getDate(), feed.getValue(), null);
@@ -241,9 +245,9 @@ public class ChartUtils {
 		return measure;
 	}
 
-	public static Date lastTick(String key) {
+	public static Date lastTick(String key, CassandraMeasures measures) {
 		if (key == null) return null;
-		return UIUtils.getCassandraService().getMeasures().getLastTick(key, new Date());
+		return measures.getLastTick(key, new Date());
 	}
 
 
@@ -289,15 +293,15 @@ public class ChartUtils {
 	 * @return
 	 */
 	public static List<MeasureRaw> getData(FeedKey feed, Date from, Date to, int displayPoints, int step,
-			List<Range<Date>> ranges, TimeZone tz) {
+			List<Range<Date>> ranges, TimeZone tz, CassandraMeasures measures, CassandraRollup rollup) {
 		List<MeasureRaw> result = new ArrayList<MeasureRaw>();
-		List<MeasureRaw> measures = new ArrayList<MeasureRaw>();
-		
+		List<MeasureRaw> measureList = new ArrayList<MeasureRaw>();
+
 		Date now = new Date();
 		if (to.after(now)) {
 			to = now;
 		}
-		
+
 		if (to.before(from)) {
 			return result;
 		}
@@ -305,35 +309,35 @@ public class ChartUtils {
 		String sn = feed.getSerial();
 		String feedKey = feed.getKey();
 		if (feed.getSerial().startsWith("_")) {
-			return UIUtils.getCassandraService().getMeasures().getMockData(from, to, displayPoints);
+			return measures.getMockData(from, to, displayPoints);
 		}
 
 		if (ranges == null) {
 			logger.error("missing validity date range for measure ", feed.getKey());
 			return result;
 		}
-		
-		
+
+
 		Range<Date> interval = toUTCRange(from, to, tz);
 
 		if (displayPoints == ChartUtils.FULL_SERIES) {
-			return UIUtils.getCassandraService().getMeasures().getData(feed, interval, ChartUtils.FULL_SERIES, 0);
+			return measures.getData(feed, interval, ChartUtils.FULL_SERIES, 0);
 		}
-		
-		Interpolation interpolation = UIUtils.getCassandraService().getRollup().interpolationChoice(sn, feedKey, interval, displayPoints);
-		
+
+		Interpolation interpolation = rollup.interpolationChoice(sn, feedKey, interval, displayPoints);
+
 		switch (interpolation) {
 		case RAW:
-			measures = UIUtils.getCassandraService().getMeasures().getData(feed, interval, displayPoints, step);
+			measureList = measures.getData(feed, interval, displayPoints, step);
 			break;
 		case MIN1:
-			measures = UIUtils.getCassandraService().getMeasures().getData(feed, interval, displayPoints, 60*1000);
+			measureList = measures.getData(feed, interval, displayPoints, 60*1000);
 			break;
 		case MIN5:
-			measures = UIUtils.getCassandraService().getMeasures().getData(feed, interval, displayPoints, 5* 60*1000);
+			measureList = measures.getData(feed, interval, displayPoints, 5* 60*1000);
 			break;
 		default:
-			measures = UIUtils.getCassandraService().getRollup().getData(feed, interval, interpolation);
+			measureList = rollup.getData(feed, interval, interpolation);
 			break;
 		}
 
@@ -343,7 +347,7 @@ public class ChartUtils {
 		 * different id and same unique key
 		 */
 
-		for (MeasureRaw measure : measures) {
+		for (MeasureRaw measure : measureList) {
 			if (measure.getValue() == null || measure.getValue().equals(Float.NaN)) {
 				continue;
 			}
@@ -357,34 +361,34 @@ public class ChartUtils {
 	}
 
 	public static List<MeasureRaw> getAggregationData(FeedKey feedKey, Date from, Date to, Interpolation interpolation,
-			List<Range<Date>> ranges, TimeZone zone) {
+			List<Range<Date>> ranges, TimeZone zone, CassandraMeasures measures, CassandraRollup rollup) {
 
-		List<MeasureRaw> measures = new ArrayList<MeasureRaw>();
+		List<MeasureRaw> measureList = new ArrayList<MeasureRaw>();
 		List<MeasureRaw> result = new ArrayList<MeasureRaw>();
 
 		if (ranges == null) {
 			logger.error("missing validity date range for measure ", feedKey.getKey());
 			return result;
 		}
-		
+
 		if (feedKey.getSerial().startsWith("_")) {
-			return UIUtils.getCassandraService().getMeasures().getMockData(from, to, 1600);
+			return measures.getMockData(from, to, 1600);
 		}
 
-		
+
 		Date now = new Date();
 		if (to.after(now)) {
 			to = now;
 		}
-		
+
 		if (to.before(from)) {
-			return measures;
+			return measureList;
 		}
 
 		Range<Date> interval = toUTCRange(from, to, zone);
-		measures = UIUtils.getCassandraService().getRollup().getAggregationData(feedKey, interval, interpolation, zone);
+		measureList = rollup.getAggregationData(feedKey, interval, interpolation, zone);
 
-		for (MeasureRaw measure : measures) {
+		for (MeasureRaw measure : measureList) {
 			if (measure.getValue() == null || measure.getValue().equals(Float.NaN)) {
 				continue;
 			}
@@ -464,12 +468,12 @@ public class ChartUtils {
 
 
 
-	public static String getFeedLabel(GraphicFeed feed) {
+	public static String getFeedLabel(GraphicFeed feed, DeviceService deviceService) {
 		String label = null;
 		if (feed.getChannel() != null) {
 			label = ChannelUtils.displayName(feed.getChannel());
 			if (!feed.getChannel().getDefaultMeasure().getType().equals(BacNet.ADIM)) {
-				String feedUnit = ChartUtils.getUnitOfMeasure(feed);
+				String feedUnit = ChartUtils.getUnitOfMeasure(feed, deviceService);
 				label = String.format("%s [%s]", label, feedUnit);
 			}
 		} else if (feed.getMetaData() != null) {
@@ -478,25 +482,25 @@ public class ChartUtils {
 		if (label == null) {
 			label = feed.getLabel();
 		}
-		
+
 		return label;
 	}
 
-	public static CassandraExportFeed createExportFeed(GraphicFeed feed) {
+	public static CassandraExportFeed createExportFeed(GraphicFeed feed, IExportProvider exportService) {
 		if (feed.getChannel() == null) return null;
-		return createExportFeed(feed.getChannel());
+		return createExportFeed(feed.getChannel(), exportService);
 	}
 
-	public static CassandraExportFeed createExportFeed(Channel channel) {
+	public static CassandraExportFeed createExportFeed(Channel channel, IExportProvider exportService) {
 		if (channel == null) return null;
-		return UIUtils.getServiceFactory().getExportService().createExportFeed(channel, ChannelUtils.displayName(channel));
+		return exportService.createExportFeed(channel, ChannelUtils.displayName(channel));
 	}
 
-	
-	public static List<CassandraExportFeed> createExportFeeds(List<GraphicFeed> feeds) {
+
+	public static List<CassandraExportFeed> createExportFeeds(List<GraphicFeed> feeds, IExportProvider exportService) {
 		List<CassandraExportFeed> items = new ArrayList<CassandraExportFeed>();
 		for (GraphicFeed feed : feeds) {
-			CassandraExportFeed item = ChartUtils.createExportFeed(feed);
+			CassandraExportFeed item = ChartUtils.createExportFeed(feed, exportService);
 			if (item != null) items.add(item);
 		}
 		return items;

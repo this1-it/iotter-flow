@@ -32,6 +32,7 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.ModbusProfile;
 import it.thisone.iotter.persistence.model.ModbusRegister;
+import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.persistence.service.ModbusProfileService;
 import it.thisone.iotter.ui.common.EditorConstraintException;
@@ -62,11 +63,16 @@ public class ControlPanelBaseStep extends Composite<VerticalLayout> implements W
 	private boolean committed;
 	private Div content;
 	private ComboBox<ModbusProfile> combo;
-	private GroupWidgetService groupWidgetService = UIUtils.getServiceFactory().getGroupWidgetService();
-	private ModbusProfileService modbusProfileService = UIUtils.getServiceFactory().getModbusProfileService();
+	private final GroupWidgetService groupWidgetService;
+	private final ModbusProfileService modbusProfileService;
+	private final DeviceService deviceService;
 
-	public ControlPanelBaseStep(IProvisioningWizard wizard) {
+	public ControlPanelBaseStep(IProvisioningWizard wizard, GroupWidgetService groupWidgetService,
+			ModbusProfileService modbusProfileService, DeviceService deviceService) {
 		this.wizard = wizard;
+		this.groupWidgetService = groupWidgetService;
+		this.modbusProfileService = modbusProfileService;
+		this.deviceService = deviceService;
 	}
 
 	public Button createCopyButton() {
@@ -143,7 +149,7 @@ public class ControlPanelBaseStep extends Composite<VerticalLayout> implements W
 			GraphicWidget widget = groupWidget.getWidgets().get(0);
 
 			content.removeAll();
-			editor = new ControlPanelBaseForm(widget);
+			editor = new ControlPanelBaseForm(widget, deviceService);
 			content.add(editor.createProfileRegistersLayout());
 
 			List<ModbusRegister> registers = entity.getRegisters().stream()

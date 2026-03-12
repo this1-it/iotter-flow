@@ -19,6 +19,7 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.charts.MultiTraceChartAdapter;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -26,11 +27,14 @@ public class ChannelTimelineDetails extends  Composite<VerticalLayout> {
 
 	@Autowired
 	private CassandraService cassandraService;
-	
+
 	private static final long serialVersionUID = 1L;
 
-	public ChannelTimelineDetails(Channel item) {
+	private final VisualizerServices visualizerServices;
+
+	public ChannelTimelineDetails(Channel item, VisualizerServices visualizerServices) {
 		super();
+		this.visualizerServices = visualizerServices;
 		getContent().add(buildContent(item));
 	}
 
@@ -55,7 +59,7 @@ public class ChannelTimelineDetails extends  Composite<VerticalLayout> {
 		feed.setMeasure(channel.getDefaultMeasure());
 		widget.addFeed(feed);
 
-		MultiTraceChartAdapter chartAdapter = new MultiTraceChartAdapter(widget);
+		MultiTraceChartAdapter chartAdapter = new MultiTraceChartAdapter(widget, visualizerServices);
 //		chartAdapter.setHeightFull();
 //		chartAdapter.setWidthFull();
 

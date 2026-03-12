@@ -12,12 +12,12 @@ import it.thisone.iotter.enums.GraphicWidgetType;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
 public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
@@ -29,8 +29,8 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 	 */
 	private static final long serialVersionUID = -1879789719298795301L;
 
-	public TypeVarMultiTraceAdapter(GraphicWidget widget) {
-		super(widget);
+	public TypeVarMultiTraceAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+		super(widget, visualizerServices);
 		Component visualization = buildVisualization();
 		//visualization.setSizeFull();
 		setRootComposition(createContentWrapper(visualization));
@@ -86,7 +86,7 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 		widget.getOptions().setShowLegend(true);
 		widget.setFeeds(feeds);
 
-		MultiTraceChartAdapter multitrace = new MultiTraceChartAdapter(widget);
+		MultiTraceChartAdapter multitrace = new MultiTraceChartAdapter(widget, visualizerServices);
 		TimeIntervalHelper helper = new TimeIntervalHelper(multitrace.getNetworkTimeZone());
 		TimePeriod period = config.getDefaultPeriod();
 		TimeInterval interval = helper.period(new Date(), period);

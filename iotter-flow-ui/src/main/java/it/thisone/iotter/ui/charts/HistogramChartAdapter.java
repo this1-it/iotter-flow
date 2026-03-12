@@ -33,10 +33,11 @@ import it.thisone.iotter.cassandra.model.Interpolation;
 import it.thisone.iotter.cassandra.model.MeasureRaw;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
+import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class HistogramChartAdapter extends AbstractChartAdapter {
 
@@ -53,11 +54,13 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 	private Interpolation interpolation;
 	private SimpleDateFormat sdf;
 	private Registration applyInterpolationRegistration;
+	private final CassandraRollup rollup;
 
 	private static final long serialVersionUID = -1958076735452737593L;
 
-	public HistogramChartAdapter(GraphicWidget widget) {
-		super(widget);
+	public HistogramChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+		super(widget, visualizerServices);
+		this.rollup = visualizerServices.getCassandraRollup();
 		optionsField.getRealTime().setVisible(false);
 		optionsField.getScale().setVisible(false);
 		optionsField.getAutoScale().setVisible(false);
@@ -99,7 +102,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 
 	private BarChartConfig createConfiguration(GraphicFeed feed) {
 		String feedColor = feed.getOptions().getFillColor();
-		String feedLabel = ChartUtils.getFeedLabel(feed);
+		String feedLabel = ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService());
 		BarChartConfig configuration = createEmptyConfiguration();
 		configuration.options().title().display(true).text(feedLabel).fontColor(feedColor).fontSize(12);
 		// TODO(flow-chartjs): Vaadin 8 column paddings and tooltip templates do not map 1:1.
@@ -174,7 +177,8 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 			FeedKey feedKey = new FeedKey(feed.getDevice().getSerial(), feed.getKey());
 			feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
 			List<MeasureRaw> measures = ChartUtils.getAggregationData(feedKey, time.getStartDate(), time.getEndDate(),
-					interpolation, validities, getNetworkTimeZone());
+					interpolation, validities, getNetworkTimeZone(),
+					visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
 			sdf.applyPattern(ChartUtils.DATE_FORMAT);
 			boolean positive = true;
 			Date ts = new Date();
@@ -201,7 +205,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 			}
 			yScale.ticks().beginAtZero(positive);
 		}
-		String feedLabel = ChartUtils.getFeedLabel(feed);
+		String feedLabel = ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService());
 		BarDataset dataset = new BarDataset().label(feedLabel).dataAsList(values)
 				.backgroundColor(feed.getOptions().getFillColor()).stack("values");
 		chartConfig.data().addDataset(dataset);
@@ -224,7 +228,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 		Range<Date> interval = Range.closedOpen(intervalField.getValue().getStartDate(), intervalField.getValue().getEndDate());
 
 		List<Interpolation> availableInterpolations = new ArrayList<>();
-		for (Interpolation type : UIUtils.getCassandraService().getRollup().availableInterpolations(interval, null, null)) {
+		for (Interpolation type : rollup.availableInterpolations(interval, null, null)) {
 			if (acceptInterpolation(type, intervalField.getValue(), getMaxColumns())) {
 				availableInterpolations.add(type);
 			}
@@ -305,7 +309,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 		int seconds = (int) ((float) (to.getTime() - from.getTime()) / (float) 1000);
 		Map<Integer, Interpolation> suggested = new HashMap<>();
 		Range<Date> range = Range.closedOpen(interval.getStartDate(), interval.getEndDate());
-		for (Interpolation interpolation : UIUtils.getCassandraService().getRollup().availableInterpolations(range, null, null)) {
+		for (Interpolation interpolation : rollup.availableInterpolations(range, null, null)) {
 			if (seconds > interpolation.getSeconds() && interpolation.getSeconds() > 0) {
 				int count = (int) ((float) seconds / (float) interpolation.getSeconds());
 				if (count > 1 && count <= maxCategories) {

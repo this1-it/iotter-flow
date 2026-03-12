@@ -60,6 +60,7 @@ import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
 
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.ui.uitask.UIRunnable;
 
 /*
@@ -110,10 +111,11 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 
 	private Registration intervalChangeRegistration;
 
+	protected final VisualizerServices visualizerServices;
 
-
-	public AbstractChartAdapter(GraphicWidget widget) {
+	public AbstractChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
 		super(widget);
+		this.visualizerServices = visualizerServices;
 		
 		//config = UIUtils.getUiFactory().getGroupWidgetUiFactory();
 		// ChartUtils.loadCustomMarkers();
@@ -311,7 +313,11 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 					createExportConfig(),
 					createExportProperties(),
 					null,
-					getBackgroundExecutor());
+					getBackgroundExecutor(),
+					visualizerServices.getCassandraRollup(),
+					visualizerServices.getCassandraFeeds(),
+					visualizerServices.getExportProvider(),
+					visualizerServices.getNotificationService());
 			UI.getCurrent().add(dialog);
 			dialog.open();
 		});
@@ -450,7 +456,7 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 		config.setInterval(range);
 		config.setName(getWidget().getLabel());
 		List<GraphicFeed> feeds = ((GraphicWidget) getWidget()).getFeeds();
-		config.setFeeds(ChartUtils.createExportFeeds(feeds));
+		config.setFeeds(ChartUtils.createExportFeeds(feeds, visualizerServices.getExportProvider()));
 		config.setInterpolation(Interpolation.RAW);
 		return config;
 	}

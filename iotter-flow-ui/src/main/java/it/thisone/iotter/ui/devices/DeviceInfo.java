@@ -37,6 +37,7 @@ import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
 import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseComponent;
@@ -78,6 +79,8 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
     private CassandraService cassandraService;
     @Autowired
 	private MeasureUnitTypeService measureUnitTypeService;
+	@Autowired
+	private UserService userService;
 	@Autowired
 	private AuthenticatedUser authenticatedUser;
 
@@ -426,7 +429,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 			return widgets;
 		}
 		Collection<GroupWidget> filtered = new ArrayList<GroupWidget>();
-		User user = UIUtils.getServiceFactory().getUserService().findOne(details.getUserId());
+		User user = userService.findOne(details.getUserId());
 		for (GroupWidget gw : widgets) {
 			if (user.getGroups().contains(gw.getGroup())) {
 				filtered.add(gw);

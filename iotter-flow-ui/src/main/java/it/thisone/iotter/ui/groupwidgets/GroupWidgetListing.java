@@ -49,6 +49,7 @@ import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.networkgroups.NetworkGroupBindings;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.util.PopupNotification;
 
 @Component
@@ -67,6 +68,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     private final NetworkGroupService networkGroupService;
     private final DeviceService deviceService;
     private final AuthenticatedUser authenticatedUser;
+    private final VisualizerServices visualizerServices;
 
     private Network network;
 
@@ -88,7 +90,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     @Autowired
     public GroupWidgetListing(GroupWidgetRepository groupWidgetRepository,
             GroupWidgetService groupWidgetService, NetworkService networkService, NetworkGroupService networkGroupService,
-            DeviceService deviceService, AuthenticatedUser authenticatedUser) {
+            DeviceService deviceService, AuthenticatedUser authenticatedUser, VisualizerServices visualizerServices) {
         super(GroupWidget.class, GROUPWIDGET_VIEW, GROUPWIDGET_VIEW, false);
 
         		UserDetailsAdapter currentUser = authenticatedUser.get()
@@ -102,6 +104,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         this.networkGroupService = networkGroupService;
         this.deviceService = deviceService;
         this.authenticatedUser = authenticatedUser;
+        this.visualizerServices = visualizerServices;
     }
 
     public void init(Network network) {
@@ -347,7 +350,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             return;
         }
         GroupWidgetDesigner content = new GroupWidgetDesigner(item, groupWidgetService, networkService, networkGroupService,
-                authenticatedUser.get().orElse(null));
+                authenticatedUser.get().orElse(null), visualizerServices);
         Dialog dialog = createDialog(getI18nLabel("designer_action"), content);
         if (dialog instanceof SideDrawer) {
             dialog.addThemeName("side-drawer-fullscreen");
@@ -361,7 +364,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         if (item == null) {
             return;
         }
-        GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true, groupWidgetService);
+        GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true, groupWidgetService, visualizerServices);
         Dialog dialog = createDialog(getI18nLabel("view_action"), visualizer);
         if (dialog instanceof SideDrawer) {
             dialog.addThemeName("side-drawer-fullscreen");

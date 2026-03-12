@@ -21,6 +21,7 @@ import it.thisone.iotter.persistence.model.Channel;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.MeasureUnit;
+import it.thisone.iotter.cassandra.CassandraAlarms;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.util.Utils;
 
@@ -150,8 +151,8 @@ public class ChannelUtils {
 		return Channel.getTypeVar(metadata);
 	}
 
-	public static String[] alarmParams(Channel chnl) {
-		FeedAlarm alarm = UIUtils.getCassandraService().getAlarms().getAlarm(chnl.getDevice().getSerial(), chnl.getKey());
+	public static String[] alarmParams(Channel chnl, CassandraAlarms alarms) {
+		FeedAlarm alarm = alarms.getAlarm(chnl.getDevice().getSerial(), chnl.getKey());
 		if (alarm == null) {
 			return null;
 		}
@@ -182,23 +183,23 @@ public class ChannelUtils {
 		return params;
 	}
 	
-	public static List<String> alarms(Device entity) {
+	public static List<String> alarms(Device entity, CassandraAlarms alarms) {
 		List<String> entries = new ArrayList<String>();
 		if (entity == null) {
 			return entries;
-		}	
-		
+		}
+
  		Map<String, Channel> channels = new HashMap<String, Channel>();
 		for (Channel chnl : entity.getChannels()) {
 			if (chnl.getAlarm().isArmed()) {
 				channels.put(chnl.getKey(), chnl);
 			}
 		}
-		
-		List<FeedAlarm> alarms = UIUtils.getCassandraService().getAlarms().findActiveAlarms(entity
+
+		List<FeedAlarm> activeAlarms = alarms.findActiveAlarms(entity
 				.getSerial());
 
-		for (IFeedAlarm alarm : alarms) {
+		for (IFeedAlarm alarm : activeAlarms) {
 			if (channels.containsKey(alarm.getKey())) {
 				Channel chnl = channels.get(alarm.getKey());
 				String[] params = alarmParams(chnl, alarm);

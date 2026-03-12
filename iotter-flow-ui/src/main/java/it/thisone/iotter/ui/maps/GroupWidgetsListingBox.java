@@ -29,6 +29,7 @@ import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.devices.DeviceInfo;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 @org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -51,6 +52,9 @@ public class GroupWidgetsListingBox extends Composite<Div> {
 
     @Autowired
     private GroupWidgetService groupWidgetService;
+
+    @Autowired
+    private VisualizerServices visualizerServices;
 
     public GroupWidgetsListingBox() {
         this(null, null, new HashMap<>());
@@ -186,7 +190,7 @@ public class GroupWidgetsListingBox extends Composite<Div> {
             return;
         }
 
-        GroupWidgetVisualizer content = new GroupWidgetVisualizer(widget.getId().toString(), true, groupWidgetService);
+        GroupWidgetVisualizer content = new GroupWidgetVisualizer(widget.getId().toString(), true, groupWidgetService, visualizerServices);
         if (getParent().isPresent() && getParent().get() instanceof TabSheet) {
             TabSheet tabsheet = (TabSheet) getParent().get();
             Tab tab = tabsheet.addTab(widget.getName(), content);

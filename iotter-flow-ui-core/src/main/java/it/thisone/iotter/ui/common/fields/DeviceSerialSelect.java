@@ -10,33 +10,29 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
-import it.thisone.iotter.ui.common.UIUtils;
+import it.thisone.iotter.persistence.service.DeviceService;
 
 public class DeviceSerialSelect extends ComboBox<String> {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	private Map<String, String> deviceLabels = new HashMap<>();
+	private final DeviceService deviceService;
 
-	public DeviceSerialSelect() {
+	public DeviceSerialSelect(DeviceService deviceService) {
 		super();
+		this.deviceService = deviceService;
 		initialize();
 	}
 
 	private void initialize() {
-//		setEmptySelectionAllowed(false);
-//		setTextInputAllowed(false);
 		setItemLabelGenerator(serial -> deviceLabels.getOrDefault(serial, serial));
 	}
-
 
 	public void setGraph(GraphicWidget widget) {
         List<String> serials = new ArrayList<>();
 		deviceLabels.clear();
-		
+
 		if (widget.getGroupWidget() != null && widget.getGroupWidget().getGroup() != null) {
 			List<Device> devices = availableDevices(widget.getGroupWidget());
 			for (Device device : devices) {
@@ -47,13 +43,11 @@ public class DeviceSerialSelect extends ComboBox<String> {
 		setItems(serials);
 		setValue(widget.getDevice());
 	}
-	
-	
-	
+
 	private List<Device> availableDevices(GroupWidget groupwidget) {
 		List<Device> available = new ArrayList<Device> ();
 		if (groupwidget.getGroup() != null) {
-			List<Device> devices = UIUtils.getServiceFactory().getDeviceService().findByGroup(groupwidget.getGroup());
+			List<Device> devices = deviceService.findByGroup(groupwidget.getGroup());
 			for (Device device : devices) {
 				if (!device.getChannels().isEmpty()) {
 					available.add(device);
@@ -61,12 +55,11 @@ public class DeviceSerialSelect extends ComboBox<String> {
 			}
 		}
 		else if (groupwidget.getDevice() != null) {
-			Device device = UIUtils.getServiceFactory().getDeviceService().findBySerial(groupwidget.getDevice());
+			Device device = deviceService.findBySerial(groupwidget.getDevice());
 			if (device != null) {
 				available.add(device);
 			}
-		}		
+		}
 		return available;
 	}
-
 }

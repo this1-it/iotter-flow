@@ -27,11 +27,12 @@ import it.thisone.iotter.cassandra.model.MeasureRaw;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
+import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.MeasureUnit;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.common.fields.ChannelAcceptor;
 import it.thisone.iotter.ui.model.TimeInterval;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class WindRoseChartAdapter extends AbstractChartAdapter {
 
@@ -44,6 +45,7 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
     };
     private static final Integer[] DEGREE_PETALS = { 4, 8, 16 };
 
+    private final CassandraRollup rollup;
     private ChartJs chart;
     private RadarChartConfig chartConfig;
 
@@ -58,8 +60,9 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
     private ComboBox<Integer> petalsChoice;
     private Registration applyPetalsChoiceRegistration;
 
-    public WindRoseChartAdapter(GraphicWidget widget) {
-        super(widget);
+    public WindRoseChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+        super(widget, visualizerServices);
+        this.rollup = visualizerServices.getCassandraRollup();
         optionsField.getRealTime().setVisible(false);
         optionsField.getScale().setVisible(false);
         optionsField.getAutoScale().setVisible(false);
@@ -104,7 +107,7 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
             return;
         }
 
-        String feedUnit = ChartUtils.getUnitOfMeasure(speed);
+        String feedUnit = ChartUtils.getUnitOfMeasure(speed, visualizerServices.getDeviceService());
         DecimalFormat df = (DecimalFormat) NumberFormat.getInstance(UIUtils.getLocale());
         df.applyPattern(speed.getMeasure().getFormat());
 
@@ -315,7 +318,7 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
             interpolation = Interpolation.RAW;
         }
         Range<Date> range = Range.closedOpen(interval.getStartDate(), interval.getEndDate());
-        return UIUtils.getCassandraService().getRollup().checkInterpolationAvailability(interpolation, range, null, null);
+        return rollup.checkInterpolationAvailability(interpolation, range, null, null);
     }
 
     private List<MeasureRaw> getData(GraphicFeed feed, TimeInterval interval) {
@@ -327,13 +330,14 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
         feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
 
         if (interpolation.equals(Interpolation.RAW)) {
-            measures = ChartUtils.getData(feedKey, interval.getStartDate(), interval.getEndDate(), -1, 0, ranges, getNetworkTimeZone());
+            measures = ChartUtils.getData(feedKey, interval.getStartDate(), interval.getEndDate(), -1, 0, ranges, getNetworkTimeZone(),
+                    visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
         } else {
             if (interpolation.equals(Interpolation.D1)) {
                 interpolation = Interpolation.H1;
             }
             measures = ChartUtils.getAggregationData(feedKey, interval.getStartDate(), interval.getEndDate(), interpolation, ranges,
-                    getNetworkTimeZone());
+                    getNetworkTimeZone(), visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
         }
         return measures;
     }

@@ -16,10 +16,11 @@ import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.persistence.model.MeasureRange;
+import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.charts.MultiTraceChartAdapter;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
@@ -34,9 +35,11 @@ public class TandemTraceChartAdapter extends MultiTraceChartAdapter {
     private List<GraphicFeed> digital = new ArrayList<>();
     private List<GraphicFeed> analog = new ArrayList<>();
     private VerticalLayout content;
+    private final GroupWidgetService groupWidgetService;
 
-    public TandemTraceChartAdapter(GraphicWidget widget) {
-        super(widget);
+    public TandemTraceChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+        super(widget, visualizerServices);
+        this.groupWidgetService = visualizerServices.getGroupWidgetService();
         Component visualization = buildVisualization();
         if (visualization instanceof VerticalLayout) {
             content = (VerticalLayout) visualization;
@@ -56,7 +59,7 @@ public class TandemTraceChartAdapter extends MultiTraceChartAdapter {
         widget.getOptions().setShowGrid(false);
         widget.getOptions().setShowLegend(true);
         widget.setFeeds(feeds);
-        return new MultiTraceChartAdapter(widget);
+        return new MultiTraceChartAdapter(widget, visualizerServices);
     }
 
     @Override
@@ -237,6 +240,6 @@ public class TandemTraceChartAdapter extends MultiTraceChartAdapter {
         createChartConfiguration(analogChartAdapter.getIntervalField().getValue());
         draw();
 
-        UIUtils.getServiceFactory().getGroupWidgetService().applyRefresh(getGraphWidget(), checked);
+        groupWidgetService.applyRefresh(getGraphWidget(), checked);
     }
 }

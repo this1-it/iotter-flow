@@ -38,6 +38,7 @@ import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.ModbusProfile;
 import it.thisone.iotter.persistence.model.ModbusRegister;
+import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.EditorConstraintException;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -76,9 +77,11 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
     private final Map<String, Tab> sectionTabsByName = new HashMap<>();
     private String sectionId;
     private int feedSize;
+    private final DeviceService deviceService;
 
-    public ControlPanelBaseForm(GraphicWidget entity) {
+    public ControlPanelBaseForm(GraphicWidget entity, DeviceService deviceService) {
         super(entity, GraphicWidget.class, CONTROLPANELBASE_EDITOR, null,null,false);
+        this.deviceService = deviceService;
         sectionFeeds = getEntity().getFeeds();
         if (sectionFeeds.isEmpty()) {
             logger.debug("sectionFeeds is empty");
@@ -104,7 +107,7 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
         label.setSizeFull();
         label.setRequiredIndicatorVisible(true);
 
-        deviceSelect = new DeviceSerialSelect();
+        deviceSelect = new DeviceSerialSelect(deviceService);
         deviceSelect.setLabel(getI18nLabel("device"));
         deviceSelect.setSizeFull();
 
@@ -169,7 +172,7 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
 
     private void initializeDeviceSelection(DeviceSerialSelect selector) {
         if (getEntity().getDevice() != null) {
-            device = UIUtils.getServiceFactory().getDeviceService().findBySerial(getEntity().getDevice());
+            device = deviceService.findBySerial(getEntity().getDevice());
             if (device != null && !device.getProfiles().isEmpty()) {
                 selector.setReadOnly(true);
                 ModbusProfile entity = device.getProfiles().iterator().next();
@@ -181,7 +184,7 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
 
         selector.addValueChangeListener(event -> {
             String serial = event.getValue();
-            device = UIUtils.getServiceFactory().getDeviceService().findBySerial(serial);
+            device = deviceService.findBySerial(serial);
             if (device != null && !device.getProfiles().isEmpty()) {
                 ModbusProfile entity = device.getProfiles().iterator().next();
                 setRegisters(entity.getRegisters());

@@ -159,6 +159,9 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	@Autowired
 	private MeasureUnitTypeService measureUnitTypeService;
 
+	@Autowired
+	private it.thisone.iotter.ui.providers.VisualizerServices visualizerServices;
+
 	// @Autowired
 	// public DeviceForm(Device entity, Network network, UserDetailsAdapter
 	// currentUser, boolean readOnly,
@@ -603,14 +606,14 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 					multicomponent.addTab(getI18nLabel("location_tab"), buildPanel(buildLocationForm()));
 				}
 
-				channelListing = new ChannelListing();
+				channelListing = new ChannelListing(visualizerServices);
 				multicomponent.addTab(getI18nLabel("channels_tab"), channelListing);
 
 				alarmListing = new ChannelAlarmListing();
 				multicomponent.addTab(getI18nLabel("alarms_tab"), alarmListing);
 
 
-				remoteControls = new ChannelRemoteControlListing();
+				remoteControls = new ChannelRemoteControlListing(visualizerServices);
 				multicomponent.addTab(getI18nLabel("remote_tab"), remoteControls);
 
 				lastValues = new ChannelLastMeasuresListing();

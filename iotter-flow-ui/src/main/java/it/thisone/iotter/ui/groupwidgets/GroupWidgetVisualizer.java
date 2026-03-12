@@ -52,6 +52,7 @@ import it.thisone.iotter.ui.gridstack.GridstackLayoutUtils;
 import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class GroupWidgetVisualizer extends BaseComponent {
     public static Logger logger = LoggerFactory.getLogger(GroupWidgetVisualizer.class);
@@ -60,6 +61,7 @@ public class GroupWidgetVisualizer extends BaseComponent {
     private static final int TIMECONTROLS_HEIGHT = 40;
 
     private final GroupWidgetService groupWidgetService;
+    private final VisualizerServices visualizerServices;
     private final UIEventBus uiEventBus;
     private final IGroupWidgetUiFactory config;
 
@@ -78,9 +80,10 @@ public class GroupWidgetVisualizer extends BaseComponent {
     private TimeControl timeControl;
     private CustomField<GraphicWidgetOptions> optionsField;
 
-    public GroupWidgetVisualizer(String entityId, boolean isTab, GroupWidgetService groupWidgetService) {
+    public GroupWidgetVisualizer(String entityId, boolean isTab, GroupWidgetService groupWidgetService, VisualizerServices visualizerServices) {
         super("groupwidget.visualizer");
         this.groupWidgetService = groupWidgetService;
+        this.visualizerServices = visualizerServices;
         this.uiEventBus = resolveUiEventBus();
         this.config = new GroupWidgetUiFactory();
 
@@ -127,7 +130,7 @@ public class GroupWidgetVisualizer extends BaseComponent {
                 continue;
             }
             widget.getOptions().setRealTime(entity.getOptions().isRealTime());
-            AbstractWidgetVisualizer component = GraphicWidgetFactory.createWidgetVisualizer(widget);
+            AbstractWidgetVisualizer component = GraphicWidgetFactory.createWidgetVisualizer(widget, visualizerServices);
             if (uiEventBus != null) {
                 component.setEventBusFunctions(uiEventBus::register, uiEventBus::unregister);
             }
@@ -181,7 +184,9 @@ public class GroupWidgetVisualizer extends BaseComponent {
         exportButton = new Button(VaadinIcon.DOWNLOAD.create());
         exportButton.getElement().setProperty("title", getI18nLabel("export"));
         exportButton.addClickListener(event -> {
-            ExportDialog dialog = new ExportDialog(createExportConfig(), createExportProperties(), null, ForkJoinPool.commonPool());
+            ExportDialog dialog = new ExportDialog(createExportConfig(), createExportProperties(), null, ForkJoinPool.commonPool(),
+                    visualizerServices.getCassandraRollup(), visualizerServices.getCassandraFeeds(),
+                    visualizerServices.getExportProvider(), visualizerServices.getNotificationService());
             dialog.open();
         });
 

@@ -15,7 +15,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.persistence.model.ModbusRegister;
-import it.thisone.iotter.ui.common.UIUtils;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.ui.modbusregisters.ModbusRegisterGrid;
 import it.thisone.iotter.ui.modbusregisters.ModbusRegisterListing;
@@ -33,10 +34,13 @@ public class ModbusRegistersField extends Composite<VerticalLayout>
 	private ModbusRegisterListing table;
 
 	
-	public ModbusRegistersField() {
+	private final AuthenticatedUser authenticatedUser;
+
+	public ModbusRegistersField(AuthenticatedUser authenticatedUser) {
 		super();
+		this.authenticatedUser = authenticatedUser;
 		grid = new ModbusRegisterGrid();
-		
+
 		table = new ModbusRegisterListing();
 
 		Tab gridTab = new Tab(getI18nLabel("slave_registers"));
@@ -51,7 +55,8 @@ public class ModbusRegistersField extends Composite<VerticalLayout>
 		pagesContainer.setSizeFull();
 		pagesContainer.add(grid);
 
-		if (UIUtils.getUserDetails().hasRole(Constants.ROLE_SUPERVISOR)) {
+		UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+		if (details != null && details.hasRole(Constants.ROLE_SUPERVISOR)) {
 			pages.put(tableTab, table);
 			tabs.add(tableTab);
 		}

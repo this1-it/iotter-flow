@@ -31,6 +31,7 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
@@ -46,8 +47,8 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
     private BaseScale<?> yScale;
     private TimeInterval currentInterval;
 
-    public MultiTraceChartAdapter(GraphicWidget widget) {
-        super(widget);
+    public MultiTraceChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+        super(widget, visualizerServices);
         optionsField.getAutoScale().setVisible(widget.hasExtremes());
     }
 
@@ -117,7 +118,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
     private TimeLineDataset createFeedDataset(GraphicFeed feed, TimeInterval interval, Float ratio) {
         TimeLineDataset dataset = new TimeLineDataset();
-        dataset.label(ChartUtils.getFeedLabel(feed));
+        dataset.label(ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService()));
         dataset.borderColor(resolveColor(feed));
         dataset.backgroundColor(resolveColor(feed));
         dataset.borderWidth(ChartUtils.PLOT_LINE_WIDTH.intValue());
@@ -162,7 +163,8 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
         FeedKey feedKey = new FeedKey(feed.getDevice().getSerial(), feed.getKey());
         feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
         List<MeasureRaw> measures = ChartUtils.getData(feedKey, from, to, points, step,
-                getValidities().get(feed.getKey()), getNetworkTimeZone());
+                getValidities().get(feed.getKey()), getNetworkTimeZone(),
+                visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
 
         for (MeasureRaw measure : measures) {
             if (measure == null || !measure.isValid() || measure.getValue() == null) {
@@ -341,7 +343,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
     private Date refreshedDate(GraphicFeed feed) {
         Date date = null;
         if (feed != null && feed.getChannel() != null) {
-            date = ChartUtils.lastTick(feed.getChannel().getDevice().getSerial());
+            date = ChartUtils.lastTick(feed.getChannel().getDevice().getSerial(), visualizerServices.getCassandraMeasures());
         }
         if (date == null) {
             date = new Date(System.currentTimeMillis() - 1);

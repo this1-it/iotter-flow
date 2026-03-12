@@ -22,6 +22,9 @@ import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.ModbusProfileService;
 import it.thisone.iotter.provisioning.ProvisionedEvent;
 import it.thisone.iotter.provisioning.ProvisioningEvent;
+import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
 import it.thisone.iotter.ui.common.EditorSavedListener;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -55,12 +58,11 @@ public class ProvisioningWizard extends Composite<VerticalLayout> implements
 	private Map<String, GraphicWidget> mapGraphics = new HashMap<>();
 	private ModbusProfile selected;
 
-	private ModbusProfileService profileService = UIUtils.getServiceFactory()
-			.getModbusProfileService();
-	private DeviceService deviceService = UIUtils.getServiceFactory()
-			.getDeviceService();
-	private SubscriptionService subscriptionService = UIUtils
-			.getServiceFactory().getSubscriptionService();
+	private final ModbusProfileService profileService;
+	private final DeviceService deviceService;
+	private final SubscriptionService subscriptionService;
+	private final GroupWidgetService groupWidgetService;
+	private final AuthenticatedUser authenticatedUser;
 
 	/**
 	 * 
@@ -74,14 +76,21 @@ public class ProvisioningWizard extends Composite<VerticalLayout> implements
 
 
 	@SuppressWarnings("serial")
-	public ProvisioningWizard(String masterSerial) {
+	public ProvisioningWizard(String masterSerial, ModbusProfileService profileService,
+			DeviceService deviceService, SubscriptionService subscriptionService,
+			GroupWidgetService groupWidgetService, AuthenticatedUser authenticatedUser) {
+		this.profileService = profileService;
+		this.deviceService = deviceService;
+		this.subscriptionService = subscriptionService;
+		this.groupWidgetService = groupWidgetService;
+		this.authenticatedUser = authenticatedUser;
 		this.master = deviceService.findBySerial(masterSerial);
 		init();
-		
+
 		Wizard wizard = new Wizard();
-		templatesStep = new ModbusTemplatesStep(this);
-		profilesStep = new ModbusProfilesStep(this);
-		aernetProStep = new ControlPanelBaseStep(this);
+		templatesStep = new ModbusTemplatesStep(this, profileService, authenticatedUser);
+		profilesStep = new ModbusProfilesStep(this, profileService, authenticatedUser);
+		aernetProStep = new ControlPanelBaseStep(this, groupWidgetService, profileService, deviceService);
 		
 		wizard.addStep(templatesStep, "templates");
 		wizard.addStep(profilesStep, "profiles");

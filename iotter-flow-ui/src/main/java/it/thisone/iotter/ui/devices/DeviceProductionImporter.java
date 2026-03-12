@@ -59,6 +59,8 @@ import it.thisone.iotter.persistence.model.DeviceCriteria;
 import it.thisone.iotter.persistence.model.DeviceModel;
 import it.thisone.iotter.persistence.model.ResourceData;
 import it.thisone.iotter.persistence.model.User;
+import it.thisone.iotter.persistence.service.DeviceService;
+import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
 import it.thisone.iotter.ui.common.EditorSelectedListener;
@@ -82,10 +84,13 @@ public class DeviceProductionImporter extends BaseComponent {
 	//private HasValue.ValueChangeListener<ResourceData> resourceValueChangeListener;
 	private EditableResourceData upload;
 	private static Logger logger = LoggerFactory.getLogger(DeviceProductionImporter.class);
+	private final DeviceService deviceService;
+	private final UserService userService;
 
-
-	public DeviceProductionImporter() {
+	public DeviceProductionImporter(DeviceService deviceService, UserService userService) {
 		super(DeviceForm.NAME, null);
+		this.deviceService = deviceService;
+		this.userService = userService;
 		//setCompositionRoot(buildLayout());
 	}
 
@@ -127,12 +132,12 @@ public class DeviceProductionImporter extends BaseComponent {
 					String activationKey = record.get(1);
 					String writeApikey = EncryptUtils.createWriteApiKey(serial);
 					Device item = null;
-					item = UIUtils.getServiceFactory().getDeviceService().findBySerial(serial);
+					item = deviceService.findBySerial(serial);
 					if (item != null) {
 						logger.error("{} serial already present", serial);
 						continue;
 					}
-					item = UIUtils.getServiceFactory().getDeviceService().findByActivationKey(activationKey);
+					item = deviceService.findByActivationKey(activationKey);
 					if (item != null) {
 						logger.error("{} activationKey already present", activationKey);
 						continue;
@@ -440,7 +445,7 @@ public class DeviceProductionImporter extends BaseComponent {
 		public DeviceProductionForm() {
 			super(Device.class);
 
-			Collection<DeviceModel> models = UIUtils.getServiceFactory().getDeviceService().getDeviceModels();
+			Collection<DeviceModel> models = deviceService.getDeviceModels();
 			model = new DeviceModelSelect(models);
 			model.setSizeFull();
 			model.setRequiredIndicatorVisible(true);
@@ -470,7 +475,7 @@ public class DeviceProductionImporter extends BaseComponent {
 			List<String> owners = new ArrayList<>();
 			owners.add(Constants.ROLE_PRODUCTION.toLowerCase());
 
-			List<User> users = UIUtils.getServiceFactory().getUserService().findByRole(Constants.ROLE_ADMINISTRATOR);
+			List<User> users = userService.findByRole(Constants.ROLE_ADMINISTRATOR);
 			for (User user : users) {
 				owners.add(user.getUsername());
 			}

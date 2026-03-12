@@ -45,7 +45,16 @@ import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.channels.ChannelRemoteControlForm;
+import it.thisone.iotter.cassandra.CassandraAlarms;
+import it.thisone.iotter.cassandra.CassandraFeeds;
+import it.thisone.iotter.exporter.IExportProvider;
+import it.thisone.iotter.integration.AlarmService;
+import it.thisone.iotter.persistence.service.DeviceService;
+import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.WidgetRefreshUIRunnable;
@@ -105,6 +114,15 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
     private ChannelAdapterDataProvider channelContainer;
     private ChannelAdapterDataProvider parameterContainer;
 
+    private final VisualizerServices visualizerServices;
+    private final DeviceService deviceService;
+    private final CassandraAlarms cassandraAlarms;
+    private final CassandraFeeds cassandraFeeds;
+    private final AlarmService alarmService;
+    private final GroupWidgetService groupWidgetService;
+    private final IExportProvider exportProvider;
+    private final AuthenticatedUser authenticatedUser;
+
     private List<Component> adapters = new ArrayList<>();
 
     private String[] colors = new String[] {
@@ -152,9 +170,18 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
             "#685CB0",
     };
 
-    public ControlPanelBaseAdapter(GraphicWidget widget) {
+    public ControlPanelBaseAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
         super(widget);
-        anonymous = !UIUtils.getUserDetails().isEnabled();
+        this.visualizerServices = visualizerServices;
+        this.deviceService = visualizerServices.getDeviceService();
+        this.cassandraAlarms = visualizerServices.getCassandraAlarms();
+        this.cassandraFeeds = visualizerServices.getCassandraFeeds();
+        this.alarmService = visualizerServices.getAlarmService();
+        this.groupWidgetService = visualizerServices.getGroupWidgetService();
+        this.exportProvider = visualizerServices.getExportProvider();
+        this.authenticatedUser = visualizerServices.getAuthenticatedUser();
+        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+        anonymous = details == null || !details.isEnabled();
         resolver = new IconSetResolver();
         widget.getOptions().setRealTime(widget.getGroupWidget().getOptions().isRealTime());
         TimeZone tz = widget.getGroupWidget().getTimeZone();
@@ -167,7 +194,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
             widget.setDevice(widget.getGroupWidget().getDevice());
         }
 
-        device = UIUtils.getServiceFactory().getDeviceService().findBySerial(widget.getDevice());
+        device = deviceService.findBySerial(widget.getDevice());
 
         materializeFeeds();
         feedContainer = new ControlPanelBaseDataProvider();
@@ -270,11 +297,11 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
         }
 
         if (!anonymous) {
-            long count = UIUtils.getCassandraService().getAlarms().countActiveAlarms(device.getSerial());
+            long count = cassandraAlarms.countActiveAlarms(device.getSerial());
             resetAlarms.setEnabled(count > 0);
         }
 
-        Date lastContactDate = UIUtils.getCassandraService().getFeeds().getLastContact(device.getSerial());
+        Date lastContactDate = cassandraFeeds.getLastContact(device.getSerial());
         device.setLastContactDate(lastContactDate);
         if (device.checkInactive(lastContactDate)) {
             getContent().addClassName(CONTROLPANEL_OFFLINE);
@@ -527,7 +554,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
         widget.getOptions().setShowLegend(false);
         widget.getFeeds().addAll(getParameters());
 
-        multitrace = new TandemTraceChartAdapter(widget);
+        multitrace = new TandemTraceChartAdapter(widget, visualizerServices);
         TimeIntervalHelper helper = new TimeIntervalHelper(multitrace.getNetworkTimeZone());
         TimePeriod period = new GroupWidgetUiFactory().getDefaultPeriod();
         TimeInterval interval = helper.period(new Date(), period);
@@ -551,14 +578,15 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
                 button.setCallback(new QuickCommandCallback() {
                     @Override
                     public boolean checkResult(float value) {
-                        long count = UIUtils.getCassandraService().getAlarms().countActiveAlarms(button.getSerial());
+                        long count = cassandraAlarms.countActiveAlarms(button.getSerial());
                         return count == 0;
                     }
 
                     @Override
                     public void beforeCommand() {
-                        UIUtils.getServiceFactory().getAlarmService().notifyAlarmReset(button.getSerial(),
-                                UIUtils.getUserDetails().getUsername());
+                        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+                        String username = details != null ? details.getUsername() : "unknown";
+                        alarmService.notifyAlarmReset(button.getSerial(), username);
                     }
 
                     @Override
@@ -574,7 +602,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
                     @Override
                     public boolean checkResult(float value) {
                         FeedKey feedKey = new FeedKey(button.getSerial(), button.getKey());
-                        MeasureRaw measure = ChartUtils.lastMeasure(feedKey);
+                        MeasureRaw measure = ChartUtils.lastMeasure(feedKey, cassandraFeeds);
                         return measure != null && measure.getValue() != null && measure.getValue().equals(value);
                     }
 
@@ -701,7 +729,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
         ExportConfig config = new ExportConfig();
         config.setName(getWidget().getLabel());
         List<GraphicFeed> feeds = ((GraphicWidget) getWidget()).getFeeds();
-        config.setFeeds(ChartUtils.createExportFeeds(feeds));
+        config.setFeeds(ChartUtils.createExportFeeds(feeds, exportProvider));
         config.setInterpolation(Interpolation.RAW);
         return config;
     }
@@ -709,7 +737,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
     private ComponentEventListener<ClickEvent<Button>> openChannelRemoteControl(final SetpointButton setpoint,
             final Channel channel) {
         return event -> {
-            control = new ChannelRemoteControlForm(channel);
+            control = new ChannelRemoteControlForm(channel, visualizerServices);
             String caption = String.format("%s %s", getI18nLabel("control_setpoint"),
                     channel.getConfiguration().getDisplayName());
 
@@ -717,7 +745,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
             control.setSavedHandler(entity -> {
                 ChannelAdapter adapter = channelContainer.getAdapter(setpoint.getKey());
                 if (adapter != null) {
-                    MeasureRaw measure = ChartUtils.lastMeasure(adapter);
+                    MeasureRaw measure = ChartUtils.lastMeasure(adapter, cassandraFeeds);
                     if (measure != null) {
                         channelContainer.refresh(adapter, measure);
                         String unit = adapter.getMeasureUnit();

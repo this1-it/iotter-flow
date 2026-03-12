@@ -33,6 +33,7 @@ import it.thisone.iotter.ui.devices.DeviceForm;
 import it.thisone.iotter.ui.ifc.ITabContent;
 
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Channel> implements ITabContent {
 
@@ -41,15 +42,17 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 	private final Permissions permissions;
 	private final List<Channel> channels;
 	private final ChannelAdapterDataProvider adapterProvider;
+	private final VisualizerServices visualizerServices;
 	private ListDataProvider<Channel> dataProvider;
 	private Grid<Channel> grid;
 	private boolean loaded;
 
-	public ChannelRemoteControlListing() {
+	public ChannelRemoteControlListing(VisualizerServices visualizerServices) {
 		super(Channel.class, DeviceForm.NAME, "channel.remote", false);
 		this.permissions = new Permissions(true);
 		this.channels = new ArrayList<>();
 		this.adapterProvider = new ChannelAdapterDataProvider();
+		this.visualizerServices = visualizerServices;
 		buildLayout();
 	}
 
@@ -98,7 +101,7 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 
 	@Override
 	public AbstractBaseEntityForm<Channel> getEditor(Channel item, boolean readonly) {
-		return new ChannelRemoteControlForm(item);
+		return new ChannelRemoteControlForm(item, visualizerServices);
 	}
 
 

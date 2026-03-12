@@ -44,6 +44,7 @@ import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.util.MapUtils;
 
 public class GroupWidgetsCustomMap extends BaseEditor<Network> {
@@ -56,6 +57,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
     private final DeviceService deviceService;
     private final NetworkGroupService networkGroupService;
     private final GroupWidgetService groupWidgetService;
+    private final VisualizerServices visualizerServices;
     private final UIEventBus uiEventBus;
     private final ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
 
@@ -72,7 +74,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
     private VerticalLayout imageLayout;
 
     public GroupWidgetsCustomMap(String networkId, boolean editable) {
-        this(networkId, editable, null, null, null, null, null, null, null);
+        this(networkId, editable, null, null, null, null, null, null, null, null);
     }
 
     public GroupWidgetsCustomMap(String networkId, boolean editable,
@@ -82,13 +84,15 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
             GroupWidgetService groupWidgetService,
             AuthenticatedUser authenticatedUser,
             UIEventBus uiEventBus,
-            ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider) {
+            ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider,
+            VisualizerServices visualizerServices) {
         super("groupwidgets.custommap");
         this.editable = editable;
         this.networkService = networkService;
         this.deviceService = deviceService;
         this.networkGroupService = networkGroupService;
         this.groupWidgetService = groupWidgetService;
+        this.visualizerServices = visualizerServices;
         this.uiEventBus = uiEventBus;
         this.devicesImageOverlayMapProvider = devicesImageOverlayMapProvider;
 
@@ -374,7 +378,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
                                 return;
                             }
                             GroupWidgetVisualizer content = new GroupWidgetVisualizer(
-                                    groupWidget.getId().toString(), true, groupWidgetService);
+                                    groupWidget.getId().toString(), true, groupWidgetService, visualizerServices);
                             Tab tab = tabsheet.addTab(groupWidget.getName(), content);
                             tabsheet.setSelectedTab(tab);
                         }

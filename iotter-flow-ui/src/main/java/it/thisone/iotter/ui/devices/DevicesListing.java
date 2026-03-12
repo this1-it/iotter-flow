@@ -100,6 +100,7 @@ import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
 import it.thisone.iotter.ui.provisioning.ProvisioningWizard;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.ui.users.UserForm;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -158,6 +159,12 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	@Autowired
 	private MeasureUnitTypeService measureUnitTypeService;
+
+	@Autowired
+	private VisualizerServices visualizerServices;
+
+	@Autowired
+	private it.thisone.iotter.persistence.service.ModbusProfileService modbusProfileService;
 
 	private Network network;
 	private boolean hasParameters = true;
@@ -591,7 +598,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	private void openImporter() {
-		final DeviceProductionImporter content = new DeviceProductionImporter();
+		final DeviceProductionImporter content = new DeviceProductionImporter(deviceService, userService);
 		Dialog dialog = createDialog(getI18nLabel("import_production"), content);
 		// if (dialog instanceof SideDrawer) {
 		// ((SideDrawer) dialog).applyDimension(content.getWindowDimension());
@@ -678,7 +685,9 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			config.getFeeds().add(ChartUtils.createExportFeed(channel));
 		}
 
-		ExportDialog dialog = new ExportDialog(config, props, device, java.util.concurrent.ForkJoinPool.commonPool());
+		ExportDialog dialog = new ExportDialog(config, props, device, java.util.concurrent.ForkJoinPool.commonPool(),
+				visualizerServices.getCassandraRollup(), visualizerServices.getCassandraFeeds(),
+				visualizerServices.getExportProvider(), visualizerServices.getNotificationService());
 		// dialog.setHeaderTitle("Export " + device.getLabel());
 		dialog.open();
 	}
@@ -728,7 +737,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"),
-				new GroupWidgetVisualizer(bean.getId().toString(), true, groupWidgetService));
+				new GroupWidgetVisualizer(bean.getId().toString(), true, groupWidgetService, visualizerServices));
 		dialog.open();
 	}
 
@@ -736,7 +745,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (bean == null) {
 			return;
 		}
-		wizard = new ProvisioningWizard(bean.getSerial());
+		wizard = new ProvisioningWizard(bean.getSerial(), modbusProfileService, deviceService,
+				subscriptionService, groupWidgetService, authenticatedUser);
 
 		Dialog dialog = createDialog(getI18nLabel("device_provisioning"), (Component)
 		wizard);
@@ -1135,7 +1145,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	private Range<Date> getMeasuresRange(Device device) {
-		Date first = UIUtils.getCassandraService().getMeasures().getFirstTick(device.getSerial(), null);
+		Date first = cassandraService.getMeasures().getFirstTick(device.getSerial(), null);
 		if (first == null) {
 			first = new Date();
 		}
@@ -1143,7 +1153,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (startDate != null && first.before(startDate)) {
 			first = startDate;
 		}
-		Date last = UIUtils.getCassandraService().getMeasures().getLastTick(device.getSerial(), null);
+		Date last = cassandraService.getMeasures().getLastTick(device.getSerial(), null);
 		if (last == null) {
 			last = new Date();
 		}

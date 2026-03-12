@@ -21,6 +21,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.persistence.model.ModbusProfile;
 import it.thisone.iotter.persistence.service.ModbusProfileService;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
 import it.thisone.iotter.ui.main.UiConstants;
@@ -42,12 +43,15 @@ public class ModbusProfilesStep extends Composite<VerticalLayout> implements Wiz
 	private ModbusProfileSimpleForm form;
 	private IProvisioningWizard wizard;
 	private ModbusRegistersField registers;
-	private ModbusProfileService modbusProfileService = UIUtils.getServiceFactory().getModbusProfileService();
+	private final ModbusProfileService modbusProfileService;
+	private final AuthenticatedUser authenticatedUser;
 
-	public ModbusProfilesStep(IProvisioningWizard wizard) {
+	public ModbusProfilesStep(IProvisioningWizard wizard, ModbusProfileService modbusProfileService, AuthenticatedUser authenticatedUser) {
 		this.form = new ModbusProfileSimpleForm();
 		this.wizard = wizard;
-		this.registers = new ModbusRegistersField();
+		this.modbusProfileService = modbusProfileService;
+		this.authenticatedUser = authenticatedUser;
+		this.registers = new ModbusRegistersField(authenticatedUser);
 	}
 
 	@SuppressWarnings({ "serial" })

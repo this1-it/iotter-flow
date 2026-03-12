@@ -24,13 +24,17 @@ import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
 import it.thisone.iotter.ui.model.TimePeriod.TimePeriodEnum;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class ChannelRemoteControlForm extends AbstractBaseEntityForm<Channel> {
 
 	private static final long serialVersionUID = 5961351166441753740L;
 
-	public ChannelRemoteControlForm(Channel item) {
+	private final VisualizerServices visualizerServices;
+
+	public ChannelRemoteControlForm(Channel item, VisualizerServices visualizerServices) {
 		super(item, Channel.class, "channel.remote", null,null,false);
+		this.visualizerServices = visualizerServices;
 		getSaveButton().setVisible(false);
 		getResetButton().setVisible(false);
 		getDeleteButton().setVisible(false);
@@ -60,7 +64,7 @@ public class ChannelRemoteControlForm extends AbstractBaseEntityForm<Channel> {
 		feed.setMeasure(channel.getDefaultMeasure());
 		widget.addFeed(feed);
 
-		final MultiTraceChartAdapter chartAdapter = new MultiTraceChartAdapter(widget);
+		final MultiTraceChartAdapter chartAdapter = new MultiTraceChartAdapter(widget, visualizerServices);
 //		chartAdapter.setHeightFull();
 //		chartAdapter.setWidthFull();
 

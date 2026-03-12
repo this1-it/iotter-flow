@@ -57,6 +57,10 @@ import it.thisone.iotter.exporter.ExportGroupConfig;
 import it.thisone.iotter.exporter.ExportProperties;
 import it.thisone.iotter.exporter.IExportConfig;
 import it.thisone.iotter.exporter.IExportProvider;
+import it.thisone.iotter.cassandra.CassandraFeeds;
+import it.thisone.iotter.cassandra.CassandraRollup;
+import it.thisone.iotter.exporter.IExportProvider;
+import it.thisone.iotter.integration.NotificationService;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -102,14 +106,23 @@ public class ExportDialog extends Dialog {
 
 	protected IGroupWidgetUiFactory config;
 	private final Executor executor;
+	private final CassandraRollup rollup;
+	private final CassandraFeeds cassandraFeeds;
+	private final IExportProvider exportProvider;
+	private final NotificationService notificationService;
 
 	@SuppressWarnings("serial")
-	public ExportDialog(IExportConfig config, ExportProperties properties, Device device, Executor executor) {
+	public ExportDialog(IExportConfig config, ExportProperties properties, Device device, Executor executor,
+			CassandraRollup rollup, CassandraFeeds cassandraFeeds, IExportProvider exportProvider, NotificationService notificationService) {
 		super();
 		if (executor == null) {
 			throw new IllegalArgumentException("Executor is required");
 		}
 		this.executor = executor;
+		this.rollup = rollup;
+		this.cassandraFeeds = cassandraFeeds;
+		this.exportProvider = exportProvider;
+		this.notificationService = notificationService;
 		//setHeaderTitle(getI18nLabel("single_csv_export") + " " + config.getName());
 		setDraggable(false);
 		// setImmediate(true);
@@ -535,24 +548,22 @@ public class ExportDialog extends Dialog {
 		boolean lockAcquired = false;
 		try {
 			if (event.getConfig().getLockId() != null) {
-				if (!UIUtils.getCassandraService().getRollup()
-						.lockSink(event.getConfig().getLockId(), 15 * 3600)) {
+				if (!rollup.lockSink(event.getConfig().getLockId(), 15 * 3600)) {
 					return ExportResult.locked();
 				}
 				lockAcquired = true;
 			}
-			IExportProvider provider = UIUtils.getServiceFactory().getExportService();
+			IExportProvider provider = exportProvider;
 			File exported = provider.createExportDataFile(event.getConfig(), event.getProperties());
 			if (exported != null && event.getEmail() != null && !event.getEmail().trim().isEmpty()) {
-				UIUtils.getServiceFactory().getNotificationService()
-						.forwardVisualization(event.getEmail(), locale, exported, event.getConfig().getName());
+				notificationService.forwardVisualization(event.getEmail(), locale, exported, event.getConfig().getName());
 			}
 			return ExportResult.success(exported);
 		} catch (Exception ex) {
 			return ExportResult.failure();
 		} finally {
 			if (lockAcquired) {
-				UIUtils.getCassandraService().getRollup().unlockSink(event.getConfig().getLockId());
+				rollup.unlockSink(event.getConfig().getLockId());
 			}
 		}
 	}
@@ -656,7 +667,7 @@ public class ExportDialog extends Dialog {
 		List<Interpolation> items = new ArrayList<>();
 
 		if (device == null) {
-			List<Interpolation> types = UIUtils.getCassandraService().getRollup().availableInterpolations(interval,
+			List<Interpolation> types = rollup.availableInterpolations(interval,
 					null, null);
 			for (Interpolation type : types) {
 				if (type.getVirtual() == null) {
@@ -715,7 +726,7 @@ public class ExportDialog extends Dialog {
 
 	private Date sinceDate(Device device) {
 		Date date = device.getActivationDate() != null ? device.getActivationDate() : device.getProductionDate();
-		Date sinceDate = UIUtils.getCassandraService().getFeeds().getSince(device.getSerial());
+		Date sinceDate = cassandraFeeds.getSince(device.getSerial());
 		return sinceDate != null ? sinceDate : date;
 	}
 

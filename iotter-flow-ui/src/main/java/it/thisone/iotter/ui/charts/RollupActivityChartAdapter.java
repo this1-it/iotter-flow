@@ -21,10 +21,11 @@ import it.thisone.iotter.cassandra.model.Interpolation;
 import it.thisone.iotter.cassandra.model.MeasureAggregation;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
+import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class RollupActivityChartAdapter extends AbstractChartAdapter {
 
@@ -33,9 +34,11 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
     private ChartJs chart;
     private LineChartConfig chartConfig;
     private TimeScale xScale;
+    private final CassandraRollup rollup;
 
-    public RollupActivityChartAdapter(GraphicWidget widget) {
-        super(widget);
+    public RollupActivityChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+        super(widget, visualizerServices);
+        this.rollup = visualizerServices.getCassandraRollup();
         optionsField.getScale().setVisible(false);
         optionsField.getShowMarkers().setVisible(false);
         optionsField.getAutoScale().setVisible(false);
@@ -83,14 +86,14 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
         chartConfig.options().title().display(true).text(getWidget().getLabel());
 
         TimeLineDataset dataset = new TimeLineDataset();
-        dataset.label(ChartUtils.getFeedLabel(feed));
+        dataset.label(ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService()));
         dataset.borderColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
         dataset.backgroundColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
         dataset.fill(false);
         dataset.pointRadius(0);
 
         Range<Date> range = Range.closedOpen(interval.getStartDate(), interval.getEndDate());
-        List<MeasureAggregation> measures = UIUtils.getCassandraService().getRollup().rollUpData(feed.getKey(), Interpolation.MIN15, range);
+        List<MeasureAggregation> measures = rollup.rollUpData(feed.getKey(), Interpolation.MIN15, range);
         List<Pair<java.time.LocalDateTime, Double>> data = new ArrayList<>();
         for (MeasureAggregation measure : measures) {
             data.add(Pair.of(toLocalDateTime(measure.getDate()), (double) measure.getRecords()));

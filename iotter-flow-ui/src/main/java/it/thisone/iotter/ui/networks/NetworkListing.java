@@ -87,6 +87,8 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	private ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
 	@Autowired
 	private AuthenticatedUser authenticatedUser;
+	@Autowired
+	private it.thisone.iotter.ui.providers.VisualizerServices visualizerServices;
 
 	@org.springframework.beans.factory.annotation.Value("${googlemap.apikey:}")
 	private String googleMapApiKey;
@@ -339,11 +341,11 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 				break;
 			case CUSTOM:
 				content = new GroupWidgetsCustomMap(item.getId(), false, networkService, deviceService,
-						networkGroupService, groupWidgetService, authenticatedUser,uiEventBus, devicesImageOverlayMapProvider);
+						networkGroupService, groupWidgetService, authenticatedUser,uiEventBus, devicesImageOverlayMapProvider, visualizerServices);
 				break;
 			default:
 				content = new GroupWidgetsDevicesListing(network, groupWidgetService, authenticatedUser, uiEventBus,
-						groupWidgetsListingBoxProvider);
+						groupWidgetsListingBoxProvider, visualizerServices);
 				break;
 		}
 

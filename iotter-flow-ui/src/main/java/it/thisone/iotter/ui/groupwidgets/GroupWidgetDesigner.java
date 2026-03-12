@@ -40,6 +40,7 @@ import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.graphicwidgets.GraphicWidgetPlaceHolder;
 import it.thisone.iotter.ui.gridstack.GridstackBoard;
 import it.thisone.iotter.ui.gridstack.GridstackLayoutUtils;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.util.EncryptUtils;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -52,6 +53,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
     private final NetworkService networkService;
     private final NetworkGroupService networkGroupService;
     private final UserDetailsAdapter currentUser;
+    private final VisualizerServices visualizerServices;
     private final UIEventBus uiEventBus;
 
     private GroupWidget entity;
@@ -65,13 +67,15 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
             GroupWidgetService groupWidgetService,
             NetworkService networkService,
             NetworkGroupService networkGroupService,
-            UserDetailsAdapter currentUser) {
+            UserDetailsAdapter currentUser,
+            VisualizerServices visualizerServices) {
         super("groupwidget.designer", sourceEntity != null && sourceEntity.getId() != null ? sourceEntity.getId() : "");
 
         this.groupWidgetService = groupWidgetService;
         this.networkService = networkService;
         this.networkGroupService = networkGroupService;
         this.currentUser = currentUser;
+        this.visualizerServices = visualizerServices;
         this.uiEventBus = resolveUiEventBus();
         this.addedWidgets = new ArrayList<>();
         this.removedWidgets = new ArrayList<>();
@@ -183,7 +187,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         for (GraphicWidget widget : entity.getWidgets()) {
             if (widget.getParent() == null) {
                 List<GraphicWidget> children = widget.findChildren(entity.getWidgets());
-                GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children);
+                GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children, visualizerServices);
                 placeHolderListeners(placeHolder);
                 int[] defaultSize = GridstackLayoutUtils.getDefaultGridSize(widget.getType());
                 gridstackBoard.addWidget(widget.getId(), placeHolder, 0, 0, defaultSize[0], defaultSize[1]);
@@ -336,7 +340,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         widget.setGroupWidget(entity);
 
         List<GraphicWidget> children = new ArrayList<>();
-        GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children);
+        GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children, visualizerServices);
         placeHolderListeners(placeHolder);
         placeHolder.openEditor(placeHolder.getWidget(), true);
     }

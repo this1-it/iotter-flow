@@ -26,6 +26,8 @@ import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.modbus.TemplateState;
 import it.thisone.iotter.persistence.model.ModbusProfile;
 import it.thisone.iotter.persistence.service.ModbusProfileService;
+import it.thisone.iotter.security.UserDetailsAdapter;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -37,11 +39,15 @@ import it.thisone.iotter.util.PopupNotification.Type;
 public class ModbusTemplatesStep extends Composite<HorizontalLayout> implements WizardStep, Constants {
 
 	private static final String SERIAL = "SERIAL";
-	private ModbusProfileService service = UIUtils.getServiceFactory().getModbusProfileService();
+	private final ModbusProfileService service;
+	private final AuthenticatedUser authenticatedUser;
 	private IProvisioningWizard wizard;
 
-	public ModbusTemplatesStep(IProvisioningWizard wizard) {
+	public ModbusTemplatesStep(IProvisioningWizard wizard, ModbusProfileService service,
+			AuthenticatedUser authenticatedUser) {
 		this.wizard = wizard;
+		this.service = service;
+		this.authenticatedUser = authenticatedUser;
 	}
 
 	public String getI18nLabel(String key) {
@@ -118,9 +124,10 @@ public class ModbusTemplatesStep extends Composite<HorizontalLayout> implements 
 		content.setFlexGrow(0.5f, left);
 		content.setFlexGrow(0.05f, center);
 		content.setFlexGrow(0.5f, right);
-		String tenant = UIUtils.getUserDetails().getTenant();
+		UserDetailsAdapter details = authenticatedUser.get().orElse(null);
+		String tenant = details != null ? details.getTenant() : null;
 
-		boolean supervisor = UIUtils.getUserDetails().hasRole(Constants.ROLE_SUPERVISOR);
+		boolean supervisor = details != null && details.hasRole(Constants.ROLE_SUPERVISOR);
 		lastTemplates = filterTemplates(service.findLastTemplates(supervisor), tenant);
 		allTemplates = filterTemplates(service.findTemplates(), tenant);
 

@@ -28,6 +28,7 @@ import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 
 public class VariationChartAdapter extends AbstractChartAdapter {
 
@@ -43,8 +44,8 @@ public class VariationChartAdapter extends AbstractChartAdapter {
 
 	private static final long serialVersionUID = -1958076735452737593L;
 
-	public VariationChartAdapter(GraphicWidget widget) {
-		super(widget);
+	public VariationChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+		super(widget, visualizerServices);
 		optionsField.getRealTime().setVisible(false);
 		optionsField.getScale().setVisible(false);
 		optionsField.getAutoScale().setVisible(false);
@@ -78,7 +79,7 @@ public class VariationChartAdapter extends AbstractChartAdapter {
 
 	private BarChartConfig createConfiguration(GraphicFeed feed) {
 		String feedColor = feed.getOptions().getFillColor();
-		String feedLabel = ChartUtils.getFeedLabel(feed);
+		String feedLabel = ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService());
 		BarChartConfig configuration = createEmptyConfiguration();
 		configuration.options().title().display(true).text(feedLabel).fontColor(feedColor).fontSize(12);
 		// TODO(flow-chartjs): Vaadin 8 column paddings and tooltip templates do not map 1:1.
@@ -125,7 +126,8 @@ public class VariationChartAdapter extends AbstractChartAdapter {
 			FeedKey feedKey = new FeedKey(feed.getDevice().getSerial(), feed.getKey());
 			feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
 			List<MeasureRaw> measures = ChartUtils.getData(feedKey, time.getStartDate(), time.getEndDate(), points, step,
-					validities, getNetworkTimeZone());
+					validities, getNetworkTimeZone(),
+					visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
 			sdf.applyPattern(ChartUtils.DATE_FORMAT);
 			boolean positive = true;
 
@@ -142,7 +144,7 @@ public class VariationChartAdapter extends AbstractChartAdapter {
 			yScale.ticks().beginAtZero(positive);
 		}
 
-		String feedLabel = ChartUtils.getFeedLabel(feed);
+		String feedLabel = ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService());
 		BarDataset dataset = new BarDataset().label(feedLabel).dataAsList(values)
 				.backgroundColor(feed.getOptions().getFillColor()).stack("values");
 		chartConfig.data().addDataset(dataset);
