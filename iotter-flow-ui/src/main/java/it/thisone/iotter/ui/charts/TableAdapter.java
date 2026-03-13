@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Range;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
 
@@ -56,7 +57,7 @@ public class TableAdapter extends AbstractChartAdapter {
 	protected Component buildVisualization() {
 		Grid<ExportRow> grid = new Grid<>();
 		
-		DataFormat dataFormat = new DataFormat(UIUtils.getLocale(), getNetworkTimeZone());
+		DataFormat dataFormat = new DataFormat(UI.getCurrent().getLocale(), getNetworkTimeZone());
 		
 		List<CassandraExportFeed> feeds = ChartUtils.createExportFeeds(getGraphWidget().getFeeds(), visualizerServices.getExportProvider());
 		

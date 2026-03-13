@@ -8,16 +8,13 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.googlecode.jatl.Html;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.UI;
 
-import it.thisone.iotter.cassandra.CassandraFeeds;
+
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.DeviceStatus;
-import it.thisone.iotter.integration.AlarmService;
+
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GroupWidget;
@@ -28,7 +25,9 @@ import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.security.UserDetailsAdapter;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
+import it.thisone.iotter.ui.providers.BackendServices;
+import it.thisone.iotter.ui.providers.VisualizerServices;
+
 
 public class MapUtils implements Serializable {
 	public static final String GOOGLE_COM_RECAPTCHA_API_JS = "https://www.google.com/recaptcha/api.js";
@@ -49,7 +48,7 @@ public class MapUtils implements Serializable {
 	private static final long serialVersionUID = -8826738658600702437L;
 
 
-	public static String getIconUrl(Device device, AlarmService alarmService, CassandraFeeds feeds) {
+	public static String getIconUrl(Device device, VisualizerServices visualizerServices) {
 		String icon = RED_DOT;
 		if (device.getStatus().equals(DeviceStatus.CONNECTED) && !device.getChannels().isEmpty()) {
 			icon = GREEN_DOT;
@@ -58,12 +57,12 @@ public class MapUtils implements Serializable {
 		}
 
 		if (device.isAlarmed()) {
-			if (alarmService.hasActiveAlarms(device.getSerial())) {
+			if (visualizerServices.getAlarmService().hasActiveAlarms(device.getSerial())) {
 				icon = RED_DOT;
 			}
 		}
 
-		Date lastContactDate = feeds.getLastContact(device.getSerial());
+		Date lastContactDate = visualizerServices.getCassandraFeeds().getLastContact(device.getSerial());
 		device.setLastContactDate(lastContactDate);
 		
 		if (device.checkInactive(lastContactDate)) {
@@ -73,18 +72,19 @@ public class MapUtils implements Serializable {
 		return icon;
 	}
 
-	public static Map<Device, Set<GroupWidget>> mappableDevices(Network network, UserDetailsAdapter details, NetworkGroupService networkGroupService, UserService userService, DeviceService deviceService) {
+	public static Map<Device, Set<GroupWidget>> mappableDevices(Network network, BackendServices backendServices) {
 		Collection<NetworkGroup> groups = new ArrayList<NetworkGroup>();
+		UserDetailsAdapter details = backendServices.getAuthenticatedUser().get().orElse(null);
 
 		if (details == null) {
 			if (network.isAnonymous()) {
-				groups = networkGroupService.findByNetwork(network);
+				groups = backendServices.getNetworkGroupService().findByNetwork(network);
 			}
 		}
 		else {
 			if (details.getNetworkId() !=null && details.getNetworkId().equals(network.getId())) {
 				if (details.hasRole(Constants.ROLE_USER)) {
-					User user = userService.findOne(details.getUserId());
+					User user = backendServices.getUserService().findOne(details.getUserId());
 					// groups = user.getGroups();
 					// Feature #1884
 					for (NetworkGroup group : user.getGroups()) {
@@ -94,7 +94,7 @@ public class MapUtils implements Serializable {
 					}
 				}
 				else {
-					groups = networkGroupService.findByNetwork(network);
+					groups = backendServices.getNetworkGroupService().findByNetwork(network);
 				}
 
 //				User user = UIUtils.getServiceFactory().getUserService().findOne(details.getUserId());
@@ -110,18 +110,18 @@ public class MapUtils implements Serializable {
 			}
 			else if (details.hasRole(Constants.ROLE_ADMINISTRATOR)) {
 				if (network.getOwner().equals(details.getTenant())) {
-					groups = networkGroupService.findByNetwork(network);
+					groups = backendServices.getNetworkGroupService().findByNetwork(network);
 				}
 			}
 			else if (details.hasRole(Constants.ROLE_SUPERVISOR)) {
-				groups = networkGroupService.findByNetwork(network);
+				groups = backendServices.getNetworkGroupService().findByNetwork(network);
 			}
 		}
 
 
 
 
-		Map<Device, Set<GroupWidget>> map = deviceService.findMappableDevices(groups);
+		Map<Device, Set<GroupWidget>> map = backendServices.getDeviceService().findMappableDevices(groups);
 		return map;
 	}
 	

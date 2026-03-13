@@ -45,6 +45,7 @@ import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.util.MapUtils;
 
 public class GroupWidgetsCustomMap extends BaseEditor<Network> {
@@ -53,16 +54,12 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
     private static final Logger logger = LoggerFactory.getLogger(GroupWidgetsCustomMap.class);
 
     private final boolean editable;
-    private final NetworkService networkService;
-    private final DeviceService deviceService;
-    private final NetworkGroupService networkGroupService;
-    private final GroupWidgetService groupWidgetService;
+
+     private final BackendServices backendServices;
     private final VisualizerServices visualizerServices;
     private final UIEventBus uiEventBus;
     private final ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
 
-    @Autowired
-	private AuthenticatedUser authenticatedUser;
 
     private Network network;
     private Map<Device, Set<GroupWidget>> map;
@@ -73,32 +70,24 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
     private HorizontalLayout footer;
     private VerticalLayout imageLayout;
 
-    public GroupWidgetsCustomMap(String networkId, boolean editable) {
-        this(networkId, editable, null, null, null, null, null, null, null, null);
-    }
+
 
     public GroupWidgetsCustomMap(String networkId, boolean editable,
-            NetworkService networkService,
-            DeviceService deviceService,
-            NetworkGroupService networkGroupService,
-            GroupWidgetService groupWidgetService,
-            AuthenticatedUser authenticatedUser,
+            BackendServices backendServices,
             UIEventBus uiEventBus,
             ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider,
             VisualizerServices visualizerServices) {
         super("groupwidgets.custommap");
         this.editable = editable;
-        this.networkService = networkService;
-        this.deviceService = deviceService;
-        this.networkGroupService = networkGroupService;
-        this.groupWidgetService = groupWidgetService;
+
+        this.backendServices = backendServices;
         this.visualizerServices = visualizerServices;
         this.uiEventBus = uiEventBus;
         this.devicesImageOverlayMapProvider = devicesImageOverlayMapProvider;
 
-        if (networkService != null) {
-            network = networkService.findOne(networkId);
-        }
+        
+            network = backendServices.getNetworkService().findOne(networkId);
+        
         if (network == null) {
             network = new Network();
             network.setId(networkId);
@@ -106,8 +95,8 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
         }
         setItem(network);
 
-        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
-        map = network.getId() != null ? MapUtils.mappableDevices(network,details) : new HashMap<>();
+        
+        map = network.getId() != null ? MapUtils.mappableDevices(network,backendServices) : new HashMap<>();
 
         buildLayout();
         init();
@@ -187,9 +176,9 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
 
         DevicesImageOverlayMap imageMap;
         if (devicesImageOverlayMapProvider != null) {
-            imageMap = devicesImageOverlayMapProvider.getObject(custom, map, editable, deviceService);
+            imageMap = devicesImageOverlayMapProvider.getObject(custom, map, editable, backendServices.getDeviceService());
         } else {
-            imageMap = new DevicesImageOverlayMap(custom, map, editable, deviceService);
+            imageMap = new DevicesImageOverlayMap(custom, map, editable, visualizerServices);
         }
         footer.removeAll();
         imageLayout.removeAll();
@@ -295,7 +284,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
             current.setNetwork(network);
         }
 
-        DeviceCustomMapForm content = new DeviceCustomMapForm(current, network, networkGroupService, deviceService);
+        DeviceCustomMapForm content = new DeviceCustomMapForm(current, network, backendServices.getNetworkGroupService(), backendServices.getDeviceService());
         Dialog dialog = createDialog(label, content);
 
         content.setSavedHandler(itemId -> {
@@ -325,12 +314,9 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
 
     @Override
     protected void onSave() {
-        if (networkService == null) {
-            // TODO(flow-migration): inject NetworkService from parent to persist custom maps.
-            return;
-        }
+
         try {
-            networkService.update(network);
+            backendServices.getNetworkService().update(network);
         } catch (BackendServiceException e) {
             logger.error("Unable to save custom map", e);
         }
@@ -338,12 +324,10 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
 
     @Override
     protected void onCancel() {
-        if (networkService == null || network.getId() == null) {
-            return;
-        }
+
         try {
-            network = networkService.findOne(network.getId());
-            networkService.update(network);
+            network = backendServices.getNetworkService().findOne(network.getId());
+            backendServices.getNetworkService().update(network);
         } catch (BackendServiceException e) {
             logger.error("Unable to reload custom map", e);
         }
@@ -373,12 +357,9 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
                     Set<GroupWidget> groupWidgets = map.get(device);
                     for (GroupWidget groupWidget : groupWidgets) {
                         if (groupWidget.getId().toString().equals(event.getWidget())) {
-                            if (groupWidgetService == null) {
-                                // TODO(flow-migration): inject GroupWidgetService from parent to open visualizers.
-                                return;
-                            }
+
                             GroupWidgetVisualizer content = new GroupWidgetVisualizer(
-                                    groupWidget.getId().toString(), true, groupWidgetService, visualizerServices);
+                                    groupWidget.getId().toString(), true, backendServices.getGroupWidgetService(), visualizerServices);
                             Tab tab = tabsheet.addTab(groupWidget.getName(), content);
                             tabsheet.setSelectedTab(tab);
                         }

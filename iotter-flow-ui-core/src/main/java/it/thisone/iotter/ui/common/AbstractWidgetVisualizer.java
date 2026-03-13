@@ -9,8 +9,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.Unit;
 
 import it.thisone.iotter.persistence.ifc.IWidget;
-import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
-import it.thisone.iotter.ui.main.IMainUI;
+
 import it.thisone.iotter.ui.uitask.UIRunnable;
 
 @SuppressWarnings("serial")
@@ -159,21 +158,7 @@ public abstract class AbstractWidgetVisualizer extends BaseComponent {
 	 * and then update the UI when the UI lock has been obtained.
 	 * @param event
 	 */
-	@Subscribe
-	public abstract void refreshWithUiAccess(final WidgetRefreshEvent event);
-	
-//	@Override
-//	public void attach() {
-//		super.attach();
-//		register();
-//	}
-//
-//	@Override
-//	public void detach() {
-//		super.detach();
-//		unregister();
-//	}
-	
+
 	public void register() {
 		if (eventBusRegister != null) {
 			eventBusRegister.accept(this);

@@ -17,6 +17,7 @@ import org.vaadin.addons.chartjs.data.RadarDataset;
 
 import com.google.common.collect.Range;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.shared.Registration;
 
@@ -108,7 +109,7 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
         }
 
         String feedUnit = ChartUtils.getUnitOfMeasure(speed, visualizerServices.getDeviceService());
-        DecimalFormat df = (DecimalFormat) NumberFormat.getInstance(UIUtils.getLocale());
+        DecimalFormat df = (DecimalFormat) NumberFormat.getInstance(UI.getCurrent().getLocale());
         df.applyPattern(speed.getMeasure().getFormat());
 
         if (speed.getThresholds().isEmpty()) {
@@ -236,7 +237,7 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
         chartConfig.options().legend().display(getGraphWidget().getOptions().getShowLegend());
         chartConfig.data().labelsAsList(degreeCategories);
 
-        DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UIUtils.getLocale());
+        DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UI.getCurrent().getLocale());
         decimalFormat.applyPattern("0.##");
 
         for (int row = 0; row < rows; row++) {

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Range;
+import com.vaadin.flow.component.UI;
 
 import it.thisone.iotter.cassandra.CassandraFeeds;
 import it.thisone.iotter.cassandra.CassandraMeasures;
@@ -124,7 +125,7 @@ public class ChartUtils {
 	}
 
 	public static String formatMeasure(Number value, MeasureUnit measureUnit) {
-		DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UIUtils.getLocale());
+		DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UI.getCurrent().getLocale());
 		if (measureUnit == null) {
 			return decimalFormat.format(value);
 		}

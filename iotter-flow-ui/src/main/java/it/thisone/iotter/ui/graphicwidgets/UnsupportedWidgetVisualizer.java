@@ -1,13 +1,12 @@
 package it.thisone.iotter.ui.graphicwidgets;
 
-import com.google.common.eventbus.Subscribe;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
-import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 
 public class UnsupportedWidgetVisualizer extends AbstractWidgetVisualizer {
 
@@ -39,9 +38,4 @@ public class UnsupportedWidgetVisualizer extends AbstractWidgetVisualizer {
     public void draw() {
     }
 
-    @Override
-    @Subscribe
-    public void refreshWithUiAccess(WidgetRefreshEvent event) {
-        // TODO(flow-migration): replace with concrete widget visualizers.
-    }
 }

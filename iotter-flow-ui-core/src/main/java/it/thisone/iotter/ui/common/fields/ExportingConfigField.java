@@ -3,6 +3,7 @@ package it.thisone.iotter.ui.common.fields;
 import java.text.DecimalFormatSymbols;
 
 import com.vaadin.flow.component.AbstractCompositeField;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Span;
@@ -105,7 +106,7 @@ public class ExportingConfigField extends AbstractCompositeField<FormLayout, Exp
 		String decimalSeparator = new String(new char[] { DecimalFormatSymbols.getInstance().getDecimalSeparator() });
 		config.setDecimalSeparator(decimalSeparator);
 		config.setTimeZone(UIUtils.getBrowserTimeZone().getID());
-		config.setLocale(UIUtils.getLocale().toLanguageTag());
+		config.setLocale(UI.getCurrent().getLocale().toLanguageTag());
 		return config;
 	}
 	

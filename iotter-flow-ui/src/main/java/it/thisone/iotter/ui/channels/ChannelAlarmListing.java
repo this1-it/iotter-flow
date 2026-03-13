@@ -10,6 +10,7 @@ import java.util.Map;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -154,7 +155,7 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 					: getTranslation("channel.alarm.digital.down");
 			return String.format("%s:%s", getTranslation("channel.alarm.digital"), direction);
 		}
-		DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UIUtils.getLocale());
+		DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UI.getCurrent().getLocale());
 		return String.format("%s:%s, %s:%s, %s:%s, %s:%s",
 				getTranslation("channel.alarm.lowLow"), decimalFormat.format(alarm.getLowLow()),
 				getTranslation("channel.alarm.low"), decimalFormat.format(alarm.getLow()),

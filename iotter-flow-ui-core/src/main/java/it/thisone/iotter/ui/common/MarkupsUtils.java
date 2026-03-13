@@ -22,13 +22,9 @@ import com.googlecode.jatl.Html;
 import com.vaadin.flow.component.UI;
 
 import it.thisone.iotter.persistence.model.Channel;
-import it.thisone.iotter.persistence.model.Device;
-import it.thisone.iotter.persistence.model.GeoLocation;
-import it.thisone.iotter.persistence.model.GraphicFeed;
-import it.thisone.iotter.persistence.model.GraphicWidget;
+
 import it.thisone.iotter.persistence.model.MeasureUnit;
-import it.thisone.iotter.ui.common.charts.ChartUtils;
-import it.thisone.iotter.ui.main.IMainUI;
+
 import it.thisone.iotter.ui.model.ChannelAdapter;
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
 
@@ -40,44 +36,44 @@ public class MarkupsUtils {
 		return String.format("<span style=\"color: %s\">%s</span>", color, text);
 	}
 
-	public static String toHtml(GraphicWidget widget) {
-		StringWriter writer = new StringWriter();
-		Html markup = new Html(writer);
-		String type = widget.getType().getI18nKey();
-		String beanName = (widget.getLabel() != null) ? type + ": " + widget.getLabel() : type + ": " + widget.getId();
-		markup.text(beanName).br();
-		if (!widget.getFeeds().isEmpty()) {
-			markup.table().width("100%");
-			markup.style("border-collapse: collapse;");
-			markup.border("1").cellpadding("2").cellspacing("2");
-			markup.thead().tr();
-			markup.th().text("label").end();
-			markup.th().text("measure").end();
-			markup.th().text("status").end();
-			markup.th().text("key").end();
-			markup.th().text("range").end();
-			markup.end().end();
-			markup.tbody();
-			for (GraphicFeed feed : widget.getFeeds()) {
-				String uniqueKey = feed.getKey();
-				String feedUnit = ChartUtils.getUnitOfMeasure(feed);
-				String feedLabel = feed.getChannel().toString();
-				String feedStatus = feed.getChannel().getConfiguration().isActive() ? "activated" : "deactivated";
+	// public static String toHtml(GraphicWidget widget) {
+	// 	StringWriter writer = new StringWriter();
+	// 	Html markup = new Html(writer);
+	// 	String type = widget.getType().getI18nKey();
+	// 	String beanName = (widget.getLabel() != null) ? type + ": " + widget.getLabel() : type + ": " + widget.getId();
+	// 	markup.text(beanName).br();
+	// 	if (!widget.getFeeds().isEmpty()) {
+	// 		markup.table().width("100%");
+	// 		markup.style("border-collapse: collapse;");
+	// 		markup.border("1").cellpadding("2").cellspacing("2");
+	// 		markup.thead().tr();
+	// 		markup.th().text("label").end();
+	// 		markup.th().text("measure").end();
+	// 		markup.th().text("status").end();
+	// 		markup.th().text("key").end();
+	// 		markup.th().text("range").end();
+	// 		markup.end().end();
+	// 		markup.tbody();
+	// 		for (GraphicFeed feed : widget.getFeeds()) {
+	// 			String uniqueKey = feed.getKey();
+	// 			String feedUnit = ChartUtils.getUnitOfMeasure(feed);
+	// 			String feedLabel = feed.getChannel().toString();
+	// 			String feedStatus = feed.getChannel().getConfiguration().isActive() ? "activated" : "deactivated";
 
-				markup.tr();
-				markup.td().text(feedLabel).end();
-				markup.td().text(feedUnit).end();
-				markup.td().text(feedStatus).end();
-				markup.td().text(uniqueKey).end();
-				markup.td().text(channelRange(feed.getChannel())).end();
-				markup.end();
-			}
-			markup.end();
-		}
-		markup.done();
-		// logger.debug(writer.toString());
-		return writer.toString();
-	}
+	// 			markup.tr();
+	// 			markup.td().text(feedLabel).end();
+	// 			markup.td().text(feedUnit).end();
+	// 			markup.td().text(feedStatus).end();
+	// 			markup.td().text(uniqueKey).end();
+	// 			markup.td().text(channelRange(feed.getChannel())).end();
+	// 			markup.end();
+	// 		}
+	// 		markup.end();
+	// 	}
+	// 	markup.done();
+	// 	// logger.debug(writer.toString());
+	// 	return writer.toString();
+	// }
 
 	public static String channelRange(Channel chnl) {
 		String range = null;
@@ -115,44 +111,6 @@ public class MarkupsUtils {
 	}
 
 
-	public static String stationLabel(Device device) {
-
-		DecimalFormat df = (DecimalFormat) NumberFormat.getInstance(UIUtils.getLocale());
-
-		StringWriter writer = new StringWriter();
-		Html markup = new Html(writer);
-
-		markup.table().width("100%");
-		markup.border("0").cellpadding("1").cellspacing("0");
-
-		markup.tr().td();
-		markup.b().text(device.getLabel()).end();
-		markup.text(" ");
-		markup.text("sn ");
-		markup.text(device.getSerial());
-		markup.end().end();
-
-		GeoLocation location = device.getLocation();
-		markup.tr().td();
-		markup.text(location.getAddress());
-		markup.end().end();
-
-		markup.tr().td();
-		markup.text("Lat.");
-		markup.b().text(df.format(location.getLatitude())).end();
-		markup.text(" ");
-		markup.text("Lon.");
-		markup.b().text(df.format(location.getLongitude())).end();
-		markup.text(" ");
-		markup.text("Alt.");
-		markup.b();
-		markup.text(df.format(location.getElevation()));
-		markup.end().end();
-
-		markup.end();
-
-		return writer.toString();
-	}
 
 	public static String toHtmlMeasureScale(List<MeasureUnit> list) {
 		if (list.isEmpty())

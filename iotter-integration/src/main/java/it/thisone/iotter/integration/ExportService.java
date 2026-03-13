@@ -95,6 +95,7 @@ public class ExportService implements IExportProvider {
 
 //	public static Logger logger = LoggerFactory.getLogger(ExportService.class);
 
+    @Override
 	public CassandraExportFeed createExportFeed(Channel channel, String label) {
 		if (channel == null)
 			return null;

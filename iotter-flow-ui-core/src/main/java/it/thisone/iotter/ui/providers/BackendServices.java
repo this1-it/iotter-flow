@@ -1,13 +1,14 @@
-package it.thisone.iotter.integration;
+package it.thisone.iotter.ui.providers;
 
-import javax.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-
+import it.thisone.iotter.integration.AlarmService;
+import it.thisone.iotter.integration.AuthManager;
+import it.thisone.iotter.integration.ExportService;
+import it.thisone.iotter.integration.NotificationService;
+import it.thisone.iotter.integration.SubscriptionService;
 import it.thisone.iotter.mqtt.MqttOutboundService;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
@@ -19,27 +20,10 @@ import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.persistence.service.RoleService;
 import it.thisone.iotter.persistence.service.TracingService;
 import it.thisone.iotter.persistence.service.UserService;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 
-@Component
-public class ServiceFactory {
-	private static Logger logger = LoggerFactory.getLogger(ServiceFactory.class);	
-	@PostConstruct
-	public void init() {
-		logger.debug("ServiceFactory initialized.");
-		checkEnhancerBySpringCGLIB(userService.getClass());
-		checkEnhancerBySpringCGLIB(groupService.getClass());
-		checkEnhancerBySpringCGLIB(networkService.getClass());
-		checkEnhancerBySpringCGLIB(deviceService.getClass());
-	}
-	
-	private <T> void checkEnhancerBySpringCGLIB(Class<T> clazz) {
-		// Bean 'deviceService' of type [it.thisone.iotter.persistence.service.DeviceService] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
-		String value = clazz.toString();
-		if (!value.contains("EnhancerBySpringCGLIB")) {
-			throw new IllegalArgumentException(String.format("Bean %s is NOT ENHANCED", clazz.getName()));
-		}
-		
-	}
+@Service
+public class BackendServices {
 
 	@Autowired
 	private ExportService exportService;
@@ -90,7 +74,7 @@ public class ServiceFactory {
 	private AlarmService alarmService;
 
 	@Autowired
-	private RecoveryService recoveryService;
+    private AuthenticatedUser authenticatedUser;
 
 	
 	public UserService getUserService() {
@@ -158,10 +142,8 @@ public class ServiceFactory {
 		return exportService;
 	}
 
-	public RecoveryService getRecoveryService() {
-		return recoveryService;
-	}
 
 
+	public AuthenticatedUser getAuthenticatedUser() { return authenticatedUser; }
 	
 }

@@ -658,7 +658,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		// props.setTimeZone(UIUtils.getBrowserTimeZone());
 		props.setFileMode(ExportFileMode.SINGLE);
 		props.setFormat(ExportFormat.EXCEL);
-		props.setLocale(UIUtils.getLocale());
+		props.setLocale(UI.getCurrent().getLocale());
 
 		ExportConfig config = new ExportConfig();
 		config.setInterpolation(Interpolation.RAW);
@@ -682,7 +682,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		List<Channel> channels = new ArrayList<>(device.getChannels());
 		Collections.sort(channels, new ChannelComparator());
 		for (Channel channel : channels) {
-			config.getFeeds().add(ChartUtils.createExportFeed(channel));
+			config.getFeeds().add(ChartUtils.createExportFeed(channel, visualizerServices.getExportProvider()));
 		}
 
 		ExportDialog dialog = new ExportDialog(config, props, device, java.util.concurrent.ForkJoinPool.commonPool(),

@@ -21,6 +21,7 @@ import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.ImageData;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.ui.common.SideDrawer;
+import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.util.MapUtils;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -29,7 +30,7 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
     private DeviceCustomMap entity;
     private static final long serialVersionUID = 1L;
     private Map<Device, Set<GroupWidget>> devices;
-    private final DeviceService deviceService;
+    private final VisualizerServices visualizerServices;
 
     public DevicesImageOverlayMap(DeviceCustomMap entity,
             Map<Device, Set<GroupWidget>> devices, boolean editable) {
@@ -37,11 +38,11 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
     }
 
     public DevicesImageOverlayMap(DeviceCustomMap entity,
-            Map<Device, Set<GroupWidget>> devices, boolean editable, DeviceService deviceService) {
+            Map<Device, Set<GroupWidget>> devices, boolean editable, VisualizerServices visualizerServices) {
         super(entity.getImage(), entity.getIMarkers(), editable);
         this.entity = entity;
         this.devices = devices;
-        this.deviceService = deviceService;
+        this.visualizerServices = visualizerServices;
         initContent(-1, -1);
     }
 
@@ -51,10 +52,8 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
                 return device;
             }
         }
-        if (deviceService == null) {
-            return null;
-        }
-        return deviceService.findBySerial(serial);
+
+        return visualizerServices.getDeviceService().findBySerial(serial);
     }
 
     @Override
@@ -63,7 +62,7 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
         if (device != null) {
             final Marker marker = new Marker(new LatLng(point.getX(), point.getY()));
             marker.onClick(event -> openDrawer(markerId));
-            Icon icon = new Icon(MapUtils.getIconUrl(device));
+            Icon icon = new Icon(MapUtils.getIconUrl(device,visualizerServices));
             marker.setIcon(icon);
             return marker;
         }

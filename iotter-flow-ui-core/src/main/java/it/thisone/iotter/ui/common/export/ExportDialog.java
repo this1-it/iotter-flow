@@ -510,7 +510,7 @@ public class ExportDialog extends Dialog {
 
 					ExportStartEvent start = new ExportStartEvent(owner, email, config, properties);
 					UI ui = UI.getCurrent();
-					Locale locale = ui == null ? UIUtils.getLocale() : ui.getLocale();
+					Locale locale = ui == null ? UI.getCurrent().getLocale() : ui.getLocale();
 					if (ui == null) {
 						PopupNotification.show(getI18nLabel("invalid_data"));
 						return;

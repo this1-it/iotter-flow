@@ -18,7 +18,6 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.charts.MultiTraceChartAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.EditorConstraintException;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 import it.thisone.iotter.ui.model.TimeInterval;

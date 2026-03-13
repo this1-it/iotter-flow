@@ -445,7 +445,7 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 		ExportProperties props = new ExportProperties();
 		props.setTimeZone(networkTimeZone);
 		props.setFileMode(ExportFileMode.SINGLE);
-		props.setLocale(UIUtils.getLocale());
+		props.setLocale(UI.getCurrent().getLocale());
 		return props;
 	}
 

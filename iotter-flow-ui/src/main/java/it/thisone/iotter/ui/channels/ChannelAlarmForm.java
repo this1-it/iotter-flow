@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.textfield.TextField;
@@ -222,7 +223,7 @@ public class ChannelAlarmForm extends AbstractBaseEntityForm<Channel> {
 
 
     private void validateAlarmThresholds() throws EditorConstraintException {
-        DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UIUtils.getLocale());
+        DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UI.getCurrent().getLocale());
         try {
             Float lowLowValue = decimalFormat.parse(lowLow.getValue()).floatValue();
             Float lowValue = decimalFormat.parse(low.getValue()).floatValue();

@@ -24,7 +24,12 @@
 			<artifactId>iotter-flow-rest-model</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>iotter-flow-backend</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-core</artifactId>

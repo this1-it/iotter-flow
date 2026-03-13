@@ -83,7 +83,7 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 	@Deprecated
 	public static TimeZone getBrowserTimeZone() {
-						throw new UnsupportedOperationException("vaadin8 legacy");
+		throw new UnsupportedOperationException("vaadin8 legacy");
 
 		// return ((IMainUI) UI.getCurrent()).getTimeZone();
 	}

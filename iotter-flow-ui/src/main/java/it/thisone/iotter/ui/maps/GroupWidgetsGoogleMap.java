@@ -31,6 +31,8 @@ import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 import it.thisone.iotter.util.MapUtils;
 
 public class GroupWidgetsGoogleMap extends BaseComponent {
@@ -40,56 +42,48 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
     private static final long serialVersionUID = 1340051957283147500L;
 
     private final Map<Device, Set<GroupWidget>> map;
-    private final GroupWidgetService groupWidgetService;
+
     private final VisualizerServices visualizerServices;
+    private final BackendServices backendServices;
     private final UIEventBus uiEventBus;
-    private final DeviceService deviceService;
-    private final NetworkService networkService;
+
     private final String googleMapApiKey;
 
     private TabSheet tabsheet;
 
-    public GroupWidgetsGoogleMap(Network network) {
-        this(network, null, null, null, null, null, "", null);
-    }
 
-    public GroupWidgetsGoogleMap(Network network,
-        GroupWidgetService groupWidgetService,
-
-            DeviceService deviceService,
-            NetworkService networkService,
-            AuthenticatedUser authenticatedUser,
-            UIEventBus uiEventBus,
+    public GroupWidgetsGoogleMap(
+            Network network,
             String googleMapApiKey,
-            VisualizerServices visualizerServices) {
+            UIEventBus uiEventBus,
+            BackendServices backendServices,
+            VisualizerServices visualizerServices
+        ) {
         super("groupwidgets.googlemap");
         setId(network != null ? network.toString() : UUID.randomUUID().toString());
 
-        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
-        this.map = network != null ? MapUtils.mappableDevices(network, details) : new HashMap<>();
-        this.groupWidgetService = groupWidgetService;
+
+        this.map = network != null ? MapUtils.mappableDevices(network, backendServices) : new HashMap<>();
+        this.backendServices = backendServices;
         this.visualizerServices = visualizerServices;
         this.uiEventBus = uiEventBus;
-        this.deviceService = deviceService;
-        this.networkService = networkService;
+
         this.googleMapApiKey = googleMapApiKey != null ? googleMapApiKey : "";
         initialize(network != null ? network.getName() : "", map, network);
     }
 
-    public GroupWidgetsGoogleMap(GroupWidget groupWidget) {
-        this(groupWidget, null, null, null, null, "", null);
-    }
 
-    public GroupWidgetsGoogleMap(GroupWidget groupWidget, GroupWidgetService groupWidgetService, UIEventBus uiEventBus,
-            DeviceService deviceService, NetworkService networkService, String googleMapApiKey,
+
+    public GroupWidgetsGoogleMap(GroupWidget groupWidget, String googleMapApiKey,
+            UIEventBus uiEventBus,
+            BackendServices backendServices,
             VisualizerServices visualizerServices) {
         super("groupwidgets.googlemap");
         this.map = new HashMap<>();
-        this.groupWidgetService = groupWidgetService;
+        this.backendServices = backendServices;
         this.visualizerServices = visualizerServices;
         this.uiEventBus = uiEventBus;
-        this.deviceService = deviceService;
-        this.networkService = networkService;
+
         this.googleMapApiKey = googleMapApiKey != null ? googleMapApiKey : "";
 
         if (groupWidget != null) {
@@ -111,7 +105,7 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
         tabsheet.setSizeFull();
 
         DevicesGoogleMap devicesGoogleMap = new DevicesGoogleMap(UUID.randomUUID().toString(), name, devicesMap, network,
-                false, true, deviceService, networkService, googleMapApiKey);
+                false, true, backendServices.getDeviceService(), backendServices.getNetworkService(), googleMapApiKey);
         Tab rootTab = tabsheet.addTab(name, devicesGoogleMap);
         tabsheet.setSelectedTab(rootTab);
 
@@ -149,12 +143,9 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
                     Set<GroupWidget> groupWidgets = map.get(device);
                     for (GroupWidget groupWidget : groupWidgets) {
                         if (groupWidget.getId().toString().equals(event.getWidget())) {
-                            if (groupWidgetService == null) {
-                                // TODO(flow-migration): inject GroupWidgetService from parent to open visualizers.
-                                return;
-                            }
+
                             GroupWidgetVisualizer content = new GroupWidgetVisualizer(groupWidget.getId().toString(), true,
-                                    groupWidgetService, visualizerServices);
+                                    backendServices.getGroupWidgetService(), visualizerServices);
                             Tab tab = tabsheet.addTab(groupWidget.getName(), content);
                             tabsheet.setSelectedTab(tab);
                         }

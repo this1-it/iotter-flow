@@ -36,16 +36,13 @@ import it.thisone.iotter.lazyquerydataprovider.QueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.QueryFactory;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.repository.NetworkRepository;
-import it.thisone.iotter.persistence.service.DeviceService;
-import it.thisone.iotter.persistence.service.GroupWidgetService;
-import it.thisone.iotter.persistence.service.NetworkGroupService;
-import it.thisone.iotter.persistence.service.NetworkService;
+
 import it.thisone.iotter.security.EntityPermission;
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
+
 
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
@@ -71,24 +68,28 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	@Autowired
 	private NetworkRepository networkRepository;
 
-	@Autowired
-	private NetworkService networkService;
-	@Autowired
-	private DeviceService deviceService;
-	@Autowired
-	private NetworkGroupService networkGroupService;
-	@Autowired
-	private GroupWidgetService groupWidgetService;
+	// @Autowired
+	// private AuthenticatedUser authenticatedUser;
+	// @Autowired
+	// private NetworkService networkService;
+	// @Autowired
+	// private DeviceService deviceService;
+	// @Autowired
+	// private NetworkGroupService networkGroupService;
+	// @Autowired
+	// private GroupWidgetService groupWidgetService;
 	@Autowired
 	private UIEventBus uiEventBus;
 	@Autowired
 	private ObjectProvider<GroupWidgetsListingBox> groupWidgetsListingBoxProvider;
 	@Autowired
 	private ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
-	@Autowired
-	private AuthenticatedUser authenticatedUser;
+
 	@Autowired
 	private it.thisone.iotter.ui.providers.VisualizerServices visualizerServices;
+
+	@Autowired
+	private it.thisone.iotter.ui.providers.BackendServices backendServices;
 
 	@org.springframework.beans.factory.annotation.Value("${googlemap.apikey:}")
 	private String googleMapApiKey;
@@ -97,6 +98,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	private LazyQueryDataProvider<Network, NetworkFilter> dataProvider;
 	private NetworkQueryDefinition queryDefinition;
 	private NetworkFilter currentFilter = new NetworkFilter();
+	private UserDetailsAdapter currentUser;
 
 	public NetworkListing() {
 		super(Network.class, NETWORKS_VIEW, NETWORKS_VIEW, false);
@@ -107,7 +109,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 			return;
 		}
 
-		UserDetailsAdapter currentUser = authenticatedUser.get()
+		currentUser = backendServices.getAuthenticatedUser().get()
 				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 		Permissions permissions = PermissionsUtils.getPermissionsForNetworkEntity(currentUser);
 		setPermissions(permissions);
@@ -123,7 +125,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 
 		queryDefinition = new NetworkQueryDefinition(Network.class, DEFAULT_LIMIT, getPermissions());
-		queryDefinition.setOwner(authenticatedUser.getTenant().orElse(null));
+		queryDefinition.setOwner(currentUser.getTenant());
 		queryDefinition.setPage(0, DEFAULT_LIMIT);
 		queryDefinition.setQueryFilter(currentFilter);
 
@@ -284,8 +286,8 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		button.getElement().setAttribute("title", getI18nLabel("migration_button"));
 		button.setId(MIGRATION_BUTTON);
 		button.addClickListener(event -> openMigration(getCurrentValue()));
-		button.setVisible(
-				authenticatedUser.get().map(u -> u.hasPermission(EntityPermission.DEVICE.MIGRATE)).orElse(false));
+		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.MIGRATE)
+				);
 		return button;
 	}
 
@@ -334,17 +336,16 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		// }
 
 		Component content;
-		Network network = networkService.findOne(item.getId());
+		Network network = backendServices.getNetworkService().findOne(item.getId());
 		switch (item.getNetworkType()) {
 			case GEOGRAPHIC:
-				content = new DevicesGoogleMap(network, false, true, deviceService, networkService, googleMapApiKey);
+				content = new DevicesGoogleMap(network, false, true, backendServices.getDeviceService(), backendServices.getNetworkService(), googleMapApiKey);
 				break;
 			case CUSTOM:
-				content = new GroupWidgetsCustomMap(item.getId(), false, networkService, deviceService,
-						networkGroupService, groupWidgetService, authenticatedUser,uiEventBus, devicesImageOverlayMapProvider, visualizerServices);
+				content = new GroupWidgetsCustomMap(item.getId(), false, backendServices,uiEventBus, devicesImageOverlayMapProvider, visualizerServices);
 				break;
 			default:
-				content = new GroupWidgetsDevicesListing(network, groupWidgetService, authenticatedUser, uiEventBus,
+				content = new GroupWidgetsDevicesListing(network, backendServices, uiEventBus,
 						groupWidgetsListingBoxProvider, visualizerServices);
 				break;
 		}
@@ -443,9 +444,9 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		editor.setSavedHandler(entity -> {
 			try {
 				if (entity.isNew()) {
-					networkService.create(entity);
+					backendServices.getNetworkService().create(entity);
 				} else {
-					networkService.update(entity);
+					backendServices.getNetworkService().update(entity);
 				}
 				dialog.close();
 				refreshCurrentPage();
@@ -475,7 +476,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("remove_dialog"), details);
 		details.setDeleteHandler(entity -> {
 			try {
-				networkService.disconnect(entity);
+				backendServices.getNetworkService().disconnect(entity);
 				dialog.close();
 				refreshCurrentPage();
 			} catch (Exception e) {
