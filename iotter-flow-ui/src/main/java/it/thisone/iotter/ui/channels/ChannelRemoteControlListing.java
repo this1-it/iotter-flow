@@ -28,12 +28,12 @@ import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
-import it.thisone.iotter.ui.common.charts.ChartUtils;
+
 import it.thisone.iotter.ui.devices.DeviceForm;
 import it.thisone.iotter.ui.ifc.ITabContent;
 
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Channel> implements ITabContent {
 
@@ -42,12 +42,12 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 	private final Permissions permissions;
 	private final List<Channel> channels;
 	private final ChannelAdapterDataProvider adapterProvider;
-	private final VisualizerServices visualizerServices;
+	private final BackendServices visualizerServices;
 	private ListDataProvider<Channel> dataProvider;
 	private Grid<Channel> grid;
 	private boolean loaded;
 
-	public ChannelRemoteControlListing(VisualizerServices visualizerServices) {
+	public ChannelRemoteControlListing(BackendServices visualizerServices) {
 		super(Channel.class, DeviceForm.NAME, "channel.remote", false);
 		this.permissions = new Permissions(true);
 		this.channels = new ArrayList<>();

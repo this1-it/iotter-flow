@@ -23,9 +23,6 @@ import it.thisone.iotter.exceptions.BackendServiceException;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
-import it.thisone.iotter.persistence.service.GroupWidgetService;
-import it.thisone.iotter.persistence.service.NetworkGroupService;
-import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.BaseEditor;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
@@ -40,7 +37,7 @@ import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.graphicwidgets.GraphicWidgetPlaceHolder;
 import it.thisone.iotter.ui.gridstack.GridstackBoard;
 import it.thisone.iotter.ui.gridstack.GridstackLayoutUtils;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.util.EncryptUtils;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -49,11 +46,9 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
     private static final long serialVersionUID = -9049540364011024970L;
     private static final Logger logger = LoggerFactory.getLogger(GroupWidgetDesigner.class);
 
-    private final GroupWidgetService groupWidgetService;
-    private final NetworkService networkService;
-    private final NetworkGroupService networkGroupService;
+
     private final UserDetailsAdapter currentUser;
-    private final VisualizerServices visualizerServices;
+    private final BackendServices backendServices;
     private final UIEventBus uiEventBus;
 
     private GroupWidget entity;
@@ -64,18 +59,13 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
     private Button saveButton;
 
     public GroupWidgetDesigner(GroupWidget sourceEntity,
-            GroupWidgetService groupWidgetService,
-            NetworkService networkService,
-            NetworkGroupService networkGroupService,
             UserDetailsAdapter currentUser,
-            VisualizerServices visualizerServices) {
+            BackendServices backendServices) {
         super("groupwidget.designer", sourceEntity != null && sourceEntity.getId() != null ? sourceEntity.getId() : "");
 
-        this.groupWidgetService = groupWidgetService;
-        this.networkService = networkService;
-        this.networkGroupService = networkGroupService;
+
         this.currentUser = currentUser;
-        this.visualizerServices = visualizerServices;
+        this.backendServices = backendServices;
         this.uiEventBus = resolveUiEventBus();
         this.addedWidgets = new ArrayList<>();
         this.removedWidgets = new ArrayList<>();
@@ -120,7 +110,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         if (sourceEntity.getId() == null) {
             return sourceEntity;
         }
-        GroupWidget managed = groupWidgetService.findOne(sourceEntity.getId());
+        GroupWidget managed = backendServices.getGroupWidgetService().findOne(sourceEntity.getId());
         return managed != null ? managed : sourceEntity;
     }
 
@@ -187,7 +177,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         for (GraphicWidget widget : entity.getWidgets()) {
             if (widget.getParent() == null) {
                 List<GraphicWidget> children = widget.findChildren(entity.getWidgets());
-                GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children, visualizerServices);
+                GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children, backendServices);
                 placeHolderListeners(placeHolder);
                 int[] defaultSize = GridstackLayoutUtils.getDefaultGridSize(widget.getType());
                 gridstackBoard.addWidget(widget.getId(), placeHolder, 0, 0, defaultSize[0], defaultSize[1]);
@@ -214,7 +204,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
     }
 
     public void openEditor(GroupWidget groupWidget, String label) {
-        GroupWidgetForm content = new GroupWidgetForm(groupWidget, null, currentUser, networkService, networkGroupService, false);
+        GroupWidgetForm content = new GroupWidgetForm(groupWidget, null, currentUser, backendServices.getNetworkService(), backendServices.getNetworkGroupService(), false);
         Dialog dialog = createDialog(label, content);
         content.setSavedHandler(saved -> dialog.close());
         dialog.open();
@@ -286,7 +276,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         }
 
         try {
-            groupWidgetService.update(entity);
+            backendServices.getGroupWidgetService().update(entity);
         } catch (BackendServiceException e) {
             PopupNotification.show(AN_EDIT_CONFLICT_OCCURRED, PopupNotification.Type.ERROR);
         }
@@ -340,7 +330,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         widget.setGroupWidget(entity);
 
         List<GraphicWidget> children = new ArrayList<>();
-        GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children, visualizerServices);
+        GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(widget, children, backendServices);
         placeHolderListeners(placeHolder);
         placeHolder.openEditor(placeHolder.getWidget(), true);
     }

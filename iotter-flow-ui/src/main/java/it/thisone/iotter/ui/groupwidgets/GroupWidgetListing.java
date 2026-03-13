@@ -49,7 +49,8 @@ import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.networkgroups.NetworkGroupBindings;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 import it.thisone.iotter.util.PopupNotification;
 
 @Component
@@ -63,12 +64,13 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
     private final Permissions permissions;
     private final GroupWidgetRepository groupWidgetRepository;
-    private final GroupWidgetService groupWidgetService;
-    private final NetworkService networkService;
-    private final NetworkGroupService networkGroupService;
-    private final DeviceService deviceService;
-    private final AuthenticatedUser authenticatedUser;
-    private final VisualizerServices visualizerServices;
+    // private final GroupWidgetService groupWidgetService;
+    // private final NetworkService networkService;
+    // private final NetworkGroupService networkGroupService;
+    // private final DeviceService deviceService;
+    // private final AuthenticatedUser authenticatedUser;
+    private final BackendServices visualizerServices;
+    private UserDetailsAdapter currentUser;
 
     private Network network;
 
@@ -89,21 +91,15 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
     @Autowired
     public GroupWidgetListing(GroupWidgetRepository groupWidgetRepository,
-            GroupWidgetService groupWidgetService, NetworkService networkService, NetworkGroupService networkGroupService,
-            DeviceService deviceService, AuthenticatedUser authenticatedUser, VisualizerServices visualizerServices) {
+            BackendServices visualizerServices) {
         super(GroupWidget.class, GROUPWIDGET_VIEW, GROUPWIDGET_VIEW, false);
 
-        		UserDetailsAdapter currentUser = authenticatedUser.get()
+        		currentUser = visualizerServices.getAuthenticatedUser().get()
 				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 
         this.permissions = PermissionsUtils.getPermissionsForGroupWidgetEntity(currentUser);
         setPermissions(permissions);
         this.groupWidgetRepository = groupWidgetRepository;
-        this.groupWidgetService = groupWidgetService;
-        this.networkService = networkService;
-        this.networkGroupService = networkGroupService;
-        this.deviceService = deviceService;
-        this.authenticatedUser = authenticatedUser;
         this.visualizerServices = visualizerServices;
     }
 
@@ -154,7 +150,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
     @Override
     protected AbstractBaseEntityForm<GroupWidget> getEditor(GroupWidget item, boolean readOnly) {
-        return new GroupWidgetForm(item, network, authenticatedUser.get().orElse(null), networkService, networkGroupService,
+        return new GroupWidgetForm(item, network, currentUser, visualizerServices.getNetworkService(), visualizerServices.getNetworkGroupService(),
                 readOnly);
     }
 
@@ -173,8 +169,8 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             if (!result) {
                 return;
             }
-            GroupWidgetDetails.removeExclusiveGroupIfNeeded(item, networkGroupService);
-            groupWidgetService.deleteById(item.getId());
+            GroupWidgetDetails.removeExclusiveGroupIfNeeded(item, visualizerServices.getNetworkGroupService());
+            visualizerServices.getGroupWidgetService().deleteById(item.getId());
             refreshCurrentPage();
         };
 
@@ -332,7 +328,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         }
 
         String caption = String.format("%s %s", getI18nLabel("bindings"), item.getName());
-        NetworkGroupBindings content = new NetworkGroupBindings(item, networkGroupService, deviceService);
+        NetworkGroupBindings content = new NetworkGroupBindings(item, visualizerServices.getNetworkGroupService(), visualizerServices.getDeviceService());
         Dialog dialog = createDialog(caption, content);
         dialog.open();
     }
@@ -349,8 +345,8 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         if (item == null) {
             return;
         }
-        GroupWidgetDesigner content = new GroupWidgetDesigner(item, groupWidgetService, networkService, networkGroupService,
-                authenticatedUser.get().orElse(null), visualizerServices);
+        GroupWidgetDesigner content = new GroupWidgetDesigner(item,
+                currentUser, visualizerServices);
         Dialog dialog = createDialog(getI18nLabel("designer_action"), content);
         if (dialog instanceof SideDrawer) {
             dialog.addThemeName("side-drawer-fullscreen");
@@ -364,7 +360,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         if (item == null) {
             return;
         }
-        GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true, groupWidgetService, visualizerServices);
+        GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true,  visualizerServices);
         Dialog dialog = createDialog(getI18nLabel("view_action"), visualizer);
         if (dialog instanceof SideDrawer) {
             dialog.addThemeName("side-drawer-fullscreen");
@@ -384,12 +380,12 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         editor.setSavedHandler(entity -> {
             try {
                 if (entity.isNew()) {
-                    groupWidgetService.create(entity);
+                    visualizerServices.getGroupWidgetService().create(entity);
                     dialog.close();
                     refreshCurrentPage();
                     openDesigner(entity);
                 } else {
-                    groupWidgetService.update(entity);
+                    visualizerServices.getGroupWidgetService().update(entity);
                     dialog.close();
                     refreshCurrentPage();
                 }
@@ -451,7 +447,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     }
 
     private String getCurrentUserTenant() {
-        return authenticatedUser.get().map(UserDetailsAdapter::getTenant).orElse(null);
+        return visualizerServices.getAuthenticatedUser().get().map(UserDetailsAdapter::getTenant).orElse(null);
     }
 
     private static final class GroupWidgetFilter {

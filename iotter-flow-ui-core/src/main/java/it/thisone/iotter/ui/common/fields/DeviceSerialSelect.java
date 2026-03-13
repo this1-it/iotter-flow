@@ -17,12 +17,15 @@ public class DeviceSerialSelect extends ComboBox<String> {
 	private static final long serialVersionUID = 1L;
 
 	private Map<String, String> deviceLabels = new HashMap<>();
-	private final DeviceService deviceService;
+	private DeviceService deviceService;
 
-	public DeviceSerialSelect(DeviceService deviceService) {
+	public DeviceSerialSelect() {
 		super();
-		this.deviceService = deviceService;
 		initialize();
+	}
+
+	public void setDeviceService(DeviceService deviceService) {
+		this.deviceService = deviceService;
 	}
 
 	private void initialize() {

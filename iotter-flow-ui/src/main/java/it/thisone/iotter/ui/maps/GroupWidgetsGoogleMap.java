@@ -30,7 +30,6 @@ import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
-import it.thisone.iotter.ui.providers.VisualizerServices;
 import it.thisone.iotter.ui.providers.BackendServices;
 
 import it.thisone.iotter.util.MapUtils;
@@ -43,7 +42,7 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
 
     private final Map<Device, Set<GroupWidget>> map;
 
-    private final VisualizerServices visualizerServices;
+
     private final BackendServices backendServices;
     private final UIEventBus uiEventBus;
 
@@ -56,8 +55,8 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
             Network network,
             String googleMapApiKey,
             UIEventBus uiEventBus,
-            BackendServices backendServices,
-            VisualizerServices visualizerServices
+            BackendServices backendServices
+
         ) {
         super("groupwidgets.googlemap");
         setId(network != null ? network.toString() : UUID.randomUUID().toString());
@@ -65,7 +64,6 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
 
         this.map = network != null ? MapUtils.mappableDevices(network, backendServices) : new HashMap<>();
         this.backendServices = backendServices;
-        this.visualizerServices = visualizerServices;
         this.uiEventBus = uiEventBus;
 
         this.googleMapApiKey = googleMapApiKey != null ? googleMapApiKey : "";
@@ -76,12 +74,11 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
 
     public GroupWidgetsGoogleMap(GroupWidget groupWidget, String googleMapApiKey,
             UIEventBus uiEventBus,
-            BackendServices backendServices,
-            VisualizerServices visualizerServices) {
+            BackendServices backendServices) {
         super("groupwidgets.googlemap");
         this.map = new HashMap<>();
         this.backendServices = backendServices;
-        this.visualizerServices = visualizerServices;
+
         this.uiEventBus = uiEventBus;
 
         this.googleMapApiKey = googleMapApiKey != null ? googleMapApiKey : "";
@@ -145,7 +142,7 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
                         if (groupWidget.getId().toString().equals(event.getWidget())) {
 
                             GroupWidgetVisualizer content = new GroupWidgetVisualizer(groupWidget.getId().toString(), true,
-                                    backendServices.getGroupWidgetService(), visualizerServices);
+                                    backendServices);
                             Tab tab = tabsheet.addTab(groupWidget.getName(), content);
                             tabsheet.setSelectedTab(tab);
                         }

@@ -33,7 +33,7 @@ import it.thisone.iotter.persistence.model.MeasureUnit;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.common.fields.ChannelAcceptor;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 public class WindRoseChartAdapter extends AbstractChartAdapter {
 
@@ -61,7 +61,7 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
     private ComboBox<Integer> petalsChoice;
     private Registration applyPetalsChoiceRegistration;
 
-    public WindRoseChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+    public WindRoseChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
         super(widget, visualizerServices);
         this.rollup = visualizerServices.getCassandraRollup();
         optionsField.getRealTime().setVisible(false);

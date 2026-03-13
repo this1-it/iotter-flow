@@ -8,10 +8,10 @@ public interface GraphicWidgetProvider {
 
 	public String getName();
 
-	public AbstractWidgetVisualizer getVisualizer(GraphicWidget widget, VisualizerServices services);
+	public AbstractWidgetVisualizer getVisualizer(GraphicWidget widget, BackendServices services);
 
 
-	public AbstractBaseEntityForm<GraphicWidget> getForm(GraphicWidget widget, VisualizerServices services);
+	public AbstractBaseEntityForm<GraphicWidget> getForm(GraphicWidget widget, BackendServices services);
 
 
 	public int maxParameters();

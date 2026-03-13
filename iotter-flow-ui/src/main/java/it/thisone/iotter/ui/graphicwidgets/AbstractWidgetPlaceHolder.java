@@ -16,7 +16,8 @@ import it.thisone.iotter.ui.designer.PlaceHolderSavedListener;
 import it.thisone.iotter.ui.eventbus.GraphWidgetParamsEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.ifc.IGraphicWidgetEditor;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 import it.thisone.iotter.util.PopupNotification;
 
 public abstract class AbstractWidgetPlaceHolder extends BaseComponent implements IPlaceHolder {
@@ -24,9 +25,9 @@ public abstract class AbstractWidgetPlaceHolder extends BaseComponent implements
     private static final long serialVersionUID = 1L;
     protected GraphicWidget entity;
     protected Span placeholderLabel;
-    protected final VisualizerServices visualizerServices;
+    protected final BackendServices visualizerServices;
 
-    public AbstractWidgetPlaceHolder(GraphicWidget entity, VisualizerServices visualizerServices) {
+    public AbstractWidgetPlaceHolder(GraphicWidget entity, BackendServices visualizerServices) {
         super("graphwidget.editor", String.valueOf(entity.getId()));
         this.entity = entity;
         this.visualizerServices = visualizerServices;

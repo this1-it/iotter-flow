@@ -69,11 +69,10 @@ public class ChannelTreeSelect
     private final ContextMenu popup;
     private final TreeGrid<TreeNode> tree;
     private final ComboBox<MeasureUnit> measures;
-    private final DeviceService deviceService;
+    private DeviceService deviceService;
 
-    public ChannelTreeSelect(DeviceService deviceService) {
+    public ChannelTreeSelect() {
         super(null);
-        this.deviceService = deviceService;
 
         HorizontalLayout layout = getContent();
         layout.setSpacing(true);
@@ -118,6 +117,13 @@ public class ChannelTreeSelect
         super.setReadOnly(readOnly);
         trigger.setEnabled(!readOnly);
         measures.setReadOnly(readOnly);
+    }
+
+    /* ------------------------------------------------------------------
+     * Service wiring (must be called before setGroup)
+     * ------------------------------------------------------------------ */
+    public void setDeviceService(DeviceService deviceService) {
+        this.deviceService = deviceService;
     }
 
     /* ------------------------------------------------------------------

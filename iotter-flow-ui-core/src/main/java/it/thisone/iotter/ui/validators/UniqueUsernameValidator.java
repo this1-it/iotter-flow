@@ -9,10 +9,13 @@ import it.thisone.iotter.persistence.service.UserService;
 public class UniqueUsernameValidator implements Validator<String> {
 	private static final long serialVersionUID = 1L;
 	private final String errorMessage;
-	private final UserService userService;
+	private UserService userService;
 
-	public UniqueUsernameValidator(String errorMessage, UserService userService) {
+	public UniqueUsernameValidator(String errorMessage) {
 		this.errorMessage = errorMessage;
+	}
+
+	public void setUserService(UserService userService) {
 		this.userService = userService;
 	}
 

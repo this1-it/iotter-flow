@@ -37,7 +37,7 @@ import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 public class HistogramChartAdapter extends AbstractChartAdapter {
 
@@ -58,7 +58,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 
 	private static final long serialVersionUID = -1958076735452737593L;
 
-	public HistogramChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+	public HistogramChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
 		super(widget, visualizerServices);
 		this.rollup = visualizerServices.getCassandraRollup();
 		optionsField.getRealTime().setVisible(false);

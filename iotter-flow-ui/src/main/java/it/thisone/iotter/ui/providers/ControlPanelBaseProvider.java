@@ -6,7 +6,7 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
 import it.thisone.iotter.ui.graphicwidgets.ControlPanelBaseForm;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.ui.provisioning.AernetXLSXParserConstants;
 import it.thisone.iotter.ui.visualizers.ControlPanelBaseAdapter;
 
@@ -20,7 +20,7 @@ public class ControlPanelBaseProvider implements GraphicWidgetProvider, AernetXL
 	}
 
 	@Override
-	public AbstractWidgetVisualizer getVisualizer(GraphicWidget widget, VisualizerServices services) {
+	public AbstractWidgetVisualizer getVisualizer(GraphicWidget widget, BackendServices services) {
 		return new ControlPanelBaseAdapter(widget, services);
 	}
 
@@ -37,7 +37,7 @@ public class ControlPanelBaseProvider implements GraphicWidgetProvider, AernetXL
 	}
 
 	@Override
-	public AbstractBaseEntityForm<GraphicWidget> getForm(GraphicWidget widget, VisualizerServices services) {
+	public AbstractBaseEntityForm<GraphicWidget> getForm(GraphicWidget widget, BackendServices services) {
 		return new ControlPanelBaseForm(widget, services.getDeviceService());
 	}
 

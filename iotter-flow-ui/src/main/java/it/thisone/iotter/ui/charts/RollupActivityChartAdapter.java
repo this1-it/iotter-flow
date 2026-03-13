@@ -25,7 +25,7 @@ import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 public class RollupActivityChartAdapter extends AbstractChartAdapter {
 
@@ -36,7 +36,7 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
     private TimeScale xScale;
     private final CassandraRollup rollup;
 
-    public RollupActivityChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+    public RollupActivityChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
         super(widget, visualizerServices);
         this.rollup = visualizerServices.getCassandraRollup();
         optionsField.getScale().setVisible(false);

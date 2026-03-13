@@ -100,7 +100,8 @@ import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
 import it.thisone.iotter.ui.provisioning.ProvisioningWizard;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 import it.thisone.iotter.ui.users.UserForm;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -161,7 +162,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private MeasureUnitTypeService measureUnitTypeService;
 
 	@Autowired
-	private VisualizerServices visualizerServices;
+	private BackendServices visualizerServices;
 
 	@Autowired
 	private it.thisone.iotter.persistence.service.ModbusProfileService modbusProfileService;
@@ -737,7 +738,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"),
-				new GroupWidgetVisualizer(bean.getId().toString(), true, groupWidgetService, visualizerServices));
+				new GroupWidgetVisualizer(bean.getId().toString(), true,  visualizerServices));
 		dialog.open();
 	}
 

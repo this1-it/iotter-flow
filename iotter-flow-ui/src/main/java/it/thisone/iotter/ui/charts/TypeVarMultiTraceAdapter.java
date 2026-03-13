@@ -17,7 +17,7 @@ import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
 public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
@@ -29,7 +29,7 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 	 */
 	private static final long serialVersionUID = -1879789719298795301L;
 
-	public TypeVarMultiTraceAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+	public TypeVarMultiTraceAdapter(GraphicWidget widget, BackendServices visualizerServices) {
 		super(widget, visualizerServices);
 		Component visualization = buildVisualization();
 		//visualization.setSizeFull();

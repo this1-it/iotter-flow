@@ -26,7 +26,7 @@ import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.providers.BackendServices;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+
 
 
 public class MapUtils implements Serializable {
@@ -48,7 +48,7 @@ public class MapUtils implements Serializable {
 	private static final long serialVersionUID = -8826738658600702437L;
 
 
-	public static String getIconUrl(Device device, VisualizerServices visualizerServices) {
+	public static String getIconUrl(Device device, BackendServices visualizerServices) {
 		String icon = RED_DOT;
 		if (device.getStatus().equals(DeviceStatus.CONNECTED) && !device.getChannels().isEmpty()) {
 			icon = GREEN_DOT;

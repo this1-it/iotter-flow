@@ -23,15 +23,16 @@ import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
 import it.thisone.iotter.ui.model.TimePeriod.TimePeriodEnum;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 
 public class ChannelRemoteControlForm extends AbstractBaseEntityForm<Channel> {
 
 	private static final long serialVersionUID = 5961351166441753740L;
 
-	private final VisualizerServices visualizerServices;
+	private final BackendServices visualizerServices;
 
-	public ChannelRemoteControlForm(Channel item, VisualizerServices visualizerServices) {
+	public ChannelRemoteControlForm(Channel item, BackendServices visualizerServices) {
 		super(item, Channel.class, "channel.remote", null,null,false);
 		this.visualizerServices = visualizerServices;
 		getSaveButton().setVisible(false);

@@ -26,18 +26,15 @@ import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.EntityRemovedEvent;
-import it.thisone.iotter.ui.common.EntityRemovedListener;
-import it.thisone.iotter.ui.common.EntitySelectedEvent;
-import it.thisone.iotter.ui.common.EntitySelectedListener;
+
 import it.thisone.iotter.ui.common.MarkupsUtils;
-import it.thisone.iotter.ui.common.UIUtils;
+
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.devices.DeviceForm;
 import it.thisone.iotter.ui.ifc.ITabContent;
-import it.thisone.iotter.ui.providers.VisualizerServices;
-import it.thisone.iotter.util.PopupNotification;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 
 public class ChannelListing extends AbstractBaseEntityListing<Channel> implements ITabContent {
 
@@ -46,12 +43,12 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 	private final Permissions permissions;
 	private final List<Channel> channels;
 	private final List<Channel> removed = new ArrayList<>();
-	private final VisualizerServices visualizerServices;
+	private final BackendServices visualizerServices;
 	private ListDataProvider<Channel> dataProvider;
 	private Grid<Channel> grid;
 	private boolean loaded;
 
-	public ChannelListing(VisualizerServices visualizerServices) {
+	public ChannelListing(BackendServices visualizerServices) {
 		super(Channel.class, DeviceForm.NAME, "channel.listing", false);
 		this.permissions = new Permissions(true);
 		this.channels =  new ArrayList<Channel>();

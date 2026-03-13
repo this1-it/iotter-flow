@@ -60,7 +60,8 @@ import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
 
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 import it.thisone.iotter.ui.uitask.UIRunnable;
 
 /*
@@ -111,9 +112,9 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 
 	private Registration intervalChangeRegistration;
 
-	protected final VisualizerServices visualizerServices;
+	protected final BackendServices visualizerServices;
 
-	public AbstractChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+	public AbstractChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
 		super(widget);
 		this.visualizerServices = visualizerServices;
 		
@@ -536,7 +537,7 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 
 	// Feature #201 (In Progress): Chart real time managed with asynchronous
 	// event better then refresher
-	@Override
+	//@Override
 	@Subscribe
 	public void refreshWithUiAccess(final WidgetRefreshEvent event) {
 		if (isRealTime()) {

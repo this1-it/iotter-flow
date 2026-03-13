@@ -19,9 +19,10 @@ import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.DeviceCustomMap;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.ImageData;
-import it.thisone.iotter.persistence.service.DeviceService;
+
 import it.thisone.iotter.ui.common.SideDrawer;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 import it.thisone.iotter.util.MapUtils;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -30,15 +31,11 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
     private DeviceCustomMap entity;
     private static final long serialVersionUID = 1L;
     private Map<Device, Set<GroupWidget>> devices;
-    private final VisualizerServices visualizerServices;
+    private final BackendServices visualizerServices;
+
 
     public DevicesImageOverlayMap(DeviceCustomMap entity,
-            Map<Device, Set<GroupWidget>> devices, boolean editable) {
-        this(entity, devices, editable, null);
-    }
-
-    public DevicesImageOverlayMap(DeviceCustomMap entity,
-            Map<Device, Set<GroupWidget>> devices, boolean editable, VisualizerServices visualizerServices) {
+            Map<Device, Set<GroupWidget>> devices, boolean editable, BackendServices visualizerServices) {
         super(entity.getImage(), entity.getIMarkers(), editable);
         this.entity = entity;
         this.devices = devices;

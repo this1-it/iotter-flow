@@ -28,7 +28,7 @@ import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 public class VariationChartAdapter extends AbstractChartAdapter {
 
@@ -44,7 +44,7 @@ public class VariationChartAdapter extends AbstractChartAdapter {
 
 	private static final long serialVersionUID = -1958076735452737593L;
 
-	public VariationChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+	public VariationChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
 		super(widget, visualizerServices);
 		optionsField.getRealTime().setVisible(false);
 		optionsField.getScale().setVisible(false);

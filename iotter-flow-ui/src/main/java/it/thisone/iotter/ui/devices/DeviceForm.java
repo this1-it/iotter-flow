@@ -160,7 +160,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	private MeasureUnitTypeService measureUnitTypeService;
 
 	@Autowired
-	private it.thisone.iotter.ui.providers.VisualizerServices visualizerServices;
+	private it.thisone.iotter.ui.providers.BackendServices visualizerServices;
 
 	// @Autowired
 	// public DeviceForm(Device entity, Network network, UserDetailsAdapter

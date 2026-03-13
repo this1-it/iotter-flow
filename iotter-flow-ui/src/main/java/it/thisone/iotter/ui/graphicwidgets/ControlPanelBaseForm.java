@@ -82,6 +82,9 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
     public ControlPanelBaseForm(GraphicWidget entity, DeviceService deviceService) {
         super(entity, GraphicWidget.class, CONTROLPANELBASE_EDITOR, null,null,false);
         this.deviceService = deviceService;
+        if (deviceSelect != null) {
+            deviceSelect.setDeviceService(deviceService);
+        }
         sectionFeeds = getEntity().getFeeds();
         if (sectionFeeds.isEmpty()) {
             logger.debug("sectionFeeds is empty");
@@ -107,7 +110,7 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
         label.setSizeFull();
         label.setRequiredIndicatorVisible(true);
 
-        deviceSelect = new DeviceSerialSelect(deviceService);
+        deviceSelect = new DeviceSerialSelect();
         deviceSelect.setLabel(getI18nLabel("device"));
         deviceSelect.setSizeFull();
 

@@ -29,7 +29,8 @@ import it.thisone.iotter.ui.designer.PlaceHolderChangedEvent;
 import it.thisone.iotter.ui.designer.PlaceHolderRemovedEvent;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 
 public class GraphicWidgetPlaceHolder extends AbstractWidgetPlaceHolder {
 
@@ -41,7 +42,7 @@ public class GraphicWidgetPlaceHolder extends AbstractWidgetPlaceHolder {
 
     private UIEventBus uiEventBus;
 
-    public GraphicWidgetPlaceHolder(GraphicWidget widget, List<GraphicWidget> children, VisualizerServices visualizerServices) {
+    public GraphicWidgetPlaceHolder(GraphicWidget widget, List<GraphicWidget> children, BackendServices visualizerServices) {
         super(widget, visualizerServices);
         widget.removeOrphanFeeds();
         this.children = children != null ? children : new ArrayList<>();

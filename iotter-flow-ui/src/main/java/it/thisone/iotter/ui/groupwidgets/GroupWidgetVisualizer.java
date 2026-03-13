@@ -52,7 +52,8 @@ import it.thisone.iotter.ui.gridstack.GridstackLayoutUtils;
 import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 
 public class GroupWidgetVisualizer extends BaseComponent {
     public static Logger logger = LoggerFactory.getLogger(GroupWidgetVisualizer.class);
@@ -60,8 +61,8 @@ public class GroupWidgetVisualizer extends BaseComponent {
     private static final long serialVersionUID = -6776667672616201904L;
     private static final int TIMECONTROLS_HEIGHT = 40;
 
-    private final GroupWidgetService groupWidgetService;
-    private final VisualizerServices visualizerServices;
+
+    private final BackendServices visualizerServices;
     private final UIEventBus uiEventBus;
     private final IGroupWidgetUiFactory config;
 
@@ -80,14 +81,14 @@ public class GroupWidgetVisualizer extends BaseComponent {
     private TimeControl timeControl;
     private CustomField<GraphicWidgetOptions> optionsField;
 
-    public GroupWidgetVisualizer(String entityId, boolean isTab, GroupWidgetService groupWidgetService, VisualizerServices visualizerServices) {
+    public GroupWidgetVisualizer(String entityId, boolean isTab, BackendServices visualizerServices) {
         super("groupwidget.visualizer");
-        this.groupWidgetService = groupWidgetService;
+
         this.visualizerServices = visualizerServices;
         this.uiEventBus = resolveUiEventBus();
         this.config = new GroupWidgetUiFactory();
 
-        this.entity = this.groupWidgetService.findOne(entityId);
+        this.entity = this.visualizerServices.getGroupWidgetService().findOne(entityId);
         if (entity == null) {
             throw new IllegalArgumentException("GroupWidget not found: " + entityId);
         }

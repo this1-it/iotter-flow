@@ -22,14 +22,13 @@ import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.Network;
-import it.thisone.iotter.persistence.service.GroupWidgetService;
-import it.thisone.iotter.security.UserDetailsAdapter;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
+
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 import it.thisone.iotter.util.MapUtils;
 
 public class GroupWidgetsDevicesListing extends BaseComponent {
@@ -39,8 +38,8 @@ public class GroupWidgetsDevicesListing extends BaseComponent {
     private static final long serialVersionUID = 1340051957283147500L;
 
     private final Map<Device, Set<GroupWidget>> map;
-    private final it.thisone.iotter.ui.providers.BackendServices backendServices;
-    private final VisualizerServices visualizerServices;
+
+    private final BackendServices backendServices;
     private final UIEventBus uiEventBus;
     private final ObjectProvider<GroupWidgetsListingBox> listingBoxProvider;
 
@@ -50,12 +49,11 @@ public class GroupWidgetsDevicesListing extends BaseComponent {
 
     public GroupWidgetsDevicesListing(String name, Map<Device, Set<GroupWidget>> devices,
             it.thisone.iotter.ui.providers.BackendServices backendServices, UIEventBus uiEventBus,
-            ObjectProvider<GroupWidgetsListingBox> listingBoxProvider,
-            VisualizerServices visualizerServices) {
+            ObjectProvider<GroupWidgetsListingBox> listingBoxProvider) {
         super("groupwidgets.deviceslisting", UUID.randomUUID().toString());
         this.map = devices;
         this.backendServices = backendServices;
-        this.visualizerServices = visualizerServices;
+
         this.uiEventBus = uiEventBus;
         this.listingBoxProvider = listingBoxProvider;
         initialize(name, map);
@@ -66,29 +64,25 @@ public class GroupWidgetsDevicesListing extends BaseComponent {
     public GroupWidgetsDevicesListing(Network network,
 it.thisone.iotter.ui.providers.BackendServices backendServices,
         UIEventBus uiEventBus,
-            ObjectProvider<GroupWidgetsListingBox> listingBoxProvider,
-            VisualizerServices visualizerServices) {
+            ObjectProvider<GroupWidgetsListingBox> listingBoxProvider) {
         super("groupwidgets.deviceslisting", network != null ? network.toString() : UUID.randomUUID().toString());
 
         this.map = network != null ? MapUtils.mappableDevices(network,backendServices) : new HashMap<>();
         this.backendServices = backendServices;
-        this.visualizerServices = visualizerServices;
         this.uiEventBus = uiEventBus;
         this.listingBoxProvider = listingBoxProvider;
         initialize(network != null ? network.getName() : "", map);
     }
 
-    public GroupWidgetsDevicesListing(GroupWidget groupWidget) {
-        this(groupWidget, null, null, null, null);
-    }
 
-    public GroupWidgetsDevicesListing(GroupWidget groupWidget, it.thisone.iotter.ui.providers.BackendServices backendServices, UIEventBus uiEventBus,
-            ObjectProvider<GroupWidgetsListingBox> listingBoxProvider,
-            VisualizerServices visualizerServices) {
+
+    public GroupWidgetsDevicesListing(GroupWidget groupWidget, BackendServices backendServices, UIEventBus uiEventBus,
+            ObjectProvider<GroupWidgetsListingBox> listingBoxProvider)
+             {
         super("groupwidgets.deviceslisting");
         this.map = new HashMap<>();
         this.backendServices = backendServices;
-        this.visualizerServices = visualizerServices;
+
         this.uiEventBus = uiEventBus;
         this.listingBoxProvider = listingBoxProvider;
 
@@ -155,7 +149,7 @@ it.thisone.iotter.ui.providers.BackendServices backendServices,
                         if (groupWidget.getId().toString().equals(event.getWidget())) {
 
                             GroupWidgetVisualizer content = new GroupWidgetVisualizer(groupWidget.getId().toString(), true,
-                                    backendServices.getGroupWidgetService(), visualizerServices);
+                                    backendServices);
                             Tab tab = tabsheet.addTab(groupWidget.getName(), content);
                             tabsheet.setSelectedTab(tab);
                         }

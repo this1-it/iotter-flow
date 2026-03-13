@@ -19,7 +19,8 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.charts.MultiTraceChartAdapter;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -30,9 +31,9 @@ public class ChannelTimelineDetails extends  Composite<VerticalLayout> {
 
 	private static final long serialVersionUID = 1L;
 
-	private final VisualizerServices visualizerServices;
+	private final BackendServices visualizerServices;
 
-	public ChannelTimelineDetails(Channel item, VisualizerServices visualizerServices) {
+	public ChannelTimelineDetails(Channel item, BackendServices visualizerServices) {
 		super();
 		this.visualizerServices = visualizerServices;
 		getContent().add(buildContent(item));

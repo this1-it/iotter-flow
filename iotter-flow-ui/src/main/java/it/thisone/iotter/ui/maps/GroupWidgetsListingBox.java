@@ -29,7 +29,7 @@ import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.devices.DeviceInfo;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 @org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -47,14 +47,10 @@ public class GroupWidgetsListingBox extends Composite<Div> {
     @Autowired
     private ObjectProvider<DeviceInfo> deviceInfoProvider;
 
-    @Autowired
-    private CassandraService cassandraService;
+
 
     @Autowired
-    private GroupWidgetService groupWidgetService;
-
-    @Autowired
-    private VisualizerServices visualizerServices;
+    private BackendServices visualizerServices;
 
     public GroupWidgetsListingBox() {
         this(null, null, new HashMap<>());
@@ -141,15 +137,15 @@ public class GroupWidgetsListingBox extends Composite<Div> {
         Span label = new Span();
         label.addClassName("no-alarm");
 
-        if (device != null && cassandraService != null) {
-            DataSink item = cassandraService.findDataSinkCacheable(device.getSerial());
+
+            DataSink item = visualizerServices.getCassandraFeeds().getDataSink(device.getSerial());
             if (item != null) {
                 device.changedAlarmStatus(item.getLastContact(), item.isAlarmed(), item.hasActiveAlarms());
                 if (device.getAlarmStatus() != null) {
                     label.setText(device.getAlarmStatus().name());
                 }
             }
-        }
+        
 
         return label;
     }
@@ -190,7 +186,7 @@ public class GroupWidgetsListingBox extends Composite<Div> {
             return;
         }
 
-        GroupWidgetVisualizer content = new GroupWidgetVisualizer(widget.getId().toString(), true, groupWidgetService, visualizerServices);
+        GroupWidgetVisualizer content = new GroupWidgetVisualizer(widget.getId().toString(), true, visualizerServices);
         if (getParent().isPresent() && getParent().get() instanceof TabSheet) {
             TabSheet tabsheet = (TabSheet) getParent().get();
             Tab tab = tabsheet.addTab(widget.getName(), content);

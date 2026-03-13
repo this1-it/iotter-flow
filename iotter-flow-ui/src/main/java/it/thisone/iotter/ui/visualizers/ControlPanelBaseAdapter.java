@@ -54,7 +54,7 @@ import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.WidgetRefreshUIRunnable;
@@ -68,6 +68,7 @@ import it.thisone.iotter.ui.model.ChannelAdapter;
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.ui.providers.ControlPanelBaseProvider;
 import it.thisone.iotter.ui.visualizers.controlpanel.ConfiguratorLabel;
 import it.thisone.iotter.ui.visualizers.controlpanel.ControlPanelBaseDataProvider;
@@ -114,7 +115,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
     private ChannelAdapterDataProvider channelContainer;
     private ChannelAdapterDataProvider parameterContainer;
 
-    private final VisualizerServices visualizerServices;
+    private final BackendServices visualizerServices;
     private final DeviceService deviceService;
     private final CassandraAlarms cassandraAlarms;
     private final CassandraFeeds cassandraFeeds;
@@ -170,7 +171,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
             "#685CB0",
     };
 
-    public ControlPanelBaseAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+    public ControlPanelBaseAdapter(GraphicWidget widget, BackendServices visualizerServices) {
         super(widget);
         this.visualizerServices = visualizerServices;
         this.deviceService = visualizerServices.getDeviceService();
@@ -241,7 +242,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
         return (getGraphWidget() != null) && getGraphWidget().getOptions().getRealTime();
     }
 
-    @Override
+
     @Subscribe
     public void refreshWithUiAccess(WidgetRefreshEvent event) {
         if (isRealTime()) {

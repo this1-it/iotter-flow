@@ -68,16 +68,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	@Autowired
 	private NetworkRepository networkRepository;
 
-	// @Autowired
-	// private AuthenticatedUser authenticatedUser;
-	// @Autowired
-	// private NetworkService networkService;
-	// @Autowired
-	// private DeviceService deviceService;
-	// @Autowired
-	// private NetworkGroupService networkGroupService;
-	// @Autowired
-	// private GroupWidgetService groupWidgetService;
+
 	@Autowired
 	private UIEventBus uiEventBus;
 	@Autowired
@@ -85,8 +76,6 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	@Autowired
 	private ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
 
-	@Autowired
-	private it.thisone.iotter.ui.providers.VisualizerServices visualizerServices;
 
 	@Autowired
 	private it.thisone.iotter.ui.providers.BackendServices backendServices;
@@ -342,11 +331,11 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 				content = new DevicesGoogleMap(network, false, true, backendServices.getDeviceService(), backendServices.getNetworkService(), googleMapApiKey);
 				break;
 			case CUSTOM:
-				content = new GroupWidgetsCustomMap(item.getId(), false, backendServices,uiEventBus, devicesImageOverlayMapProvider, visualizerServices);
+				content = new GroupWidgetsCustomMap(item.getId(), false, backendServices,uiEventBus, devicesImageOverlayMapProvider);
 				break;
 			default:
 				content = new GroupWidgetsDevicesListing(network, backendServices, uiEventBus,
-						groupWidgetsListingBoxProvider, visualizerServices);
+						groupWidgetsListingBoxProvider);
 				break;
 		}
 

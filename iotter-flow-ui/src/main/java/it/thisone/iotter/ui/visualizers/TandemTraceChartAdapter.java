@@ -20,7 +20,7 @@ import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.charts.MultiTraceChartAdapter;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
@@ -37,7 +37,7 @@ public class TandemTraceChartAdapter extends MultiTraceChartAdapter {
     private VerticalLayout content;
     private final GroupWidgetService groupWidgetService;
 
-    public TandemTraceChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+    public TandemTraceChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
         super(widget, visualizerServices);
         this.groupWidgetService = visualizerServices.getGroupWidgetService();
         Component visualization = buildVisualization();

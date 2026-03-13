@@ -24,7 +24,8 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 
 	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
 public class TableAdapter extends AbstractChartAdapter {
@@ -39,7 +40,7 @@ public class TableAdapter extends AbstractChartAdapter {
 	private final CassandraRollup rollup;
 	private final CassandraMeasures cassandraMeasures;
 
-	public TableAdapter(GraphicWidget widget, IMeasureExporter exporter, VisualizerServices visualizerServices) {
+	public TableAdapter(GraphicWidget widget, IMeasureExporter exporter, BackendServices visualizerServices) {
 		super(widget, visualizerServices);
 		this.exporter = exporter;
 		this.rollup = visualizerServices.getCassandraRollup();

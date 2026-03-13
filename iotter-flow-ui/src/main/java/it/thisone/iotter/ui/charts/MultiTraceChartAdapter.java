@@ -31,7 +31,8 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.model.TimeInterval;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+import it.thisone.iotter.ui.providers.BackendServices;
+
 
 public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
@@ -47,7 +48,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
     private BaseScale<?> yScale;
     private TimeInterval currentInterval;
 
-    public MultiTraceChartAdapter(GraphicWidget widget, VisualizerServices visualizerServices) {
+    public MultiTraceChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
         super(widget, visualizerServices);
         optionsField.getAutoScale().setVisible(widget.hasExtremes());
     }

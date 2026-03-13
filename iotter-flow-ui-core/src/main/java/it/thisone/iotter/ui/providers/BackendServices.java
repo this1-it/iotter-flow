@@ -1,9 +1,12 @@
 package it.thisone.iotter.ui.providers;
 
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import it.thisone.iotter.cassandra.CassandraAlarms;
+import it.thisone.iotter.cassandra.CassandraFeeds;
+import it.thisone.iotter.cassandra.CassandraMeasures;
+import it.thisone.iotter.cassandra.CassandraRollup;
+import it.thisone.iotter.exporter.IExportProvider;
 import it.thisone.iotter.integration.AlarmService;
 import it.thisone.iotter.integration.AuthManager;
 import it.thisone.iotter.integration.ExportService;
@@ -25,58 +28,86 @@ import it.thisone.iotter.ui.common.AuthenticatedUser;
 @Service
 public class BackendServices {
 
-	@Autowired
-	private ExportService exportService;
+	private final ExportService exportService;
+	private final NotificationService notificationService;
+	private final ModbusProfileService modbusProfileService;
+	private final SubscriptionService subscriptionService;
+	private final AuthManager authManager;
+	private final UserService userService;
+	private final RoleService roleService;
+	private final NetworkGroupService groupService;
+	private final NetworkService networkService;
+	private final DeviceService deviceService;
+	private final TracingService tracingService;
+	private final GroupWidgetService groupWidgetService;
+	private final ImageDataService imageDataService;
+	private final MeasureUnitTypeService measureUnitTypeService;
+	private final MqttOutboundService mqttService;
+	private final AlarmService alarmService;
+	private final AuthenticatedUser authenticatedUser;
 
-	@Autowired
-	private NotificationService notificationService;
+    private final CassandraAlarms cassandraAlarms;
+    private final CassandraFeeds cassandraFeeds;
+    private final CassandraMeasures cassandraMeasures;
+    private final CassandraRollup cassandraRollup;
+    private final IExportProvider exportProvider;
 
-	@Autowired
-	private ModbusProfileService modbusProfileService;
 
-	@Autowired
-	private SubscriptionService subscriptionService;
-	
-	@Autowired
-	private AuthManager authManager;
+	public BackendServices(
+			ExportService exportService,
+			NotificationService notificationService,
+			ModbusProfileService modbusProfileService,
+			SubscriptionService subscriptionService,
+			AuthManager authManager,
+			UserService userService,
+			RoleService roleService,
+			NetworkGroupService groupService,
+			NetworkService networkService,
+			DeviceService deviceService,
+			TracingService tracingService,
+			GroupWidgetService groupWidgetService,
+			ImageDataService imageDataService,
+			MeasureUnitTypeService measureUnitTypeService,
+			MqttOutboundService mqttService,
+			AlarmService alarmService,
+			AuthenticatedUser authenticatedUser,
+			CassandraAlarms cassandraAlarms, 
+			CassandraFeeds cassandraFeeds,
+            CassandraMeasures cassandraMeasures, 
+			CassandraRollup cassandraRollup,
+            IExportProvider exportProvider
+		) {
+		this.exportService = exportService;
+		this.notificationService = notificationService;
+		this.modbusProfileService = modbusProfileService;
+		this.subscriptionService = subscriptionService;
+		this.authManager = authManager;
+		this.userService = userService;
+		this.roleService = roleService;
+		this.groupService = groupService;
+		this.networkService = networkService;
+		this.deviceService = deviceService;
+		this.tracingService = tracingService;
+		this.groupWidgetService = groupWidgetService;
+		this.imageDataService = imageDataService;
+		this.measureUnitTypeService = measureUnitTypeService;
+		this.mqttService = mqttService;
+		this.alarmService = alarmService;
+		this.authenticatedUser = authenticatedUser;
+        this.cassandraAlarms = cassandraAlarms;
+        this.cassandraFeeds = cassandraFeeds;
+        this.cassandraMeasures = cassandraMeasures;
+        this.cassandraRollup = cassandraRollup;
+        this.exportProvider = exportProvider;
 
-	@Autowired
-	private UserService userService;
-	
-	@Autowired
-	private RoleService roleService;
+	}
 
-	@Autowired
-	private NetworkGroupService groupService;
+	public CassandraAlarms getCassandraAlarms() { return cassandraAlarms; }
+    public CassandraFeeds getCassandraFeeds() { return cassandraFeeds; }
+    public CassandraMeasures getCassandraMeasures() { return cassandraMeasures; }
+    public CassandraRollup getCassandraRollup() { return cassandraRollup; }
+    public IExportProvider getExportProvider() { return exportProvider; }
 
-	@Autowired
-	private NetworkService networkService;
-	
-	@Autowired
-	private DeviceService deviceService;
-	
-	@Autowired
-	private TracingService tracingService;
-
-	@Autowired
-	private GroupWidgetService groupWidgetService;
-
-	@Autowired
-	private ImageDataService imageDataService;
-	
-	@Autowired
-	private MeasureUnitTypeService measureUnitTypeService;
-
-	@Autowired
-	private MqttOutboundService mqttService;
-
-	@Autowired
-	private AlarmService alarmService;
-
-	@Autowired
-    private AuthenticatedUser authenticatedUser;
-
-	
 	public UserService getUserService() {
 		return userService;
 	}
@@ -113,7 +144,6 @@ public class BackendServices {
 		return imageDataService;
 	}
 
-
 	public SubscriptionService getSubscriptionService() {
 		return subscriptionService;
 	}
@@ -125,7 +155,7 @@ public class BackendServices {
 	public AlarmService getAlarmService() {
 		return alarmService;
 	}
-	
+
 	public MqttOutboundService getMqttService() {
 		return mqttService;
 	}
@@ -142,8 +172,7 @@ public class BackendServices {
 		return exportService;
 	}
 
-
-
-	public AuthenticatedUser getAuthenticatedUser() { return authenticatedUser; }
-	
+	public AuthenticatedUser getAuthenticatedUser() {
+		return authenticatedUser;
+	}
 }

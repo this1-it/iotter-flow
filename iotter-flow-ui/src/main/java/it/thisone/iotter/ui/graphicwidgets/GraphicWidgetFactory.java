@@ -12,15 +12,16 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 
 import it.thisone.iotter.enums.GraphicWidgetType;
-import it.thisone.iotter.exceptions.ApplicationRuntimeException;
+
 import it.thisone.iotter.integration.IClassPathScanner;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.main.UiConstants;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.ui.providers.GraphicWidgetProvider;
-import it.thisone.iotter.ui.providers.VisualizerServices;
+
 import it.thisone.iotter.util.EncryptUtils;
 
 public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
@@ -64,7 +65,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	public static AbstractWidgetVisualizer createWidgetVisualizer(
-			GraphicWidget widget, VisualizerServices services) {
+			GraphicWidget widget, BackendServices services) {
 		AbstractWidgetVisualizer visualizer = null;
 		if (widget != null) {
 			if (GraphicWidgetType.CUSTOM.equals(widget.getType())) {
@@ -83,7 +84,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	public static GraphicWidgetPlaceHolder createPlaceHolder(
-			GraphicWidgetType type, String provider, int fullWidth, int x, int y, VisualizerServices visualizerServices) {
+			GraphicWidgetType type, String provider, int fullWidth, int x, int y, BackendServices visualizerServices) {
 		float height = 550;
 		float width = 550;
 		switch (type) {
@@ -137,7 +138,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	public static AbstractBaseEntityForm<GraphicWidget> createWidgetEditor(
-			GraphicWidget entity, VisualizerServices services) {
+			GraphicWidget entity, BackendServices services) {
 		AbstractBaseEntityForm<GraphicWidget> editor = null;
 		if (entity != null) {
 			switch (entity.getType()) {
@@ -245,7 +246,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	// }
 
 	private static AbstractWidgetVisualizer customWidgetVisualizer(
-			GraphicWidget widget, VisualizerServices services) {
+			GraphicWidget widget, BackendServices services) {
 		AbstractWidgetVisualizer visualizer = null;
 		for (GraphicWidgetProvider provider : findProviders("it.thisone.iotter.ui")) {
 			if (provider != null && provider.getName().equalsIgnoreCase(widget.getProvider())) {
@@ -257,7 +258,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	private static AbstractBaseEntityForm<GraphicWidget> customWidgetEditor(
-			GraphicWidget widget, VisualizerServices services) {
+			GraphicWidget widget, BackendServices services) {
 		AbstractBaseEntityForm<GraphicWidget> editor = null;
 		for (GraphicWidgetProvider provider : findProviders("it.thisone.iotter.ui")) {
 			if (provider != null && provider.getName().equalsIgnoreCase(widget.getProvider())) {

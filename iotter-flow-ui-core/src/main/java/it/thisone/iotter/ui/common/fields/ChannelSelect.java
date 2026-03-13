@@ -16,21 +16,24 @@ public class ChannelSelect extends AbstractCompositeField<VerticalLayout, Channe
 	private ComboBox<MeasureUnit> measures;
 	private Span channelLabel;
 	private Channel value;
-	private final DeviceService deviceService;
+	private DeviceService deviceService;
 
 	private static final String name = "channel.select";
 
-	public ChannelSelect(DeviceService deviceService) {
+	public ChannelSelect() {
 		super(null);
-		this.deviceService = deviceService;
 		VerticalLayout layout = getContent();
 		layout.setSpacing(true);
 		channelLabel = new Span();
 
 		measures = new ComboBox<MeasureUnit>();
 		measures.setLabel(getI18nLabel("measure"));
-		measures.setItemLabelGenerator(measure -> deviceService.getUnitOfMeasureName(measure.getType()));
 		layout.add(measures);
+	}
+
+	public void setDeviceService(DeviceService deviceService) {
+		this.deviceService = deviceService;
+		measures.setItemLabelGenerator(measure -> deviceService.getUnitOfMeasureName(measure.getType()));
 	}
 
 	@Override
