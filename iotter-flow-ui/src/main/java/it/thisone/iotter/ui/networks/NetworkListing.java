@@ -75,7 +75,8 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	private ObjectProvider<GroupWidgetsListingBox> groupWidgetsListingBoxProvider;
 	@Autowired
 	private ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
-
+	@Autowired
+	private ObjectProvider<NetworkRelations> networkRelationsProvider;
 
 	@Autowired
 	private it.thisone.iotter.ui.providers.BackendServices backendServices;
@@ -312,18 +313,6 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		if (item == null) {
 			return;
 		}
-		// Legacy Vaadin 8 map flow kept for reference during migration.
-		// TODO(flow-migration): Re-enable after map components/navigation are migrated
-		// to Flow.
-		//
-		// if (item.isAnonymous()) {
-		// 	String url = UIUtils.getDisplayURL("display", Network.class.getSimpleName(),
-		// 			UiConstants.VIEW_MODE_DEFAULT, item.getId());
-		// 	UI.getCurrent().getNavigator().navigateTo(url.substring(url.indexOf("!") +
-		// 			1));
-		// 	return;
-		// }
-
 		Component content;
 		Network network = backendServices.getNetworkService().findOne(item.getId());
 		switch (item.getNetworkType()) {
@@ -351,77 +340,46 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		if (item == null) {
 			return;
 		}
-		// Legacy Vaadin 8 editable-map flow kept for reference during migration.
-		// TODO(flow-migration): Re-enable after map editors/events are migrated to
-		// Flow.
-		//
-		// BaseEditor content = null;
-		// switch (item.getNetworkType()) {
-		// case GEOGRAPHIC:
-		// Network network = networkService.findOne(item.getId());
-		// content = new DevicesGoogleMap(network, permissions.isModifyMode(), true);
-		// break;
-		// case CUSTOM:
-		// content = new GroupWidgetsCustomMap(item.getId(),
-		// permissions.isModifyMode());
-		// break;
-		// default:
-		// PopupNotification.show("This network map is not editable",
-		// com.vaadin.ui.Notification.Type.WARNING_MESSAGE);
-		// break;
-		// }
-		//
-		// if (content != null) {
-		// Tab tab = tabsheet.addTab(content);
-		// tab.setIcon(UIUtils.ICON_EDIT);
-		// tab.setClosable(true);
-		// tabsheet.setSelectedTab(tab);
-		// content.addListener(new EditorSavedListener() {
-		// @Override
-		// public void editorSaved(EditorSavedEvent event) {
-		// TabSheet sheet = (TabSheet) event.getComponent().getParent();
-		// Tab removed = sheet.getTab(event.getComponent());
-		// sheet.removeTab(removed);
-		// }
-		// });
-		// }
-		PopupNotification.show("Editable network map migration pending", PopupNotification.Type.WARNING);
+
+		Component content;
+		boolean editable = getPermissions().isModifyMode();
+		switch (item.getNetworkType()) {
+			case GEOGRAPHIC:
+				Network network = backendServices.getNetworkService().findOne(item.getId());
+				content = new DevicesGoogleMap(network, editable, true,
+						backendServices.getDeviceService(), backendServices.getNetworkService(), googleMapApiKey);
+				break;
+			case CUSTOM:
+				content = new GroupWidgetsCustomMap(item.getId(), editable,
+						backendServices, uiEventBus, devicesImageOverlayMapProvider);
+				break;
+			default:
+				PopupNotification.show(getI18nLabel("map_not_editable"), PopupNotification.Type.WARNING);
+				return;
+		}
+
+		Tab tab = tabsheet.addTab("", content);
+		tabsheet.setSelectedTab(tab);
 	}
 
 	private void openNetworkConfigurations(Network item) {
 		if (item == null) {
 			return;
 		}
-		// Legacy Vaadin 8 relations flow kept for reference during migration.
-		// TODO(flow-migration): Re-enable after NetworkRelations is migrated to Flow.
-		//
-		// NetworkRelations relations = new NetworkRelations(item.getId());
-		// Tab tab = tabsheet.addTab(relations);
-		// tab.setIcon(UIUtils.ICON_NETWORKS);
-		// tab.setClosable(true);
-		// tabsheet.setSelectedTab(tab);
-		PopupNotification.show("Network relations migration pending", PopupNotification.Type.WARNING);
+		NetworkRelations relations = networkRelationsProvider.getObject();
+		relations.init(item.getId());
+		Tab tab = tabsheet.addTab("", relations);
+		tabsheet.setSelectedTab(tab);
 	}
 
 	private void openMigration(Network item) {
 		if (item == null) {
 			return;
 		}
-		// Legacy Vaadin 8 migration dialog flow kept for reference during migration.
-		// TODO(flow-migration): Re-enable after NetworkDevices dialog/editor is
-		// migrated to Flow.
-		//
-		// NetworkDevices content = new NetworkDevices(item);
-		// Window dialog = createDialog(getI18nLabel("device_migration"), content,
-		// content.getWindowDimension(), content.getWindowStyle());
-		// content.addListener(new EditorSavedListener() {
-		// @Override
-		// public void editorSaved(EditorSavedEvent event) {
-		// dialog.close();
-		// }
-		// });
-		// UI.getCurrent().addWindow(dialog);
-		PopupNotification.show("Network device migration dialog migration pending", PopupNotification.Type.WARNING);
+		NetworkDevices content = new NetworkDevices(item, backendServices.getDeviceService());
+		SideDrawer dialog = new SideDrawer(getI18nLabel("device_migration"));
+		dialog.setDrawerContent(content);
+		dialog.open();
 	}
 
 	private void openEditor(Network item, String label) {

@@ -40,11 +40,11 @@ public class TableAdapter extends AbstractChartAdapter {
 	private final CassandraRollup rollup;
 	private final CassandraMeasures cassandraMeasures;
 
-	public TableAdapter(GraphicWidget widget, IMeasureExporter exporter, BackendServices visualizerServices) {
-		super(widget, visualizerServices);
+	public TableAdapter(GraphicWidget widget, IMeasureExporter exporter, BackendServices backendServices) {
+		super(widget, backendServices);
 		this.exporter = exporter;
-		this.rollup = visualizerServices.getCassandraRollup();
-		this.cassandraMeasures = visualizerServices.getCassandraMeasures();
+		this.rollup = backendServices.getCassandraRollup();
+		this.cassandraMeasures = backendServices.getCassandraMeasures();
 		optionsField.getScale().setVisible(false);
 		optionsField.getShowGrid().setVisible(false);
 		optionsField.getRealTime().setVisible(false);
@@ -60,7 +60,7 @@ public class TableAdapter extends AbstractChartAdapter {
 		
 		DataFormat dataFormat = new DataFormat(UI.getCurrent().getLocale(), getNetworkTimeZone());
 		
-		List<CassandraExportFeed> feeds = ChartUtils.createExportFeeds(getGraphWidget().getFeeds(), visualizerServices.getExportProvider());
+		List<CassandraExportFeed> feeds = ChartUtils.createExportFeeds(getGraphWidget().getFeeds(), backendServices.getExportProvider());
 		
 		boolean ascending = getGraphWidget().getOptions().getOrder().equals(Order.ASCENDING);
 		

@@ -42,8 +42,8 @@ public class GraphicWidgetPlaceHolder extends AbstractWidgetPlaceHolder {
 
     private UIEventBus uiEventBus;
 
-    public GraphicWidgetPlaceHolder(GraphicWidget widget, List<GraphicWidget> children, BackendServices visualizerServices) {
-        super(widget, visualizerServices);
+    public GraphicWidgetPlaceHolder(GraphicWidget widget, List<GraphicWidget> children, BackendServices backendServices) {
+        super(widget, backendServices);
         widget.removeOrphanFeeds();
         this.children = children != null ? children : new ArrayList<>();
         buildLayout();

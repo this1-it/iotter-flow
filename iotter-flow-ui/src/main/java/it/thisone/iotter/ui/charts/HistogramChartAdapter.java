@@ -58,9 +58,9 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 
 	private static final long serialVersionUID = -1958076735452737593L;
 
-	public HistogramChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
-		super(widget, visualizerServices);
-		this.rollup = visualizerServices.getCassandraRollup();
+	public HistogramChartAdapter(GraphicWidget widget, BackendServices backendServices) {
+		super(widget, backendServices);
+		this.rollup = backendServices.getCassandraRollup();
 		optionsField.getRealTime().setVisible(false);
 		optionsField.getScale().setVisible(false);
 		optionsField.getAutoScale().setVisible(false);
@@ -102,7 +102,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 
 	private BarChartConfig createConfiguration(GraphicFeed feed) {
 		String feedColor = feed.getOptions().getFillColor();
-		String feedLabel = ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService());
+		String feedLabel = ChartUtils.getFeedLabel(feed, backendServices.getDeviceService());
 		BarChartConfig configuration = createEmptyConfiguration();
 		configuration.options().title().display(true).text(feedLabel).fontColor(feedColor).fontSize(12);
 		// TODO(flow-chartjs): Vaadin 8 column paddings and tooltip templates do not map 1:1.
@@ -178,7 +178,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 			feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
 			List<MeasureRaw> measures = ChartUtils.getAggregationData(feedKey, time.getStartDate(), time.getEndDate(),
 					interpolation, validities, getNetworkTimeZone(),
-					visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
+					backendServices.getCassandraMeasures(), backendServices.getCassandraRollup());
 			sdf.applyPattern(ChartUtils.DATE_FORMAT);
 			boolean positive = true;
 			Date ts = new Date();
@@ -205,7 +205,7 @@ public class HistogramChartAdapter extends AbstractChartAdapter {
 			}
 			yScale.ticks().beginAtZero(positive);
 		}
-		String feedLabel = ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService());
+		String feedLabel = ChartUtils.getFeedLabel(feed, backendServices.getDeviceService());
 		BarDataset dataset = new BarDataset().label(feedLabel).dataAsList(values)
 				.backgroundColor(feed.getOptions().getFillColor()).stack("values");
 		chartConfig.data().addDataset(dataset);

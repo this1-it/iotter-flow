@@ -21,6 +21,10 @@ import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.server.VaadinServlet;
+
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -45,6 +49,7 @@ import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.channels.ChannelRemoteControlForm;
+import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.cassandra.CassandraAlarms;
 import it.thisone.iotter.cassandra.CassandraFeeds;
 import it.thisone.iotter.exporter.IExportProvider;
@@ -115,7 +120,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
     private ChannelAdapterDataProvider channelContainer;
     private ChannelAdapterDataProvider parameterContainer;
 
-    private final BackendServices visualizerServices;
+    private final BackendServices backendServices;
     private final DeviceService deviceService;
     private final CassandraAlarms cassandraAlarms;
     private final CassandraFeeds cassandraFeeds;
@@ -171,16 +176,16 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
             "#685CB0",
     };
 
-    public ControlPanelBaseAdapter(GraphicWidget widget, BackendServices visualizerServices) {
+    public ControlPanelBaseAdapter(GraphicWidget widget, BackendServices backendServices) {
         super(widget);
-        this.visualizerServices = visualizerServices;
-        this.deviceService = visualizerServices.getDeviceService();
-        this.cassandraAlarms = visualizerServices.getCassandraAlarms();
-        this.cassandraFeeds = visualizerServices.getCassandraFeeds();
-        this.alarmService = visualizerServices.getAlarmService();
-        this.groupWidgetService = visualizerServices.getGroupWidgetService();
-        this.exportProvider = visualizerServices.getExportProvider();
-        this.authenticatedUser = visualizerServices.getAuthenticatedUser();
+        this.backendServices = backendServices;
+        this.deviceService = backendServices.getDeviceService();
+        this.cassandraAlarms = backendServices.getCassandraAlarms();
+        this.cassandraFeeds = backendServices.getCassandraFeeds();
+        this.alarmService = backendServices.getAlarmService();
+        this.groupWidgetService = backendServices.getGroupWidgetService();
+        this.exportProvider = backendServices.getExportProvider();
+        this.authenticatedUser = backendServices.getAuthenticatedUser();
         UserDetailsAdapter details = authenticatedUser.get().orElse(null);
         anonymous = details == null || !details.isEnabled();
         resolver = new IconSetResolver();
@@ -555,7 +560,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
         widget.getOptions().setShowLegend(false);
         widget.getFeeds().addAll(getParameters());
 
-        multitrace = new TandemTraceChartAdapter(widget, visualizerServices);
+        multitrace = new TandemTraceChartAdapter(widget, backendServices);
         TimeIntervalHelper helper = new TimeIntervalHelper(multitrace.getNetworkTimeZone());
         TimePeriod period = new GroupWidgetUiFactory().getDefaultPeriod();
         TimeInterval interval = helper.period(new Date(), period);
@@ -738,7 +743,10 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
     private ComponentEventListener<ClickEvent<Button>> openChannelRemoteControl(final SetpointButton setpoint,
             final Channel channel) {
         return event -> {
-            control = new ChannelRemoteControlForm(channel, visualizerServices);
+            WebApplicationContext ctx = WebApplicationContextUtils
+                    .getWebApplicationContext(VaadinServlet.getCurrent().getServletContext());
+            UIEventBus uiEventBus = ctx.getBean(UIEventBus.class);
+            control = new ChannelRemoteControlForm(channel, backendServices, uiEventBus);
             String caption = String.format("%s %s", getI18nLabel("control_setpoint"),
                     channel.getConfiguration().getDisplayName());
 

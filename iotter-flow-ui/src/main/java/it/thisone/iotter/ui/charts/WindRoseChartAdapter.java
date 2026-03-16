@@ -61,9 +61,9 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
     private ComboBox<Integer> petalsChoice;
     private Registration applyPetalsChoiceRegistration;
 
-    public WindRoseChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
-        super(widget, visualizerServices);
-        this.rollup = visualizerServices.getCassandraRollup();
+    public WindRoseChartAdapter(GraphicWidget widget, BackendServices backendServices) {
+        super(widget, backendServices);
+        this.rollup = backendServices.getCassandraRollup();
         optionsField.getRealTime().setVisible(false);
         optionsField.getScale().setVisible(false);
         optionsField.getAutoScale().setVisible(false);
@@ -108,7 +108,7 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
             return;
         }
 
-        String feedUnit = ChartUtils.getUnitOfMeasure(speed, visualizerServices.getDeviceService());
+        String feedUnit = ChartUtils.getUnitOfMeasure(speed, backendServices.getDeviceService());
         DecimalFormat df = (DecimalFormat) NumberFormat.getInstance(UI.getCurrent().getLocale());
         df.applyPattern(speed.getMeasure().getFormat());
 
@@ -332,13 +332,13 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
 
         if (interpolation.equals(Interpolation.RAW)) {
             measures = ChartUtils.getData(feedKey, interval.getStartDate(), interval.getEndDate(), -1, 0, ranges, getNetworkTimeZone(),
-                    visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
+                    backendServices.getCassandraMeasures(), backendServices.getCassandraRollup());
         } else {
             if (interpolation.equals(Interpolation.D1)) {
                 interpolation = Interpolation.H1;
             }
             measures = ChartUtils.getAggregationData(feedKey, interval.getStartDate(), interval.getEndDate(), interpolation, ranges,
-                    getNetworkTimeZone(), visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
+                    getNetworkTimeZone(), backendServices.getCassandraMeasures(), backendServices.getCassandraRollup());
         }
         return measures;
     }

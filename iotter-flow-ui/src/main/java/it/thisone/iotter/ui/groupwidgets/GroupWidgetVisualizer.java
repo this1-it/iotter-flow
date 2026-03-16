@@ -62,7 +62,7 @@ public class GroupWidgetVisualizer extends BaseComponent {
     private static final int TIMECONTROLS_HEIGHT = 40;
 
 
-    private final BackendServices visualizerServices;
+    private final BackendServices backendServices;
     private final UIEventBus uiEventBus;
     private final IGroupWidgetUiFactory config;
 
@@ -81,14 +81,14 @@ public class GroupWidgetVisualizer extends BaseComponent {
     private TimeControl timeControl;
     private CustomField<GraphicWidgetOptions> optionsField;
 
-    public GroupWidgetVisualizer(String entityId, boolean isTab, BackendServices visualizerServices) {
+    public GroupWidgetVisualizer(String entityId, boolean isTab, BackendServices backendServices) {
         super("groupwidget.visualizer");
 
-        this.visualizerServices = visualizerServices;
+        this.backendServices = backendServices;
         this.uiEventBus = resolveUiEventBus();
         this.config = new GroupWidgetUiFactory();
 
-        this.entity = this.visualizerServices.getGroupWidgetService().findOne(entityId);
+        this.entity = this.backendServices.getGroupWidgetService().findOne(entityId);
         if (entity == null) {
             throw new IllegalArgumentException("GroupWidget not found: " + entityId);
         }
@@ -131,7 +131,7 @@ public class GroupWidgetVisualizer extends BaseComponent {
                 continue;
             }
             widget.getOptions().setRealTime(entity.getOptions().isRealTime());
-            AbstractWidgetVisualizer component = GraphicWidgetFactory.createWidgetVisualizer(widget, visualizerServices);
+            AbstractWidgetVisualizer component = GraphicWidgetFactory.createWidgetVisualizer(widget, backendServices);
             if (uiEventBus != null) {
                 component.setEventBusFunctions(uiEventBus::register, uiEventBus::unregister);
             }
@@ -186,8 +186,8 @@ public class GroupWidgetVisualizer extends BaseComponent {
         exportButton.getElement().setProperty("title", getI18nLabel("export"));
         exportButton.addClickListener(event -> {
             ExportDialog dialog = new ExportDialog(createExportConfig(), createExportProperties(), null, ForkJoinPool.commonPool(),
-                    visualizerServices.getCassandraRollup(), visualizerServices.getCassandraFeeds(),
-                    visualizerServices.getExportProvider(), visualizerServices.getNotificationService());
+                    backendServices.getCassandraRollup(), backendServices.getCassandraFeeds(),
+                    backendServices.getExportProvider(), backendServices.getNotificationService());
             dialog.open();
         });
 

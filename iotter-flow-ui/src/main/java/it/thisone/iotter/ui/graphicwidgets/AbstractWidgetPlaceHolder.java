@@ -25,16 +25,16 @@ public abstract class AbstractWidgetPlaceHolder extends BaseComponent implements
     private static final long serialVersionUID = 1L;
     protected GraphicWidget entity;
     protected Span placeholderLabel;
-    protected final BackendServices visualizerServices;
+    protected final BackendServices backendServices;
 
-    public AbstractWidgetPlaceHolder(GraphicWidget entity, BackendServices visualizerServices) {
+    public AbstractWidgetPlaceHolder(GraphicWidget entity, BackendServices backendServices) {
         super("graphwidget.editor", String.valueOf(entity.getId()));
         this.entity = entity;
-        this.visualizerServices = visualizerServices;
+        this.backendServices = backendServices;
     }
 
     public void openEditor(final GraphicWidget widget, boolean create) {
-        AbstractBaseEntityForm<GraphicWidget> content = GraphicWidgetFactory.createWidgetEditor(widget, visualizerServices);
+        AbstractBaseEntityForm<GraphicWidget> content = GraphicWidgetFactory.createWidgetEditor(widget, backendServices);
         if (content == null) {
             PopupNotification.show("Unable to create widget editor", PopupNotification.Type.ERROR);
             return;

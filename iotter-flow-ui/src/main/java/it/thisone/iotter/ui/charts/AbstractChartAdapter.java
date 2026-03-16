@@ -112,11 +112,11 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 
 	private Registration intervalChangeRegistration;
 
-	protected final BackendServices visualizerServices;
+	protected final BackendServices backendServices;
 
-	public AbstractChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
+	public AbstractChartAdapter(GraphicWidget widget, BackendServices backendServices) {
 		super(widget);
-		this.visualizerServices = visualizerServices;
+		this.backendServices = backendServices;
 		
 		//config = UIUtils.getUiFactory().getGroupWidgetUiFactory();
 		// ChartUtils.loadCustomMarkers();
@@ -315,10 +315,10 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 					createExportProperties(),
 					null,
 					getBackgroundExecutor(),
-					visualizerServices.getCassandraRollup(),
-					visualizerServices.getCassandraFeeds(),
-					visualizerServices.getExportProvider(),
-					visualizerServices.getNotificationService());
+					backendServices.getCassandraRollup(),
+					backendServices.getCassandraFeeds(),
+					backendServices.getExportProvider(),
+					backendServices.getNotificationService());
 			UI.getCurrent().add(dialog);
 			dialog.open();
 		});
@@ -457,7 +457,7 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 		config.setInterval(range);
 		config.setName(getWidget().getLabel());
 		List<GraphicFeed> feeds = ((GraphicWidget) getWidget()).getFeeds();
-		config.setFeeds(ChartUtils.createExportFeeds(feeds, visualizerServices.getExportProvider()));
+		config.setFeeds(ChartUtils.createExportFeeds(feeds, backendServices.getExportProvider()));
 		config.setInterpolation(Interpolation.RAW);
 		return config;
 	}

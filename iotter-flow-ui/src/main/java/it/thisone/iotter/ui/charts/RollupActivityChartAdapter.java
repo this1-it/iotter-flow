@@ -36,9 +36,9 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
     private TimeScale xScale;
     private final CassandraRollup rollup;
 
-    public RollupActivityChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
-        super(widget, visualizerServices);
-        this.rollup = visualizerServices.getCassandraRollup();
+    public RollupActivityChartAdapter(GraphicWidget widget, BackendServices backendServices) {
+        super(widget, backendServices);
+        this.rollup = backendServices.getCassandraRollup();
         optionsField.getScale().setVisible(false);
         optionsField.getShowMarkers().setVisible(false);
         optionsField.getAutoScale().setVisible(false);
@@ -86,7 +86,7 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
         chartConfig.options().title().display(true).text(getWidget().getLabel());
 
         TimeLineDataset dataset = new TimeLineDataset();
-        dataset.label(ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService()));
+        dataset.label(ChartUtils.getFeedLabel(feed, backendServices.getDeviceService()));
         dataset.borderColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
         dataset.backgroundColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
         dataset.fill(false);

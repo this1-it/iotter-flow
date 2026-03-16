@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.flow.component.UI;
-
+import com.vaadin.flow.server.VaadinSession;
 
 import it.thisone.iotter.config.Constants;
 
@@ -69,6 +69,8 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 
 	public static String toHtml(String input) {
+
+		
 		if (input == null) {
 			return "";
 		}
@@ -81,11 +83,15 @@ public final class UIUtils implements Serializable, UiConstants, Constants {
 
 
 
-	@Deprecated
 	public static TimeZone getBrowserTimeZone() {
-		throw new UnsupportedOperationException("vaadin8 legacy");
-
-		// return ((IMainUI) UI.getCurrent()).getTimeZone();
+		VaadinSession session = VaadinSession.getCurrent();
+		if (session != null) {
+			String tz = (String) session.getAttribute("browserTZ");
+			if (tz != null) {
+				return TimeZone.getTimeZone(tz);
+			}
+		}
+		return TimeZone.getDefault();
 	}
 
 

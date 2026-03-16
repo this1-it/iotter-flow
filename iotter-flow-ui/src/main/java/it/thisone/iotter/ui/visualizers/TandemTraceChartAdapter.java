@@ -37,9 +37,9 @@ public class TandemTraceChartAdapter extends MultiTraceChartAdapter {
     private VerticalLayout content;
     private final GroupWidgetService groupWidgetService;
 
-    public TandemTraceChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
-        super(widget, visualizerServices);
-        this.groupWidgetService = visualizerServices.getGroupWidgetService();
+    public TandemTraceChartAdapter(GraphicWidget widget, BackendServices backendServices) {
+        super(widget, backendServices);
+        this.groupWidgetService = backendServices.getGroupWidgetService();
         Component visualization = buildVisualization();
         if (visualization instanceof VerticalLayout) {
             content = (VerticalLayout) visualization;
@@ -59,7 +59,7 @@ public class TandemTraceChartAdapter extends MultiTraceChartAdapter {
         widget.getOptions().setShowGrid(false);
         widget.getOptions().setShowLegend(true);
         widget.setFeeds(feeds);
-        return new MultiTraceChartAdapter(widget, visualizerServices);
+        return new MultiTraceChartAdapter(widget, backendServices);
     }
 
     @Override

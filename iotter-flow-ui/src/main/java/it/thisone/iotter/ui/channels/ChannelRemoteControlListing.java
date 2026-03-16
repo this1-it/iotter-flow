@@ -32,6 +32,7 @@ import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.devices.DeviceForm;
 import it.thisone.iotter.ui.ifc.ITabContent;
 
+import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
 import it.thisone.iotter.ui.providers.BackendServices;
 
@@ -42,17 +43,19 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 	private final Permissions permissions;
 	private final List<Channel> channels;
 	private final ChannelAdapterDataProvider adapterProvider;
-	private final BackendServices visualizerServices;
+	private final BackendServices backendServices;
+	private final UIEventBus uiEventBus;
 	private ListDataProvider<Channel> dataProvider;
 	private Grid<Channel> grid;
 	private boolean loaded;
 
-	public ChannelRemoteControlListing(BackendServices visualizerServices) {
+	public ChannelRemoteControlListing(BackendServices backendServices, UIEventBus uiEventBus) {
 		super(Channel.class, DeviceForm.NAME, "channel.remote", false);
 		this.permissions = new Permissions(true);
 		this.channels = new ArrayList<>();
 		this.adapterProvider = new ChannelAdapterDataProvider();
-		this.visualizerServices = visualizerServices;
+		this.backendServices = backendServices;
+		this.uiEventBus = uiEventBus;
 		buildLayout();
 	}
 
@@ -101,7 +104,7 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 
 	@Override
 	public AbstractBaseEntityForm<Channel> getEditor(Channel item, boolean readonly) {
-		return new ChannelRemoteControlForm(item, visualizerServices);
+		return new ChannelRemoteControlForm(item, backendServices, uiEventBus);
 	}
 
 

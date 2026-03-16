@@ -31,11 +31,11 @@ public class ChannelTimelineDetails extends  Composite<VerticalLayout> {
 
 	private static final long serialVersionUID = 1L;
 
-	private final BackendServices visualizerServices;
+	private final BackendServices backendServices;
 
-	public ChannelTimelineDetails(Channel item, BackendServices visualizerServices) {
+	public ChannelTimelineDetails(Channel item, BackendServices backendServices) {
 		super();
-		this.visualizerServices = visualizerServices;
+		this.backendServices = backendServices;
 		getContent().add(buildContent(item));
 	}
 
@@ -60,7 +60,7 @@ public class ChannelTimelineDetails extends  Composite<VerticalLayout> {
 		feed.setMeasure(channel.getDefaultMeasure());
 		widget.addFeed(feed);
 
-		MultiTraceChartAdapter chartAdapter = new MultiTraceChartAdapter(widget, visualizerServices);
+		MultiTraceChartAdapter chartAdapter = new MultiTraceChartAdapter(widget, backendServices);
 //		chartAdapter.setHeightFull();
 //		chartAdapter.setWidthFull();
 

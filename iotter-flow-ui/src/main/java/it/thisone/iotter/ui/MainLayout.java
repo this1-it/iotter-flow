@@ -59,6 +59,12 @@ public class MainLayout extends FlexLayout implements RouterLayout {
         protected void onAttach(AttachEvent attachEvent) {
                 super.onAttach(attachEvent);
 
+                attachEvent.getUI().getPage().executeJs(
+                        "return Intl.DateTimeFormat().resolvedOptions().timeZone;"
+                ).then(String.class, tz -> {
+                        VaadinSession.getCurrent().setAttribute("browserTZ", tz);
+                });
+
                 attachEvent.getUI()
                                 .addShortcutListener(
                                                 () -> {

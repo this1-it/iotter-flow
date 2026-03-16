@@ -162,7 +162,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private MeasureUnitTypeService measureUnitTypeService;
 
 	@Autowired
-	private BackendServices visualizerServices;
+	private BackendServices backendServices;
 
 	@Autowired
 	private it.thisone.iotter.persistence.service.ModbusProfileService modbusProfileService;
@@ -683,12 +683,12 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		List<Channel> channels = new ArrayList<>(device.getChannels());
 		Collections.sort(channels, new ChannelComparator());
 		for (Channel channel : channels) {
-			config.getFeeds().add(ChartUtils.createExportFeed(channel, visualizerServices.getExportProvider()));
+			config.getFeeds().add(ChartUtils.createExportFeed(channel, backendServices.getExportProvider()));
 		}
 
 		ExportDialog dialog = new ExportDialog(config, props, device, java.util.concurrent.ForkJoinPool.commonPool(),
-				visualizerServices.getCassandraRollup(), visualizerServices.getCassandraFeeds(),
-				visualizerServices.getExportProvider(), visualizerServices.getNotificationService());
+				backendServices.getCassandraRollup(), backendServices.getCassandraFeeds(),
+				backendServices.getExportProvider(), backendServices.getNotificationService());
 		// dialog.setHeaderTitle("Export " + device.getLabel());
 		dialog.open();
 	}
@@ -738,7 +738,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 		Dialog dialog = createDialog(getI18nLabel("groupwidgetbox_device"),
-				new GroupWidgetVisualizer(bean.getId().toString(), true,  visualizerServices));
+				new GroupWidgetVisualizer(bean.getId().toString(), true,  backendServices));
 		dialog.open();
 	}
 

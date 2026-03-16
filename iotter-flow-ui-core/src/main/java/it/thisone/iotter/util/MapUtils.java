@@ -48,7 +48,7 @@ public class MapUtils implements Serializable {
 	private static final long serialVersionUID = -8826738658600702437L;
 
 
-	public static String getIconUrl(Device device, BackendServices visualizerServices) {
+	public static String getIconUrl(Device device, BackendServices backendServices) {
 		String icon = RED_DOT;
 		if (device.getStatus().equals(DeviceStatus.CONNECTED) && !device.getChannels().isEmpty()) {
 			icon = GREEN_DOT;
@@ -57,12 +57,12 @@ public class MapUtils implements Serializable {
 		}
 
 		if (device.isAlarmed()) {
-			if (visualizerServices.getAlarmService().hasActiveAlarms(device.getSerial())) {
+			if (backendServices.getAlarmService().hasActiveAlarms(device.getSerial())) {
 				icon = RED_DOT;
 			}
 		}
 
-		Date lastContactDate = visualizerServices.getCassandraFeeds().getLastContact(device.getSerial());
+		Date lastContactDate = backendServices.getCassandraFeeds().getLastContact(device.getSerial());
 		device.setLastContactDate(lastContactDate);
 		
 		if (device.checkInactive(lastContactDate)) {

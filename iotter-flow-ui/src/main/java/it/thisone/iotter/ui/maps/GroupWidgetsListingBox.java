@@ -50,7 +50,7 @@ public class GroupWidgetsListingBox extends Composite<Div> {
 
 
     @Autowired
-    private BackendServices visualizerServices;
+    private BackendServices backendServices;
 
     public GroupWidgetsListingBox() {
         this(null, null, new HashMap<>());
@@ -138,7 +138,7 @@ public class GroupWidgetsListingBox extends Composite<Div> {
         label.addClassName("no-alarm");
 
 
-            DataSink item = visualizerServices.getCassandraFeeds().getDataSink(device.getSerial());
+            DataSink item = backendServices.getCassandraFeeds().getDataSink(device.getSerial());
             if (item != null) {
                 device.changedAlarmStatus(item.getLastContact(), item.isAlarmed(), item.hasActiveAlarms());
                 if (device.getAlarmStatus() != null) {
@@ -186,7 +186,7 @@ public class GroupWidgetsListingBox extends Composite<Div> {
             return;
         }
 
-        GroupWidgetVisualizer content = new GroupWidgetVisualizer(widget.getId().toString(), true, visualizerServices);
+        GroupWidgetVisualizer content = new GroupWidgetVisualizer(widget.getId().toString(), true, backendServices);
         if (getParent().isPresent() && getParent().get() instanceof TabSheet) {
             TabSheet tabsheet = (TabSheet) getParent().get();
             Tab tab = tabsheet.addTab(widget.getName(), content);

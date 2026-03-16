@@ -59,6 +59,7 @@ import it.thisone.iotter.ui.common.fields.ExportingConfigField;
 import it.thisone.iotter.ui.common.fields.LegacyDateTimeField;
 import it.thisone.iotter.ui.common.fields.NetworkGroupSelect;
 import it.thisone.iotter.ui.common.fields.NetworkSelect;
+import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.ifc.ITabContent;
 import it.thisone.iotter.util.EncryptUtils;
 import it.thisone.iotter.util.Utils;
@@ -160,7 +161,10 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	private MeasureUnitTypeService measureUnitTypeService;
 
 	@Autowired
-	private it.thisone.iotter.ui.providers.BackendServices visualizerServices;
+	private it.thisone.iotter.ui.providers.BackendServices backendServices;
+
+	@Autowired
+	private UIEventBus uiEventBus;
 
 	// @Autowired
 	// public DeviceForm(Device entity, Network network, UserDetailsAdapter
@@ -606,14 +610,14 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 					multicomponent.addTab(getI18nLabel("location_tab"), buildPanel(buildLocationForm()));
 				}
 
-				channelListing = new ChannelListing(visualizerServices);
+				channelListing = new ChannelListing(backendServices);
 				multicomponent.addTab(getI18nLabel("channels_tab"), channelListing);
 
 				alarmListing = new ChannelAlarmListing();
 				multicomponent.addTab(getI18nLabel("alarms_tab"), alarmListing);
 
 
-				remoteControls = new ChannelRemoteControlListing(visualizerServices);
+				remoteControls = new ChannelRemoteControlListing(backendServices, uiEventBus);
 				multicomponent.addTab(getI18nLabel("remote_tab"), remoteControls);
 
 				lastValues = new ChannelLastMeasuresListing();

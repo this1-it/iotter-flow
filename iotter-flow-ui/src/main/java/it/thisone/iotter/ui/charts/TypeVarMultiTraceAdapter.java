@@ -29,8 +29,8 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 	 */
 	private static final long serialVersionUID = -1879789719298795301L;
 
-	public TypeVarMultiTraceAdapter(GraphicWidget widget, BackendServices visualizerServices) {
-		super(widget, visualizerServices);
+	public TypeVarMultiTraceAdapter(GraphicWidget widget, BackendServices backendServices) {
+		super(widget, backendServices);
 		Component visualization = buildVisualization();
 		//visualization.setSizeFull();
 		setRootComposition(createContentWrapper(visualization));
@@ -86,7 +86,7 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 		widget.getOptions().setShowLegend(true);
 		widget.setFeeds(feeds);
 
-		MultiTraceChartAdapter multitrace = new MultiTraceChartAdapter(widget, visualizerServices);
+		MultiTraceChartAdapter multitrace = new MultiTraceChartAdapter(widget, backendServices);
 		TimeIntervalHelper helper = new TimeIntervalHelper(multitrace.getNetworkTimeZone());
 		TimePeriod period = config.getDefaultPeriod();
 		TimeInterval interval = helper.period(new Date(), period);

@@ -31,15 +31,15 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
     private DeviceCustomMap entity;
     private static final long serialVersionUID = 1L;
     private Map<Device, Set<GroupWidget>> devices;
-    private final BackendServices visualizerServices;
+    private final BackendServices backendServices;
 
 
     public DevicesImageOverlayMap(DeviceCustomMap entity,
-            Map<Device, Set<GroupWidget>> devices, boolean editable, BackendServices visualizerServices) {
+            Map<Device, Set<GroupWidget>> devices, boolean editable, BackendServices backendServices) {
         super(entity.getImage(), entity.getIMarkers(), editable);
         this.entity = entity;
         this.devices = devices;
-        this.visualizerServices = visualizerServices;
+        this.backendServices = backendServices;
         initContent(-1, -1);
     }
 
@@ -50,7 +50,7 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
             }
         }
 
-        return visualizerServices.getDeviceService().findBySerial(serial);
+        return backendServices.getDeviceService().findBySerial(serial);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class DevicesImageOverlayMap extends ImageOverlayMap {
         if (device != null) {
             final Marker marker = new Marker(new LatLng(point.getX(), point.getY()));
             marker.onClick(event -> openDrawer(markerId));
-            Icon icon = new Icon(MapUtils.getIconUrl(device,visualizerServices));
+            Icon icon = new Icon(MapUtils.getIconUrl(device,backendServices));
             marker.setIcon(icon);
             return marker;
         }

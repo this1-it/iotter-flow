@@ -12,6 +12,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
+import it.thisone.iotter.cassandra.CassandraFeeds;
 import it.thisone.iotter.cassandra.model.FeedKey;
 import it.thisone.iotter.cassandra.model.MeasureRaw;
 import it.thisone.iotter.persistence.model.Channel;
@@ -32,11 +33,14 @@ public class ChannelRemoteControlField extends CustomField<ChannelRemoteControl>
 	private final String serial;
 	private final Device device;
 
+	private final Channel channel;
+
 	private HorizontalLayout layout;
 	private ComboBox<Double> combo;
 	private TextField textField;
 
 	public ChannelRemoteControlField(Channel channel) {
+		this.channel = channel;
 		key = channel.getKey();
 		device = channel.getDevice();
 		serial = channel.getDevice().getSerial();
@@ -48,17 +52,19 @@ public class ChannelRemoteControlField extends CustomField<ChannelRemoteControl>
 		item.setMax(max.floatValue());
 		item.setMin(min.floatValue());
 		item.setTopic(topic);
+		currentValue = item;
+		combo = ChannelUtils.enumComboBox(channel);
+	}
 
+	public void initLastMeasure(CassandraFeeds cassandraFeeds) {
 		FeedKey feedKey = new FeedKey(serial, key);
-		MeasureRaw lastMeasure = ChartUtils.lastMeasure(feedKey);
+		MeasureRaw lastMeasure = ChartUtils.lastMeasure(feedKey, cassandraFeeds);
 		if (lastMeasure != null && lastMeasure.getValue() != null) {
 			try {
-				item.setValue((Double) ChartUtils.calculateMeasure(lastMeasure.getValue(), channel.getDefaultMeasure()));
+				currentValue.setValue((Double) ChartUtils.calculateMeasure(lastMeasure.getValue(), channel.getDefaultMeasure()));
 			} catch (Exception ignored) {
 			}
 		}
-		currentValue = item;
-		combo = ChannelUtils.enumComboBox(channel);
 	}
 
 	public void setValidationError(String message) {

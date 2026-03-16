@@ -84,7 +84,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	public static GraphicWidgetPlaceHolder createPlaceHolder(
-			GraphicWidgetType type, String provider, int fullWidth, int x, int y, BackendServices visualizerServices) {
+			GraphicWidgetType type, String provider, int fullWidth, int x, int y, BackendServices backendServices) {
 		float height = 550;
 		float width = 550;
 		switch (type) {
@@ -132,7 +132,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 
 
 		GraphicWidgetPlaceHolder placeHolder = new GraphicWidgetPlaceHolder(
-				widget, children, visualizerServices);
+				widget, children, backendServices);
 
 		return placeHolder;
 	}

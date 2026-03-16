@@ -69,7 +69,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     // private final NetworkGroupService networkGroupService;
     // private final DeviceService deviceService;
     // private final AuthenticatedUser authenticatedUser;
-    private final BackendServices visualizerServices;
+    private final BackendServices backendServices;
     private UserDetailsAdapter currentUser;
 
     private Network network;
@@ -91,16 +91,16 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
     @Autowired
     public GroupWidgetListing(GroupWidgetRepository groupWidgetRepository,
-            BackendServices visualizerServices) {
+            BackendServices backendServices) {
         super(GroupWidget.class, GROUPWIDGET_VIEW, GROUPWIDGET_VIEW, false);
 
-        		currentUser = visualizerServices.getAuthenticatedUser().get()
+        		currentUser = backendServices.getAuthenticatedUser().get()
 				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 
         this.permissions = PermissionsUtils.getPermissionsForGroupWidgetEntity(currentUser);
         setPermissions(permissions);
         this.groupWidgetRepository = groupWidgetRepository;
-        this.visualizerServices = visualizerServices;
+        this.backendServices = backendServices;
     }
 
     public void init(Network network) {
@@ -150,7 +150,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
     @Override
     protected AbstractBaseEntityForm<GroupWidget> getEditor(GroupWidget item, boolean readOnly) {
-        return new GroupWidgetForm(item, network, currentUser, visualizerServices.getNetworkService(), visualizerServices.getNetworkGroupService(),
+        return new GroupWidgetForm(item, network, currentUser, backendServices.getNetworkService(), backendServices.getNetworkGroupService(),
                 readOnly);
     }
 
@@ -169,8 +169,8 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             if (!result) {
                 return;
             }
-            GroupWidgetDetails.removeExclusiveGroupIfNeeded(item, visualizerServices.getNetworkGroupService());
-            visualizerServices.getGroupWidgetService().deleteById(item.getId());
+            GroupWidgetDetails.removeExclusiveGroupIfNeeded(item, backendServices.getNetworkGroupService());
+            backendServices.getGroupWidgetService().deleteById(item.getId());
             refreshCurrentPage();
         };
 
@@ -328,7 +328,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         }
 
         String caption = String.format("%s %s", getI18nLabel("bindings"), item.getName());
-        NetworkGroupBindings content = new NetworkGroupBindings(item, visualizerServices.getNetworkGroupService(), visualizerServices.getDeviceService());
+        NetworkGroupBindings content = new NetworkGroupBindings(item, backendServices.getNetworkGroupService(), backendServices.getDeviceService());
         Dialog dialog = createDialog(caption, content);
         dialog.open();
     }
@@ -346,7 +346,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             return;
         }
         GroupWidgetDesigner content = new GroupWidgetDesigner(item,
-                currentUser, visualizerServices);
+                currentUser, backendServices);
         Dialog dialog = createDialog(getI18nLabel("designer_action"), content);
         if (dialog instanceof SideDrawer) {
             dialog.addThemeName("side-drawer-fullscreen");
@@ -360,7 +360,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         if (item == null) {
             return;
         }
-        GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true,  visualizerServices);
+        GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true,  backendServices);
         Dialog dialog = createDialog(getI18nLabel("view_action"), visualizer);
         if (dialog instanceof SideDrawer) {
             dialog.addThemeName("side-drawer-fullscreen");
@@ -380,12 +380,12 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         editor.setSavedHandler(entity -> {
             try {
                 if (entity.isNew()) {
-                    visualizerServices.getGroupWidgetService().create(entity);
+                    backendServices.getGroupWidgetService().create(entity);
                     dialog.close();
                     refreshCurrentPage();
                     openDesigner(entity);
                 } else {
-                    visualizerServices.getGroupWidgetService().update(entity);
+                    backendServices.getGroupWidgetService().update(entity);
                     dialog.close();
                     refreshCurrentPage();
                 }
@@ -447,7 +447,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     }
 
     private String getCurrentUserTenant() {
-        return visualizerServices.getAuthenticatedUser().get().map(UserDetailsAdapter::getTenant).orElse(null);
+        return backendServices.getAuthenticatedUser().get().map(UserDetailsAdapter::getTenant).orElse(null);
     }
 
     private static final class GroupWidgetFilter {

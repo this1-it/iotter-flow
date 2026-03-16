@@ -43,16 +43,16 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 	private final Permissions permissions;
 	private final List<Channel> channels;
 	private final List<Channel> removed = new ArrayList<>();
-	private final BackendServices visualizerServices;
+	private final BackendServices backendServices;
 	private ListDataProvider<Channel> dataProvider;
 	private Grid<Channel> grid;
 	private boolean loaded;
 
-	public ChannelListing(BackendServices visualizerServices) {
+	public ChannelListing(BackendServices backendServices) {
 		super(Channel.class, DeviceForm.NAME, "channel.listing", false);
 		this.permissions = new Permissions(true);
 		this.channels =  new ArrayList<Channel>();
-		this.visualizerServices = visualizerServices;
+		this.backendServices = backendServices;
 		buildLayout();
 	}
 
@@ -226,7 +226,7 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 			return;
 		}
 		
-		Dialog dialog = createDialog(getI18nLabel("channel_timeline"), new ChannelTimelineDetails(channel, visualizerServices));
+		Dialog dialog = createDialog(getI18nLabel("channel_timeline"), new ChannelTimelineDetails(channel, backendServices));
 		dialog.open();
 		
 //		AbstractBaseEntityDetails<Channel> details = getDetails(item, remove);

@@ -48,8 +48,8 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
     private BaseScale<?> yScale;
     private TimeInterval currentInterval;
 
-    public MultiTraceChartAdapter(GraphicWidget widget, BackendServices visualizerServices) {
-        super(widget, visualizerServices);
+    public MultiTraceChartAdapter(GraphicWidget widget, BackendServices backendServices) {
+        super(widget, backendServices);
         optionsField.getAutoScale().setVisible(widget.hasExtremes());
     }
 
@@ -119,7 +119,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
     private TimeLineDataset createFeedDataset(GraphicFeed feed, TimeInterval interval, Float ratio) {
         TimeLineDataset dataset = new TimeLineDataset();
-        dataset.label(ChartUtils.getFeedLabel(feed, visualizerServices.getDeviceService()));
+        dataset.label(ChartUtils.getFeedLabel(feed, backendServices.getDeviceService()));
         dataset.borderColor(resolveColor(feed));
         dataset.backgroundColor(resolveColor(feed));
         dataset.borderWidth(ChartUtils.PLOT_LINE_WIDTH.intValue());
@@ -165,7 +165,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
         feedKey.setQualifier(feed.getChannel().getConfiguration().getQualifier());
         List<MeasureRaw> measures = ChartUtils.getData(feedKey, from, to, points, step,
                 getValidities().get(feed.getKey()), getNetworkTimeZone(),
-                visualizerServices.getCassandraMeasures(), visualizerServices.getCassandraRollup());
+                backendServices.getCassandraMeasures(), backendServices.getCassandraRollup());
 
         for (MeasureRaw measure : measures) {
             if (measure == null || !measure.isValid() || measure.getValue() == null) {
@@ -344,7 +344,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
     private Date refreshedDate(GraphicFeed feed) {
         Date date = null;
         if (feed != null && feed.getChannel() != null) {
-            date = ChartUtils.lastTick(feed.getChannel().getDevice().getSerial(), visualizerServices.getCassandraMeasures());
+            date = ChartUtils.lastTick(feed.getChannel().getDevice().getSerial(), backendServices.getCassandraMeasures());
         }
         if (date == null) {
             date = new Date(System.currentTimeMillis() - 1);
