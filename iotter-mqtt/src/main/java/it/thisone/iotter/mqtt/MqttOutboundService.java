@@ -96,7 +96,7 @@ public class MqttOutboundService {
 	private boolean handleMessage(String topic, byte[] payload, boolean retained, int qos) {
 		try {
 			Message<byte[]> message = MessageBuilder.withPayload(payload)
-					.setHeader(MqttHeaders.TOPIC, topic) //
+					.setHeader(MqttHeaders.RESPONSE_TOPIC, topic) //
 					.setHeader(MqttHeaders.RETAINED, new Boolean(retained)) //
 					.setHeader(MqttHeaders.QOS, new Integer(qos)) //
 					.build(); //

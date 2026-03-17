@@ -339,7 +339,9 @@ public class ChannelAdapterDataProvider extends ListDataProvider<ChannelAdapter>
 
 	public ChoiceFormat getMeasureRenderer() {
 		if (measureRenderer == null) {
-			return new ChoiceFormat("");
+			double[] limits = {0, 1, 2};
+			String[] formats = {"0.00", "1.00", "2.00"};
+			return new ChoiceFormat(limits, formats);
 		}
 		return measureRenderer;
 	}

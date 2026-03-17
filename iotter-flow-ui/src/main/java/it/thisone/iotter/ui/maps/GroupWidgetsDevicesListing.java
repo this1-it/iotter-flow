@@ -22,11 +22,12 @@ import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.Network;
-
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.ui.providers.BackendServices;
 
 import it.thisone.iotter.util.MapUtils;
@@ -38,7 +39,7 @@ public class GroupWidgetsDevicesListing extends BaseComponent {
     private static final long serialVersionUID = 1340051957283147500L;
 
     private final Map<Device, Set<GroupWidget>> map;
-
+    private final UserDetailsAdapter currentUser;
     private final BackendServices backendServices;
     private final UIEventBus uiEventBus;
     private final ObjectProvider<GroupWidgetsListingBox> listingBoxProvider;
@@ -48,12 +49,13 @@ public class GroupWidgetsDevicesListing extends BaseComponent {
 
 
     public GroupWidgetsDevicesListing(String name, Map<Device, Set<GroupWidget>> devices,
-            it.thisone.iotter.ui.providers.BackendServices backendServices, UIEventBus uiEventBus,
+            UserDetailsAdapter currentUser,
+            BackendServices backendServices, UIEventBus uiEventBus,
             ObjectProvider<GroupWidgetsListingBox> listingBoxProvider) {
         super("groupwidgets.deviceslisting", UUID.randomUUID().toString());
         this.map = devices;
         this.backendServices = backendServices;
-
+        this.currentUser = currentUser;
         this.uiEventBus = uiEventBus;
         this.listingBoxProvider = listingBoxProvider;
         initialize(name, map);
@@ -62,12 +64,12 @@ public class GroupWidgetsDevicesListing extends BaseComponent {
 
 
     public GroupWidgetsDevicesListing(Network network,
-it.thisone.iotter.ui.providers.BackendServices backendServices,
+        UserDetailsAdapter currentUser, BackendServices backendServices,
         UIEventBus uiEventBus,
             ObjectProvider<GroupWidgetsListingBox> listingBoxProvider) {
         super("groupwidgets.deviceslisting", network != null ? network.toString() : UUID.randomUUID().toString());
-
-        this.map = network != null ? MapUtils.mappableDevices(network,backendServices) : new HashMap<>();
+        this.currentUser = currentUser;
+        this.map = network != null ? MapUtils.mappableDevices(currentUser, network,backendServices) : new HashMap<>();
         this.backendServices = backendServices;
         this.uiEventBus = uiEventBus;
         this.listingBoxProvider = listingBoxProvider;
@@ -76,13 +78,13 @@ it.thisone.iotter.ui.providers.BackendServices backendServices,
 
 
 
-    public GroupWidgetsDevicesListing(GroupWidget groupWidget, BackendServices backendServices, UIEventBus uiEventBus,
+    public GroupWidgetsDevicesListing(GroupWidget groupWidget, UserDetailsAdapter currentUser,BackendServices backendServices, UIEventBus uiEventBus,
             ObjectProvider<GroupWidgetsListingBox> listingBoxProvider)
              {
         super("groupwidgets.deviceslisting");
         this.map = new HashMap<>();
         this.backendServices = backendServices;
-
+        this.currentUser = currentUser;
         this.uiEventBus = uiEventBus;
         this.listingBoxProvider = listingBoxProvider;
 

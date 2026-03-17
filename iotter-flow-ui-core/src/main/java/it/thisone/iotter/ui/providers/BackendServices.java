@@ -44,7 +44,6 @@ public class BackendServices {
 	private final MeasureUnitTypeService measureUnitTypeService;
 	private final MqttOutboundService mqttService;
 	private final AlarmService alarmService;
-	private final AuthenticatedUser authenticatedUser;
 
     private final CassandraAlarms cassandraAlarms;
     private final CassandraFeeds cassandraFeeds;
@@ -70,7 +69,6 @@ public class BackendServices {
 			MeasureUnitTypeService measureUnitTypeService,
 			MqttOutboundService mqttService,
 			AlarmService alarmService,
-			AuthenticatedUser authenticatedUser,
 			CassandraAlarms cassandraAlarms, 
 			CassandraFeeds cassandraFeeds,
             CassandraMeasures cassandraMeasures, 
@@ -93,7 +91,6 @@ public class BackendServices {
 		this.measureUnitTypeService = measureUnitTypeService;
 		this.mqttService = mqttService;
 		this.alarmService = alarmService;
-		this.authenticatedUser = authenticatedUser;
         this.cassandraAlarms = cassandraAlarms;
         this.cassandraFeeds = cassandraFeeds;
         this.cassandraMeasures = cassandraMeasures;
@@ -172,7 +169,5 @@ public class BackendServices {
 		return exportService;
 	}
 
-	public AuthenticatedUser getAuthenticatedUser() {
-		return authenticatedUser;
-	}
+
 }

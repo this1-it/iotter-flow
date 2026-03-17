@@ -3,35 +3,33 @@
  * This file can be used for manual configuration will not be modified if the flowDefaults constant exists.
  */
 const merge = require('webpack-merge');
+const webpack = require('webpack');
 const flowDefaults = require('./webpack.generated.js');
+const path = require('path');
+const fs = require('fs');
+
+// Fix Chart.js / Moment.js load order issue.
+// Vaadin's generated-flow-imports.js sorts imports alphabetically, so Chart.min.js
+// loads before Moment.js. Chart.js 2.7.2 (browserify bundle) captures window.moment
+// in a closure at module-definition time — it must exist BEFORE Chart.min.js evaluates.
+//
+// Solution: Use NormalModuleReplacementPlugin to redirect the Chart.min.js import
+// to a wrapper (chartjs-init.js) that loads Moment.js first, then Chart.js.
+// To avoid circular resolution, we copy Chart.min.js to Chart.original.js at build time.
+const chartDir = path.resolve(__dirname, 'node_modules/@vaadin/flow-frontend/chart');
+const chartOriginal = path.join(chartDir, 'Chart.original.js');
+const chartMin = path.join(chartDir, 'Chart.min.js');
+if (!fs.existsSync(chartOriginal)) {
+    fs.copyFileSync(chartMin, chartOriginal);
+}
+
+const chartInitWrapper = path.resolve(__dirname, 'frontend/src/chartjs-init.js');
 
 module.exports = merge(flowDefaults, {
-
+    plugins: [
+        new webpack.NormalModuleReplacementPlugin(
+            /chart\/Chart\.min\.js$/,
+            chartInitWrapper
+        )
+    ]
 });
-
-/**
- * This file can be used to configure the flow plugin defaults.
- * <code>
- *   // Add a custom plugin
- *   flowDefaults.plugins.push(new MyPlugin());
- *
- *   // Update the rules to also transpile `.mjs` files
- *   if (!flowDefaults.module.rules[0].test) {
- *     throw "Unexpected structure in generated webpack config";
- *   }
- *   flowDefaults.module.rules[0].test = /\.m?js$/
- *
- *   // Include a custom JS in the entry point in addition to generated-flow-imports.js
- *   if (typeof flowDefaults.entry.index != "string") {
- *     throw "Unexpected structure in generated webpack config";
- *   }
- *   flowDefaults.entry.index = [flowDefaults.entry.index, "myCustomFile.js"];
- * </code>
- * or add new configuration in the merge block.
- * <code>
- *   module.exports = merge(flowDefaults, {
- *     mode: 'development',
- *     devtool: 'inline-source-map'
- *   });
- * </code>
- */

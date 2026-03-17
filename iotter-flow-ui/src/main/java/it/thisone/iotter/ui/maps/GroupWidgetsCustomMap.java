@@ -55,7 +55,8 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
 
     private final boolean editable;
 
-     private final BackendServices backendServices;
+    private final BackendServices backendServices;
+
 
     private final UIEventBus uiEventBus;
     private final ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider;
@@ -73,6 +74,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
 
 
     public GroupWidgetsCustomMap(String networkId, boolean editable,
+            UserDetailsAdapter currentUser,
             BackendServices backendServices,
             UIEventBus uiEventBus,
             ObjectProvider<DevicesImageOverlayMap> devicesImageOverlayMapProvider
@@ -96,7 +98,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
         setItem(network);
 
         
-        map = network.getId() != null ? MapUtils.mappableDevices(network,backendServices) : new HashMap<>();
+        map = network.getId() != null ? MapUtils.mappableDevices(currentUser, network,backendServices) : new HashMap<>();
 
         buildLayout();
         init();

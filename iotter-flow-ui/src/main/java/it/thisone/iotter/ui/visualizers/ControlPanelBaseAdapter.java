@@ -13,8 +13,6 @@ import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.flow.component.ClickEvent;
@@ -55,10 +53,8 @@ import it.thisone.iotter.cassandra.CassandraFeeds;
 import it.thisone.iotter.exporter.IExportProvider;
 import it.thisone.iotter.integration.AlarmService;
 import it.thisone.iotter.persistence.service.DeviceService;
-import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
 
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -125,9 +121,8 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
     private final CassandraAlarms cassandraAlarms;
     private final CassandraFeeds cassandraFeeds;
     private final AlarmService alarmService;
-    private final GroupWidgetService groupWidgetService;
     private final IExportProvider exportProvider;
-    private final AuthenticatedUser authenticatedUser;
+
 
     private List<Component> adapters = new ArrayList<>();
 
@@ -176,18 +171,15 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
             "#685CB0",
     };
 
-    public ControlPanelBaseAdapter(GraphicWidget widget, BackendServices backendServices) {
+    public ControlPanelBaseAdapter(GraphicWidget widget,  BackendServices backendServices) {
         super(widget);
         this.backendServices = backendServices;
         this.deviceService = backendServices.getDeviceService();
         this.cassandraAlarms = backendServices.getCassandraAlarms();
         this.cassandraFeeds = backendServices.getCassandraFeeds();
         this.alarmService = backendServices.getAlarmService();
-        this.groupWidgetService = backendServices.getGroupWidgetService();
         this.exportProvider = backendServices.getExportProvider();
-        this.authenticatedUser = backendServices.getAuthenticatedUser();
-        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
-        anonymous = details == null || !details.isEnabled();
+
         resolver = new IconSetResolver();
         widget.getOptions().setRealTime(widget.getGroupWidget().getOptions().isRealTime());
         TimeZone tz = widget.getGroupWidget().getTimeZone();
@@ -590,9 +582,7 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
 
                     @Override
                     public void beforeCommand() {
-                        UserDetailsAdapter details = authenticatedUser.get().orElse(null);
-                        String username = details != null ? details.getUsername() : "unknown";
-                        alarmService.notifyAlarmReset(button.getSerial(), username);
+                        alarmService.notifyAlarmReset(button.getSerial(), "unknown");
                     }
 
                     @Override

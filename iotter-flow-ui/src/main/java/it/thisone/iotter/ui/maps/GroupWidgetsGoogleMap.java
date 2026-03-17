@@ -43,6 +43,7 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
     private final Map<Device, Set<GroupWidget>> map;
 
 
+    private final UserDetailsAdapter currentUser;
     private final BackendServices backendServices;
     private final UIEventBus uiEventBus;
 
@@ -54,6 +55,7 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
     public GroupWidgetsGoogleMap(
             Network network,
             String googleMapApiKey,
+            UserDetailsAdapter currentUser,
             UIEventBus uiEventBus,
             BackendServices backendServices
 
@@ -62,9 +64,10 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
         setId(network != null ? network.toString() : UUID.randomUUID().toString());
 
 
-        this.map = network != null ? MapUtils.mappableDevices(network, backendServices) : new HashMap<>();
+        this.map = network != null ? MapUtils.mappableDevices(currentUser, network, backendServices) : new HashMap<>();
         this.backendServices = backendServices;
         this.uiEventBus = uiEventBus;
+        this.currentUser = currentUser;
 
         this.googleMapApiKey = googleMapApiKey != null ? googleMapApiKey : "";
         initialize(network != null ? network.getName() : "", map, network);
@@ -72,13 +75,13 @@ public class GroupWidgetsGoogleMap extends BaseComponent {
 
 
 
-    public GroupWidgetsGoogleMap(GroupWidget groupWidget, String googleMapApiKey,
+    public GroupWidgetsGoogleMap(GroupWidget groupWidget, UserDetailsAdapter currentUser, String googleMapApiKey,
             UIEventBus uiEventBus,
             BackendServices backendServices) {
         super("groupwidgets.googlemap");
         this.map = new HashMap<>();
         this.backendServices = backendServices;
-
+        this.currentUser = currentUser;
         this.uiEventBus = uiEventBus;
 
         this.googleMapApiKey = googleMapApiKey != null ? googleMapApiKey : "";

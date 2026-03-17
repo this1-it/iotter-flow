@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
@@ -44,6 +45,7 @@ public class MqttDevelConfig {
 
         mqtt.setConverter(converter);
         mqtt.setTaskScheduler(scheduler);
+		mqtt.setOutputChannel(new PublishSubscribeChannel());
 		return mqtt;
 	}
 

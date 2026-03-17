@@ -42,8 +42,7 @@ import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
-
-
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -68,7 +67,8 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	@Autowired
 	private NetworkRepository networkRepository;
 
-
+	@Autowired
+	private AuthenticatedUser authenticatedUser;
 	@Autowired
 	private UIEventBus uiEventBus;
 	@Autowired
@@ -99,7 +99,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 			return;
 		}
 
-		currentUser = backendServices.getAuthenticatedUser().get()
+		currentUser = authenticatedUser.get()
 				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 		Permissions permissions = PermissionsUtils.getPermissionsForNetworkEntity(currentUser);
 		setPermissions(permissions);
@@ -320,10 +320,10 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 				content = new DevicesGoogleMap(network, false, true, backendServices.getDeviceService(), backendServices.getNetworkService(), googleMapApiKey);
 				break;
 			case CUSTOM:
-				content = new GroupWidgetsCustomMap(item.getId(), false, backendServices,uiEventBus, devicesImageOverlayMapProvider);
+				content = new GroupWidgetsCustomMap(item.getId(), false, currentUser, backendServices,uiEventBus, devicesImageOverlayMapProvider);
 				break;
 			default:
-				content = new GroupWidgetsDevicesListing(network, backendServices, uiEventBus,
+				content = new GroupWidgetsDevicesListing(network, currentUser, backendServices, uiEventBus,
 						groupWidgetsListingBoxProvider);
 				break;
 		}
@@ -350,7 +350,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 						backendServices.getDeviceService(), backendServices.getNetworkService(), googleMapApiKey);
 				break;
 			case CUSTOM:
-				content = new GroupWidgetsCustomMap(item.getId(), editable,
+				content = new GroupWidgetsCustomMap(item.getId(), editable,currentUser,
 						backendServices, uiEventBus, devicesImageOverlayMapProvider);
 				break;
 			default:

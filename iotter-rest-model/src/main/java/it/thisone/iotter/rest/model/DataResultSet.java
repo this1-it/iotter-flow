@@ -134,7 +134,7 @@ public class DataResultSet implements Serializable {
 		this.lastContact = lastContact;
 	}
 
-	@JsonIgnore
+	@JsonProperty("serial")
 	public void setSerial(String serial) {
 		this.serial = serial;
 	}

@@ -72,9 +72,8 @@ public class MapUtils implements Serializable {
 		return icon;
 	}
 
-	public static Map<Device, Set<GroupWidget>> mappableDevices(Network network, BackendServices backendServices) {
+	public static Map<Device, Set<GroupWidget>> mappableDevices(UserDetailsAdapter details, Network network, BackendServices backendServices) {
 		Collection<NetworkGroup> groups = new ArrayList<NetworkGroup>();
-		UserDetailsAdapter details = backendServices.getAuthenticatedUser().get().orElse(null);
 
 		if (details == null) {
 			if (network.isAnonymous()) {

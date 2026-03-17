@@ -3,6 +3,7 @@ package it.thisone.iotter.ui.providers;
 
 
 import it.thisone.iotter.persistence.model.GraphicWidget;
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
 import it.thisone.iotter.ui.graphicwidgets.ControlPanelBaseForm;
@@ -20,7 +21,7 @@ public class ControlPanelBaseProvider implements GraphicWidgetProvider, AernetXL
 	}
 
 	@Override
-	public AbstractWidgetVisualizer getVisualizer(GraphicWidget widget, BackendServices services) {
+	public AbstractWidgetVisualizer getVisualizer(GraphicWidget widget,  BackendServices services) {
 		return new ControlPanelBaseAdapter(widget, services);
 	}
 

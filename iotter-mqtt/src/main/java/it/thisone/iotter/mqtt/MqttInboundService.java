@@ -61,8 +61,8 @@ public class MqttInboundService implements InitializingBean, DisposableBean {
 		MessageHandler messageHandler = new MessageHandler() {
 			@Override
 			public void handleMessage(Message<?> message) throws MessagingException {
-				String topic = message.getHeaders().get(MqttHeaders.TOPIC) != null
-						? message.getHeaders().get(MqttHeaders.TOPIC).toString()
+				String topic = message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC) != null
+						? message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC).toString()
 						: "";
 				try {
 

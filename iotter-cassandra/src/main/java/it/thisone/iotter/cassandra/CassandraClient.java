@@ -239,23 +239,23 @@ public class CassandraClient implements InitializingBean, DisposableBean, Serial
 	}
 
 	public Statement<?> prepareInsertMeasureTickBoundStatement(String key, Date date) {
-		BoundStatement stmt = insertMeasureTick.bind(key, date);
+		BoundStatement stmt = insertMeasureTick.bind(key, date.toInstant());
 		return stmt.setConsistencyLevel(writeConsistencyLevel());
 	}
 
 	public Statement<?> prepareInsertMeasureRawBoundStatement(MeasureRaw measure) {
-		BoundStatement stmt = insertMeasureRaw.bind(measure.getKey(), measure.getDate(), measure.getReceived(),
+		BoundStatement stmt = insertMeasureRaw.bind(measure.getKey(), measure.getDate().toInstant(), measure.getReceived().toInstant(),
 				measure.getValue(), measure.getError());
 		return stmt.setConsistencyLevel(writeConsistencyLevel());
 	}
 
 	public Statement<?> prepareSelectMeasureTickBoundStatement(String key, Range<Date> interval) {
-		BoundStatement stmt = selectMeasureTick.bind(key, interval.lowerEndpoint(), interval.upperEndpoint());
+		BoundStatement stmt = selectMeasureTick.bind(key, interval.lowerEndpoint().toInstant(), interval.upperEndpoint().toInstant());
 		return stmt.setConsistencyLevel(readConsistencyLevel());
 	}
 
 	public Statement<?> prepareSelectMeasureRawBoundStatement(String key, Range<Date> interval) {
-		BoundStatement stmt = selectMeasureRaw.bind(key, interval.lowerEndpoint(), interval.upperEndpoint());
+		BoundStatement stmt = selectMeasureRaw.bind(key, interval.lowerEndpoint().toInstant(), interval.upperEndpoint().toInstant());
 		return stmt.setConsistencyLevel(readConsistencyLevel());
 	}
 

@@ -107,12 +107,12 @@ public class GraphicFeedForm extends AbstractBaseEntityForm<GraphicFeed> {
         label.setWidthFull();
 
         channel = new ChannelSelect();
-        channel.setWidthFull();
+        //channel.setWidthFull();
 
         options = new ChartPlotOptionsField();
         options.setGraphWidgetType(getWidgetType(entity));
         options.buildContent();
-        options.setWidthFull();
+        //options.setWidthFull();
 
         thresholds = new ChartThresholdsField();
         thresholds.setWidthFull();
@@ -179,13 +179,5 @@ public class GraphicFeedForm extends AbstractBaseEntityForm<GraphicFeed> {
     protected void beforeCommit() throws EditorConstraintException {
     }
 
-    @Override
-    public String getWindowStyle() {
-        return "graphfeed-editor";
-    }
 
-    @Override
-    public float[] getWindowDimension() {
-        return UIUtils.L_DIMENSION;
-    }
 }

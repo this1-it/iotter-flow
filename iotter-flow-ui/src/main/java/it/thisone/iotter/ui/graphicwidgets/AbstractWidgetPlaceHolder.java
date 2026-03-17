@@ -42,6 +42,7 @@ public abstract class AbstractWidgetPlaceHolder extends BaseComponent implements
 
         String caption = create ? getI18nLabel("dialog_create") : getI18nLabel("dialog");
         Dialog dialog = createDialog(caption, content);
+        dialog.addThemeName("side-drawer-fullscreen");
         content.setSavedHandler(saved -> {
             if (saved != null && getWidget().getId().equals(widget.getId())) {
                 getPlaceholderLabel().setText(getWidgetName(widget));

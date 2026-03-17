@@ -16,7 +16,7 @@ public class DevelEnabledCondition  implements Condition{
 		// enabled only for development
 		boolean enabled = !resource.exists();
 		logger.info("DevelEnabledCondition enabled: {}", enabled);
-		return false;
+		return enabled;
 	}
 
 }

@@ -79,22 +79,14 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     private GroupWidgetQueryDefinition queryDefinition;
     private GroupWidgetFilter currentFilter = new GroupWidgetFilter();
 
-    // @Autowired
-    // public GroupWidgetListing(GroupWidgetRepository groupWidgetRepository, GroupWidgetService groupWidgetService,
-    //         NetworkService networkService, NetworkGroupService networkGroupService, DeviceService deviceService,
-    //         AuthenticatedUser authenticatedUser) {
 
-
-    //     this(groupWidgetRepository, groupWidgetService,
-    //             networkService, networkGroupService, deviceService, authenticatedUser);
-    // }
 
     @Autowired
-    public GroupWidgetListing(GroupWidgetRepository groupWidgetRepository,
+    public GroupWidgetListing(AuthenticatedUser authenticatedUser, GroupWidgetRepository groupWidgetRepository,
             BackendServices backendServices) {
         super(GroupWidget.class, GROUPWIDGET_VIEW, GROUPWIDGET_VIEW, false);
 
-        		currentUser = backendServices.getAuthenticatedUser().get()
+        		currentUser = authenticatedUser.get()
 				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 
         this.permissions = PermissionsUtils.getPermissionsForGroupWidgetEntity(currentUser);
@@ -119,7 +111,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
         queryDefinition = new GroupWidgetQueryDefinition(GroupWidget.class, DEFAULT_LIMIT, permissions);
         queryDefinition.setNetwork(network);
-        queryDefinition.setOwner(getCurrentUserTenant());
+        queryDefinition.setOwner(currentUser.getTenant());
         queryDefinition.setPage(0, DEFAULT_LIMIT);
         queryDefinition.setQueryFilter(currentFilter);
 
@@ -446,9 +438,6 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         // });
     }
 
-    private String getCurrentUserTenant() {
-        return backendServices.getAuthenticatedUser().get().map(UserDetailsAdapter::getTenant).orElse(null);
-    }
 
     private static final class GroupWidgetFilter {
         private String name;

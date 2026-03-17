@@ -28,6 +28,7 @@ import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.NetworkService;
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.BaseEditor;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.fields.GeoLocationForm;
@@ -69,14 +70,7 @@ public class DevicesGoogleMap extends BaseEditor<Network> {
                 googleMapApiKey);
     }
 
-    public DevicesGoogleMap(Network network, boolean editable, boolean infoWindow) {
-        this(network, editable, infoWindow, null, null, "");
-    }
 
-    public DevicesGoogleMap(String id, String caption, Map<Device, Set<GroupWidget>> devicesMap, Network network,
-            boolean editable, boolean infoWindow) {
-        this(id, caption, devicesMap, network, editable, infoWindow, null, null, "");
-    }
 
     public DevicesGoogleMap(String id, String caption, Map<Device, Set<GroupWidget>> devicesMap, Network network,
             boolean editable, boolean infoWindow, DeviceService deviceService, NetworkService networkService,

@@ -59,6 +59,7 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
 
     private LineChartConfig createBaseConfiguration() {
         LineChartConfig config = new LineChartConfig();
+        config.data().labelsAsList(new ArrayList<>());
         config.options().responsive(true).maintainAspectRatio(false);
         config.options().legend().display(false).position(Position.BOTTOM);
 

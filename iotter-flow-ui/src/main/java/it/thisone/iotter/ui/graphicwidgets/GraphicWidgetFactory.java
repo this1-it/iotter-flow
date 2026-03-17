@@ -250,7 +250,7 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 		AbstractWidgetVisualizer visualizer = null;
 		for (GraphicWidgetProvider provider : findProviders("it.thisone.iotter.ui")) {
 			if (provider != null && provider.getName().equalsIgnoreCase(widget.getProvider())) {
-				visualizer = provider.getVisualizer(widget, services);
+				visualizer = provider.getVisualizer(widget,services);
 				break;
 			}
 		}

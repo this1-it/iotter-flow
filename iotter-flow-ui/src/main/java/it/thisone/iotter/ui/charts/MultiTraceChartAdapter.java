@@ -65,6 +65,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
     protected LineChartConfig createBaseConfiguration() {
         LineChartConfig config = new LineChartConfig();
+        config.data().labelsAsList(new ArrayList<>());
         config.options().responsive(true).maintainAspectRatio(false);
         config.options().legend().display(getGraphWidget().getOptions().getShowLegend()).position(Position.BOTTOM);
 

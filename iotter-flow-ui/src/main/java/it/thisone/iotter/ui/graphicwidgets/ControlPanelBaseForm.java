@@ -73,8 +73,8 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
     private FeedDataProvider feedsDataProvider;
     private Device device;
     private Tabs sections;
-    private final Map<Tab, VerticalLayout> sectionLayouts = new LinkedHashMap<>();
-    private final Map<String, Tab> sectionTabsByName = new HashMap<>();
+    private Map<Tab, VerticalLayout> sectionLayouts = new LinkedHashMap<>();
+    private Map<String, Tab> sectionTabsByName = new HashMap<>();
     private String sectionId;
     private int feedSize;
     private final DeviceService deviceService;
@@ -84,6 +84,9 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
         this.deviceService = deviceService;
         if (deviceSelect != null) {
             deviceSelect.setDeviceService(deviceService);
+            deviceSelect.setGraph(getEntity());
+            bindDeviceSelect();
+            initializeDeviceSelection(deviceSelect);
         }
         sectionFeeds = getEntity().getFeeds();
         if (sectionFeeds.isEmpty()) {
@@ -128,7 +131,11 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
         binder.forField(type).bind(GraphicWidget::getType, GraphicWidget::setType);
         binder.forField(provider).bind(GraphicWidget::getProvider, GraphicWidget::setProvider);
         binder.forField(label).bind(GraphicWidget::getLabel, GraphicWidget::setLabel);
-        binder.forField(deviceSelect).bind(GraphicWidget::getDevice, GraphicWidget::setDevice);
+        // deviceSelect is bound separately after items are populated (see constructor)
+    }
+
+    private void bindDeviceSelect() {
+        getBinder().forField(deviceSelect).bind(GraphicWidget::getDevice, GraphicWidget::setDevice);
     }
 
     public void reset() {
@@ -153,6 +160,8 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
 
         Div pages = new Div();
         pages.setSizeFull();
+        pages.getStyle().set("display", "flex");
+        pages.getStyle().set("flex-direction", "column");
 
         Map<Tab, Component> mainPages = new LinkedHashMap<>();
         List<String> generalProps = Arrays.asList("type", "provider", "label", "device");
@@ -168,8 +177,6 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
         mainLayout.add(mainTabs, pages);
         mainLayout.setFlexGrow(1f, pages);
 
-        deviceSelect.setGraph(getEntity());
-        initializeDeviceSelection(deviceSelect);
         return mainLayout;
     }
 
@@ -201,6 +208,7 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
         HorizontalLayout content = new HorizontalLayout();
         content.setPadding(true);
         content.setSizeFull();
+        content.getStyle().set("flex", "1 1 0");
 
         VerticalLayout left = new VerticalLayout();
         left.setDefaultHorizontalComponentAlignment(Alignment.START);
@@ -341,6 +349,12 @@ public class ControlPanelBaseForm extends AbstractBaseEntityForm<GraphicWidget>
     private Tabs createSections() {
         Tabs tabs = new Tabs();
         tabs.setWidthFull();
+        if (sectionLayouts == null) {
+            sectionLayouts = new LinkedHashMap<>();
+        }
+        if (sectionTabsByName == null) {
+            sectionTabsByName = new HashMap<>();
+        }
         sectionLayouts.clear();
         sectionTabsByName.clear();
 

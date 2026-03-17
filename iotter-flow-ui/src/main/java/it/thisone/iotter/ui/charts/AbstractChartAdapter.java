@@ -17,6 +17,7 @@ import org.springframework.beans.BeanUtils;
 import com.google.common.collect.Range;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.HasSize;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.AttachEvent;
@@ -56,6 +57,7 @@ import it.thisone.iotter.ui.eventbus.GraphWidgetOptionsEvent;
 import it.thisone.iotter.ui.eventbus.TimeIntervalEvent;
 import it.thisone.iotter.ui.eventbus.TimePeriodEvent;
 import it.thisone.iotter.ui.eventbus.WidgetRefreshEvent;
+import it.thisone.iotter.ui.groupwidgets.GroupWidgetUiFactory;
 import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
 
 import it.thisone.iotter.ui.model.TimeInterval;
@@ -75,6 +77,7 @@ import it.thisone.iotter.ui.uitask.UIRunnable;
 // AbstractChartAdapter : useless layout in createContentWrapper
 
 
+@JsModule("./src/chartjs-init.js")
 public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer implements IExportable {
 	// TODO(flow-migration): manual refactor still needed here for IMainUI/UIUtils legacy access,
 	// dialog/window handling, and Vaadin 8 layout APIs.
@@ -118,7 +121,7 @@ public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer impl
 		super(widget);
 		this.backendServices = backendServices;
 		
-		//config = UIUtils.getUiFactory().getGroupWidgetUiFactory();
+		config = new GroupWidgetUiFactory();
 		// ChartUtils.loadCustomMarkers();
 		optionsField = new GraphicWidgetOptionsField();
 
