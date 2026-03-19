@@ -72,8 +72,8 @@
 
 		<!-- JAX-RS -->
 		<dependency>
-			<groupId>javax.ws.rs</groupId>
-			<artifactId>javax.ws.rs-api</artifactId>
+			<groupId>jakarta.ws.rs</groupId>
+			<artifactId>jakarta.ws.rs-api</artifactId>
 			<version>${jaxrs.version}</version>
 		</dependency>
 
@@ -101,8 +101,8 @@
 					<artifactId>jackson-module-jaxb-annotations</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>javax.xml.bind</groupId>
-					<artifactId>jaxb-api</artifactId>
+					<groupId>jakarta.xml.bind</groupId>
+					<artifactId>jakarta.xml.bind-api</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

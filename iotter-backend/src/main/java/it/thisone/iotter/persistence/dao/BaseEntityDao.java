@@ -5,18 +5,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public abstract class BaseEntityDao<T extends BaseEntity> {
 		TypedQuery<T> q = entityManager.createQuery(c);
 		// http://wiki.eclipse.org/EclipseLink/Examples/JPA/Caching
 		// http://java-persistence-performance.blogspot.it/2013/01/got-cache.html
-		q.setHint("javax.persistence.cache.storeMode", "REFRESH");
+		q.setHint("jakarta.persistence.cache.storeMode", "REFRESH");
 //		q.setHint(QueryHints.REFRESH, HintValues.TRUE);
 //		q.setHint(QueryHints.REFRESH_CASCADE, CascadePolicy.CascadeAllParts);
 		List<T> result = q.getResultList();
@@ -75,7 +75,7 @@ public abstract class BaseEntityDao<T extends BaseEntity> {
 		q.setFirstResult(offset) // offset
         .setMaxResults(limit); // limit
 		// http://wiki.eclipse.org/EclipseLink/Examples/JPA/Caching
-		q.setHint("javax.persistence.cache.storeMode", "REFRESH");
+		q.setHint("jakarta.persistence.cache.storeMode", "REFRESH");
 		List<T> result = q.getResultList();
 		if (result == null) result = new ArrayList<T>();
 		return result;

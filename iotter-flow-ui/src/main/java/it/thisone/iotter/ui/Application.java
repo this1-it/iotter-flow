@@ -9,6 +9,8 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
+import com.vaadin.flow.component.page.AppShellConfigurator;
+
 import it.thisone.iotter.config.SecurityConfig;
 
 @SpringBootApplication(exclude = {
@@ -24,7 +26,7 @@ import it.thisone.iotter.config.SecurityConfig;
 	        classes = SecurityConfig.class
 	    )
 	)
-public class Application {
+public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

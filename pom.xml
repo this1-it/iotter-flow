@@ -13,33 +13,33 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <failOnMissingWebXml>false</failOnMissingWebXml>
 
-        <java.version>8</java.version>
-        <vaadin.version>14.8.14</vaadin.version>
+        <java.version>21</java.version>
+        <vaadin.version>24.10.0</vaadin.version>
 
         <!-- Spring -->
-        <spring.framework.version>5.3.39</spring.framework.version>
-        <org.springframework.version>5.3.39</org.springframework.version>
-        <spring-security.version>5.8.15</spring-security.version>
-        <spring.data.jpa.version>2.7.18</spring.data.jpa.version>
-        <spring.data.cassandra.version>3.0.5.RELEASE</spring.data.cassandra.version>
-        <spring.integration.version>5.5.20</spring.integration.version>
+        <spring.framework.version>6.2.3</spring.framework.version>
+        <org.springframework.version>6.2.3</org.springframework.version>
+        <spring-security.version>6.4.3</spring-security.version>
+        <spring.data.jpa.version>3.4.3</spring.data.jpa.version>
+        <spring.data.cassandra.version>4.4.3</spring.data.cassandra.version>
+        <spring.integration.version>6.4.3</spring.integration.version>
 
-        <!-- Boot (USED ONLY BY VAADIN MODULE) -->
-        <spring.boot.version>2.7.18</spring.boot.version>
-        <jaxrs.version>2.1.1</jaxrs.version>
-        <jersey2.version>2.35</jersey2.version>
+        <!-- Boot -->
+        <spring.boot.version>3.4.3</spring.boot.version>
+        <jaxrs.version>3.1.0</jaxrs.version>
+        <jersey2.version>3.1.9</jersey2.version>
         <jersey2.scope>compile</jersey2.scope>
 
-		<hibernate-validator.version>6.2.5.Final</hibernate-validator.version>
+		<hibernate-validator.version>8.0.2.Final</hibernate-validator.version>
 		<jackson.version>2.17.2</jackson.version>
-		<aspectJ.version>1.8.0</aspectJ.version>
-        <eclipselink.version>2.7.12</eclipselink.version>
-        <javax.persistence.version>2.1.0</javax.persistence.version>
-		<org.slf4j.version>1.7.36</org.slf4j.version>
+		<aspectJ.version>1.9.21</aspectJ.version>
+        <eclipselink.version>4.0.4</eclipselink.version>
+        <jakarta.persistence.version>3.1.0</jakarta.persistence.version>
+		<org.slf4j.version>2.0.16</org.slf4j.version>
 
 
         <!-- Encoding -->
@@ -47,22 +47,18 @@
 
     </properties>
 
-    <prerequisites>
-        <maven>3</maven>
-    </prerequisites>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>javax.servlet-api</artifactId>
-                <version>4.0.1</version>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>6.0.0</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>javax.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <version>2.0.1.Final</version>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>3.0.2</version>
             </dependency>
 
             <dependency>
@@ -77,7 +73,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.36</version>
+      <version>${org.slf4j.version}</version>
     </dependency>
 
 

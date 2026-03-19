@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.CronScheduleBuilder;
@@ -210,6 +210,7 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
 			//builder.withClass(DefaultDriverOption.RETRY_POLICY_CLASS, CustomRetryPolicy.class);
 			builder.withInt(DefaultDriverOption.CONNECTION_POOL_LOCAL_SIZE, 8);
 			builder.withString(DefaultDriverOption.LOAD_BALANCING_LOCAL_DATACENTER, getLocalDataCenter());
+			builder.withString(DefaultDriverOption.PROTOCOL_VERSION, "V4");
 		};
 	}
 

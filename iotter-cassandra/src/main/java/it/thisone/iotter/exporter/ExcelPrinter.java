@@ -99,7 +99,7 @@ public class ExcelPrinter implements Flushable, Closeable, RecordPrinter {
         for (Object value : values) {
             Cell cell = row.createCell(cellIndex++);
             if (value == null) {
-            	cell.setCellType(Cell.CELL_TYPE_BLANK);
+            	cell.setBlank();
             } else if (value instanceof Date) {
                 cell.setCellValue((Date) value);
                 cell.setCellStyle(dateCellStyle);
@@ -109,7 +109,6 @@ public class ExcelPrinter implements Flushable, Closeable, RecordPrinter {
             }  else {
                 // Fallback: convert other types to string
                 cell.setCellValue(value.toString());
-                cell.setCellType(Cell.CELL_TYPE_STRING);
             }
         }
     }

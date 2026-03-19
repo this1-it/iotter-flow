@@ -2,7 +2,7 @@ package it.thisone.iotter.persistence.service;
 
 import java.util.List;
 
-import javax.persistence.RollbackException;
+import jakarta.persistence.RollbackException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

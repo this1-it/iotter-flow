@@ -1,12 +1,11 @@
 // Wrapper that ensures Moment.js is on window before Chart.js evaluates.
-// Chart.js 2.7.2 (browserify bundle) captures window.moment at module-definition
-// time inside a closure. It must exist BEFORE Chart.min.js is first evaluated.
+// Chart.js 2.7.2 captures window.moment at module-evaluation time.
 //
-// webpack.config.js redirects all Chart.min.js imports to this file via
-// NormalModuleReplacementPlugin. This file loads Chart.original.js (a copy of
-// Chart.min.js) to avoid circular resolution.
-const moment = require('@vaadin/flow-frontend/chart/Moment.js');
+// Vaadin 23 uses Vite (not Webpack), so we use dynamic imports with
+// top-level await to guarantee execution order.
+const momentModule = await import('Frontend/generated/jar-resources/chart/Moment.js');
+const moment = momentModule.default || momentModule;
 if (typeof window !== 'undefined') {
     window.moment = moment;
 }
-require('@vaadin/flow-frontend/chart/Chart.original.js');
+await import('Frontend/generated/jar-resources/chart/Chart.min.js');

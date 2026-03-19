@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class AppConfig {
     private final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 	
     @Autowired(required = false)
-    private javax.servlet.ServletContext servletContext;
+    private jakarta.servlet.ServletContext servletContext;
     
 	@PostConstruct
 	public void init() {

@@ -3,8 +3,8 @@ package it.thisone.iotter.persistence.model;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 /**
  * A class to represent a latitude and longitude

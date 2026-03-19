@@ -23,8 +23,9 @@ import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.POIXMLException;
+import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -241,7 +242,7 @@ public class AernetProvisioning implements IProvisioningProvider, AernetXLSXPars
 				rowId++;
 				List<String> content = new ArrayList<String>();
 				for (int i = 0; i < COLS_NUM; i++) {
-					content.add(cellToString(row.getCell(i, Row.RETURN_NULL_AND_BLANK)));
+					content.add(cellToString(row.getCell(i, Row.MissingCellPolicy.RETURN_NULL_AND_BLANK)));
 				}
 				ModbusRegister register = readRegisterTemplate(rowId, content, profileId, cnt, extraLocale);
 				if (register != null) {
@@ -313,11 +314,13 @@ public class AernetProvisioning implements IProvisioningProvider, AernetXLSXPars
 		// Check the cell type and format accordingly
 		NumberFormat format = NumberFormat.getInstance(Locale.US);
 		switch (cell.getCellType()) {
-		case Cell.CELL_TYPE_NUMERIC:
+		case NUMERIC:
 			s = format.format(cell.getNumericCellValue());
 			break;
-		case Cell.CELL_TYPE_STRING:
+		case STRING:
 			s = cell.getStringCellValue().trim();
+			break;
+		default:
 			break;
 		}
 		return s;

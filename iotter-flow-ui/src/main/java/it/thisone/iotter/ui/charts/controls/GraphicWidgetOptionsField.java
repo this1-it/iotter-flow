@@ -150,7 +150,7 @@ public class GraphicWidgetOptionsField extends CustomField<GraphicWidgetOptions>
 
 	@Override
 	public void setReadOnly(boolean readOnly) {
-		super.setReadOnly(readOnly);
+		//super.setReadOnly(readOnly);
 		if (apply != null) {
 			apply.setEnabled(!readOnly);
 		}

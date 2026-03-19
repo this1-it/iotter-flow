@@ -20,11 +20,11 @@
 		   <version>1.0.0</version>
 		</dependency>
 	
-		<dependency>
-		   <groupId>org.vaadin</groupId>
-		   <artifactId>flow-viritin</artifactId>
-		   <version>0.5.1</version>
-		</dependency>
+<dependency>
+   <groupId>in.virit</groupId>
+   <artifactId>viritin</artifactId>
+   <version>1.7.4</version>
+</dependency>
 
 		<dependency>
 		   <groupId>org.vaadin.addons.chartjs</groupId>
@@ -38,11 +38,11 @@
 			<version>2.4.0</version>
 		</dependency>
 
-<dependency>
-   <groupId>org.vaadin.addons.componentfactory</groupId>
-   <artifactId>vcf-leaflet</artifactId>
-   <version>1.0.0</version>
-</dependency>
+		<dependency>
+			<groupId>org.vaadin.addons.componentfactory</groupId>
+			<artifactId>vcf-leaflet</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -76,15 +76,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>eu.bitwalker</groupId>
-			<artifactId>UserAgentUtils</artifactId>
-			<version>1.19</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>4.0.1</version>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 

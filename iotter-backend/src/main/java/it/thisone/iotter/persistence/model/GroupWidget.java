@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 
 
@@ -113,7 +113,7 @@ public class GroupWidget extends BaseEntity {
 
 	private GroupWidgetOptions options;
 
-	@javax.persistence.Lob
+	@jakarta.persistence.Lob
 	@Column(name = "LAYOUT")
 	private String layout;
 	

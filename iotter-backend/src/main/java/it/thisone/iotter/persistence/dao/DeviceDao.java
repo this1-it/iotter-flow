@@ -7,17 +7,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CacheStoreMode;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 import org.eclipse.persistence.config.CascadePolicy;
 import org.eclipse.persistence.config.QueryHints;
@@ -100,7 +100,7 @@ public class DeviceDao extends BaseEntityDao<Device> implements IDeviceDao {
 		// If the object/data is already in the cache, then refresh/replace it
 		// with the database results.
 		q.setHint(QueryHints.CACHE_STORE_MODE, CacheStoreMode.REFRESH);
-		// q.setHint("javax.persistence.cache.storeMode", "REFRESH");
+		// q.setHint("jakarta.persistence.cache.storeMode", "REFRESH");
 
 		List<Device> result = q.getResultList();
 

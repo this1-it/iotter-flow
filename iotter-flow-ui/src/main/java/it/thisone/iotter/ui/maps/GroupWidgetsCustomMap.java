@@ -236,7 +236,7 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
     private ComboBox<DeviceCustomMap> createComboBox() {
         ComboBox<DeviceCustomMap> combo = new ComboBox<>();
         dataProvider = createDataProvider();
-        combo.setDataProvider(dataProvider);
+        combo.setItems(dataProvider);
         combo.setItemLabelGenerator(DeviceCustomMap::getName);
         combo.setAllowCustomValue(false);
         combo.addValueChangeListener(event -> showMap(event.getValue()));

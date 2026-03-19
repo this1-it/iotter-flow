@@ -1,75 +1,30 @@
-# Development Guidelines
-
-This is a Vaadin Flow project that rewrites a Vaadin 8 application.
-Many of the patterns used in Vaadin 8 are no longer compatible with Vaadin Flow.
-
-In particular, Vaadin Flow introduces a clear and fundamental change in the programming model compared to Vaadin 8:
-
-Components must no longer access the Spring context manually.
-
-Replicating the old pattern of an interface that pulls services from the Spring context is no longer meaningful nor supported.
-
-It is no longer possible to use com.vaadin.flow.component.UI in the same way as com.vaadin.ui.UI was used in Vaadin 8 (for example, as a global access point to application or Spring resources).
-
-Vaadin Flow is based on dependency injection, UI-scoped state, and explicit service wiring, and existing Vaadin 8 patterns must be refactored accordingly.
-
-When migrating the code, if you encounter a reference to it.thisone.iotter.ui.main.IMainUI, that interface was used to pull services from the Spring context.
-
-Likewise, some methods from it.thisone.iotter.ui.common.UIUtils are no longer available. They were intentionally removed because they relied on patterns such as:
-
-```
-((IMainUI) UI.getCurrent())
-```
-
-These patterns are not compatible with Vaadin Flow and have therefore been deliberately eliminated during the migration.
-
-
-## i18n support using iotter-flow-ui/src/main/java/it/thisone/iotter/i18n/FlowI18NProvider.java
-
- getTranslation() is a method provided by com.vaadin.flow.component.Component. It's available in any class that extends a Vaadin Flow component: 
-                                                                                                                                                  
-  ✓ Works in these classes:                                                                                                                       
-  - Classes extending VerticalLayout, HorizontalLayout, FlexLayout                                                                                
-  - Classes extending Div, Span, Button                                                                                                           
-  - Any custom component extending Component                                                                                                      
- 
-
-
 # Repository Guidelines
 
-
 ## Project Structure & Module Organization
-- `iotter-flow-ui/` is the Vaadin Flow UI module (Java views, resources, and web assets). Java lives in `iotter-flow-ui/src/main/java`, static assets in `iotter-flow-ui/src/main/webapp`, and frontend resources in `iotter-flow-ui/frontend`.
-- `iotter-flow-it/` contains integration/UI tests using Vaadin TestBench, under `iotter-flow-it/src/test/java`.
-- The root `pom.xml` aggregates the modules for multi-module builds.
+`iotter-flow` is a multi-module Maven workspace. Core domain and integration code lives in modules such as `iotter-core`, `iotter-backend`, `iotter-cassandra`, `iotter-mqtt`, and `iotter-integration`. REST-facing code is split across `iotter-flow-rest`, `iotter-rest-endpoints`, `iotter-rest-billings`, and related endpoint/model modules.
+
+The Vaadin UI is split into `iotter-flow-ui-core`, `iotter-flow-ui-shim`, and `iotter-flow-ui`. Java sources follow the standard Maven layout under `src/main/java`; static assets live in `iotter-flow-ui/src/main/resources`, `src/main/webapp`, and `iotter-flow-ui/frontend`. Treat `iotter-flow-ui/frontend/generated` as generated output. Integration tests live in `iotter-flow-it/src/test/java`. Design notes and migration docs are kept in `docs/`.
 
 ## ExecPlans
 
 When writing complex features or significant refactors, use an ExecPlan (as described in .agents/_template/PLANS.md) from design to implementation. Write new plans to the .agents dir, Place any temporary research, clones, etc., in a .gitignored subdirectory of .agents. But for permanent features, open a new subdir under .agents, so for example for the orchestrator, we would use .agents/orchestrator/PLAN.md ... start by doing `cp -r .agents/_template .agents/orchestrator`. You need to remove the preamble of each plan, do not copy blindly. And if you need to take a different approach than TDD just for a particular plan, put that clearly in the plan.
 
-
 ## Build, Test, and Development Commands
-- `mvn clean install` builds all modules.
-- `mvn -pl iotter-flow-ui jetty:run` runs the UI locally via Jetty (default goal in the UI module).
-- `mvn -pl iotter-flow-ui -Pproduction package` builds the UI in production mode (frontend bundle generated).
-- `mvn -pl iotter-flow-it -Pintegration-tests verify -Dwebdriver.chrome.driver=/path/to/chromedriver` runs integration tests; the profile downloads drivers into `iotter-flow-it/drivers/`.
+Run commands from the repository root unless you need a single module.
+
+- `mvn clean install -DskipTests`: build all modules quickly.
+- `mvn clean install`: full multi-module build.
+- `mvn -pl iotter-flow-ui -am spring-boot:run`: start the Vaadin UI and required modules locally.
+- `mvn -pl iotter-flow-ui -Pproduction package`: build the production frontend bundle.
+- `mvn -pl iotter-flow-it -Pintegration-tests verify`: run TestBench integration tests.
 
 ## Coding Style & Naming Conventions
-- Java: 4-space indentation, braces on the same line, standard Vaadin/Java conventions.
-- Packages are lower-case (for example `com.vaadin.samples.*`), classes use `PascalCase`, methods and fields use `camelCase`.
-- UI views and components are named by purpose (for example `AboutView`, `SampleCrudView`).
-- No formatter or linter is configured; keep edits consistent with existing files.
+Use Java 21 and existing Maven conventions. Source code uses 4-space indentation, `UpperCamelCase` for classes, `lowerCamelCase` for methods and fields, and package names under `it.thisone.iotter.*`. Keep module names and Spring/Vaadin config classes descriptive, for example `SecurityConfig` or `TomcatJndiConfig`.
+
+Frontend resources in `iotter-flow-ui/frontend/src` and `frontend/styles` use lowercase, dash-separated filenames such as `gridstack-board.js`. No formatter or Checkstyle config is currently enforced in the build, so follow surrounding code closely.
 
 ## Testing Guidelines
-- Unit tests use JUnit 4 (`*Test.java`) in the backend module.
-- Integration/UI tests use Vaadin TestBench with Failsafe (`*IT.java`) in `iotter-flow-it`.
-- Keep test names descriptive of the behavior, and prefer running the relevant module tests before PRs.
+Integration tests use Vaadin TestBench with JUnit 4 and the `maven-failsafe-plugin`. Name browser-driven tests `*IT.java`; keep supporting page objects and elements alongside them. No coverage gate is configured, so add focused tests for changed behavior and document any manual verification when UI work cannot be automated.
 
 ## Commit & Pull Request Guidelines
-- Git history shows short, imperative commit messages (for example “renamed modules”); follow that style.
-- PRs should include a concise summary, testing performed (command + result), and screenshots for UI changes.
-- Link related issues/tickets when applicable.
-
-## Configuration Tips
-- The UI module relies on the Vaadin Maven plugin to prepare/build the frontend; avoid manual edits under `iotter-flow-ui/target`.
-- Integration tests require a compatible ChromeDriver on your machine unless the downloader profile is used.
+Recent history favors short, imperative or descriptive subjects like `Chart.js Fixes for Vaadin 14` and `refactor provisioning`. Keep commit titles brief, specific, and scoped to one change. For pull requests, include a concise summary, affected modules, setup or migration notes, linked issues if any, and screenshots for visible UI changes.

@@ -2,8 +2,8 @@ package it.thisone.iotter.persistence.model;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 import it.thisone.iotter.enums.ChartAxis;
 

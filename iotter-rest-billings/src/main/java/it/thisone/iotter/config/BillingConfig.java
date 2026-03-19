@@ -2,7 +2,7 @@ package it.thisone.iotter.config;
 
 import java.util.Properties;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 //import org.codehaus.jackson.map.AnnotationIntrospector;
 //import org.codehaus.jackson.map.ObjectMapper;

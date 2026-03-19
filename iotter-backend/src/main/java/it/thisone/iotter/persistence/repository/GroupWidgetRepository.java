@@ -22,11 +22,15 @@ public interface GroupWidgetRepository extends BaseEntityRepository<GroupWidget>
 
 	Page<GroupWidget> findByOwnerAndNameStartingWithIgnoreCase(String owner, String name, Pageable pageable);
 
-	@Query("select distinct gw from GroupWidget gw join gw.group g where g.network.id = :networkId and gw.owner = :owner")
+	@Query(value = "select distinct gw.* from GROUP_WIDGET gw join NETWORK_GROUP g on gw.NETWORK_GROUP_ID = g.ID where g.NETWORK_ID = :networkId and gw.OWNER = :owner",
+			countQuery = "select count(distinct gw.ID) from GROUP_WIDGET gw join NETWORK_GROUP g on gw.NETWORK_GROUP_ID = g.ID where g.NETWORK_ID = :networkId and gw.OWNER = :owner",
+			nativeQuery = true)
 	Page<GroupWidget> findByOwnerAndNetworkId(@Param("owner") String owner, @Param("networkId") String networkId,
 			Pageable pageable);
 
-	@Query("select distinct gw from GroupWidget gw join gw.group g where g.network.id = :networkId and gw.owner = :owner and lower(gw.name) like lower(concat('%', :name, '%'))")
+	@Query(value = "select distinct gw.* from GROUP_WIDGET gw join NETWORK_GROUP g on gw.NETWORK_GROUP_ID = g.ID where g.NETWORK_ID = :networkId and gw.OWNER = :owner and lower(gw.NAME) like lower(concat('%', :name, '%'))",
+			countQuery = "select count(distinct gw.ID) from GROUP_WIDGET gw join NETWORK_GROUP g on gw.NETWORK_GROUP_ID = g.ID where g.NETWORK_ID = :networkId and gw.OWNER = :owner and lower(gw.NAME) like lower(concat('%', :name, '%'))",
+			nativeQuery = true)
 	Page<GroupWidget> findByOwnerAndNetworkIdAndNameStartingWithIgnoreCase(@Param("owner") String owner,
 			@Param("networkId") String networkId, @Param("name") String name, Pageable pageable);
 }

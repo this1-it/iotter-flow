@@ -2,7 +2,7 @@ package it.thisone.iotter.lazyquerydataprovider;
 
 import java.io.Serializable;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * Factory for creating EntityQuery instances for Vaadin 8 DataProvider.

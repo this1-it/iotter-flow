@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.ehcache.EhCacheCache;
+import org.springframework.cache.Cache;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -86,7 +86,6 @@ import it.thisone.iotter.rest.model.DeviceOnlineStatus;
 import it.thisone.iotter.rest.model.ModbusProvisioning;
 import it.thisone.iotter.util.BacNet;
 import it.thisone.iotter.util.Utils;
-import net.sf.ehcache.Statistics;
 
 // http://java.sys-con.com/node/2123093
 
@@ -1351,22 +1350,13 @@ public class SubscriptionService extends Initializator {
 			/* get stats for all known caches */
 			for (String cacheName : cacheManager.getCacheNames()) {
 
-				EhCacheCache cache = (EhCacheCache) cacheManager.getCache(cacheName);
+				Cache cache = cacheManager.getCache(cacheName);
 
-				Statistics stats = cache.getNativeCache().getStatistics();
-				long count = stats.getObjectCount();
-				
 				if ("clear".equals(mode)) {
 					cache.clear();
 				}
-				else {
-					cache.getNativeCache().evictExpiredElements();
-				}
-				
 
-				sb.append(String.format("%s: %s size \n", cacheName, count//
-						 // nb element in heap tier
-				));
+				sb.append(String.format("%s: active \n", cacheName));
 
 			}
 

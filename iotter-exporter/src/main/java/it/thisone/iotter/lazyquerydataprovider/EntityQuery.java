@@ -7,13 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
@@ -69,7 +69,7 @@ public class EntityQuery<T, F> implements Query<T, F>, Serializable {
                 cq.where(wherePredicate);
             }
 
-            final javax.persistence.Query query = entityManager.createQuery(cq);
+            final jakarta.persistence.Query query = entityManager.createQuery(cq);
             cachedQuerySize = ((Number) query.getSingleResult()).intValue();
         }
         return cachedQuerySize;
@@ -92,7 +92,7 @@ public class EntityQuery<T, F> implements Query<T, F>, Serializable {
         // Apply sorting
         setOrderClause(cb, cq, root, queryDefinition);
 
-        final javax.persistence.TypedQuery<T> query = entityManager.createQuery(cq);
+        final jakarta.persistence.TypedQuery<T> query = entityManager.createQuery(cq);
         query.setFirstResult(offset);
         query.setMaxResults(limit);
 
@@ -171,7 +171,7 @@ public class EntityQuery<T, F> implements Query<T, F>, Serializable {
                 cq.where(wherePredicate);
             }
 
-            final javax.persistence.TypedQuery<T> query = entityManager.createQuery(cq);
+            final jakarta.persistence.TypedQuery<T> query = entityManager.createQuery(cq);
             final List<T> entities = query.getResultList();
             
             for (T entity : entities) {

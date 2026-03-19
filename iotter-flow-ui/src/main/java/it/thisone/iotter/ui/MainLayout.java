@@ -6,14 +6,10 @@ import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.IronIcon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.router.RouterLayout;
 import com.vaadin.flow.server.VaadinSession;
-import com.vaadin.flow.theme.Theme;
-import com.vaadin.flow.theme.lumo.Lumo;
-
 import it.thisone.iotter.ui.about.AboutView;
 import it.thisone.iotter.ui.deviceconfigurations.DeviceConfigurationsView;
 import it.thisone.iotter.ui.devices.DevicesView;
@@ -25,9 +21,6 @@ import it.thisone.iotter.ui.users.UsersView;
 /**
  * The main layout. Contains the navigation menu.
  */
-@Theme(value = Lumo.class)
-// @Theme(themeFolder = "iotter-flow")
-// @PWA(name = "Iotter Flow", shortName = "Iotter")
 @CssImport("./styles/shared-styles.css")
 public class MainLayout extends FlexLayout implements RouterLayout {
         private Menu menu;

@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -98,39 +99,31 @@ public class ExcelFileBuilder extends FileBuilder {
 	@Override
 	protected void buildCell(Object value) {
 		if (value == null) {
-			cell.setCellType(Cell.CELL_TYPE_BLANK);
+			cell.setBlank();
 		} else if (value instanceof Boolean) {
 			cell.setCellValue((Boolean) value);
-			cell.setCellType(Cell.CELL_TYPE_BOOLEAN);
 		} else if (value instanceof Date) {
 			cell.setCellValue(formatDate((Date) value));
-			cell.setCellType(Cell.CELL_TYPE_STRING);
-//			cell.setCellValue((Date) value);
-//			cell.setCellStyle(getDateCellStyle());
 		} else if (value instanceof Calendar) {
 			Calendar calendar = (Calendar) value;
-			cell.setCellValue(calendar.getTime());
-			cell.setCellType(Cell.CELL_TYPE_STRING);
+			cell.setCellValue(formatDate(calendar.getTime()));
 		} else if (value instanceof Number) {
 			cell.setCellValue(((Number) value).doubleValue());
-			cell.setCellType(Cell.CELL_TYPE_NUMERIC);
 		} else {
 			if (value.toString().startsWith(NUMBER_PREFIX)) {
 				try {
 					String _value = value.toString().replaceAll(NUMBER_PREFIX, "");
 					Number number = getNumberFormat().parse(_value);
-					cell.setCellType(Cell.CELL_TYPE_NUMERIC);
 					cell.setCellValue(number.doubleValue());
 					// do not format integers
 					if(number.doubleValue() % 1 != 0) {
 						cell.setCellStyle(getNumberCellStyle());
 					}
 				} catch (ParseException e) {
-					cell.setCellType(Cell.CELL_TYPE_BLANK);
+					cell.setBlank();
 				}
 			} else {
 				cell.setCellValue(value.toString());
-				cell.setCellType(Cell.CELL_TYPE_STRING);
 			}
 		}
 	}
@@ -164,7 +157,7 @@ public class ExcelFileBuilder extends FileBuilder {
 	private CellStyle getBoldStyle() {
 		if (boldStyle == null) {
 			Font bold = workbook.createFont();
-			bold.setBoldweight(Font.BOLDWEIGHT_BOLD);
+			bold.setBold(true);
 			boldStyle = workbook.createCellStyle();
 			boldStyle.setFont(bold);
 		}
@@ -180,11 +173,11 @@ public class ExcelFileBuilder extends FileBuilder {
 		onNewCell();
 		cell.setCellValue(getHeader());
 		Font headerFont = workbook.createFont();
-		headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		headerFont.setBold(true);
 		headerFont.setFontHeightInPoints((short) 15);
 		CellStyle headerStyle = workbook.createCellStyle();
 		headerStyle.setFont(headerFont);
-		headerStyle.setAlignment(CellStyle.ALIGN_CENTER);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
 		cell.setCellStyle(headerStyle);
 		sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, getNumberofColumns() - 1));
 		onNewRow();

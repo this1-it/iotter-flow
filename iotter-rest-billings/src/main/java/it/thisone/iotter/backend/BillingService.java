@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;

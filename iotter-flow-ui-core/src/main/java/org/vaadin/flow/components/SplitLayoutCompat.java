@@ -267,7 +267,7 @@ public abstract class SplitLayoutCompat extends SplitLayout {
     }
 
     public Registration addSplitPositionChangeListener(
-            ComponentEventListener<SplitterDragendEvent<SplitLayout>> listener) {
+            ComponentEventListener<SplitterDragendEvent> listener) {
         return addSplitterDragendListener(listener);
     }
 }
