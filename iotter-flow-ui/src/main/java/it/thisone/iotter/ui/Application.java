@@ -10,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.theme.Theme;
 
 import it.thisone.iotter.config.SecurityConfig;
 
@@ -26,6 +27,7 @@ import it.thisone.iotter.config.SecurityConfig;
 	        classes = SecurityConfig.class
 	    )
 	)
+@Theme("parity")
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

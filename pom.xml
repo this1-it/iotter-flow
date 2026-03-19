@@ -23,7 +23,7 @@
         <!-- Spring -->
         <spring.framework.version>6.2.3</spring.framework.version>
         <org.springframework.version>6.2.3</org.springframework.version>
-        <spring-security.version>6.4.3</spring-security.version>
+        <spring-security.version>6.5.6</spring-security.version>
         <spring.data.jpa.version>3.4.3</spring.data.jpa.version>
         <spring.data.cassandra.version>4.4.3</spring.data.cassandra.version>
         <spring.integration.version>6.4.3</spring.integration.version>
@@ -76,6 +76,13 @@
       <version>${org.slf4j.version}</version>
     </dependency>
 
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-bom</artifactId>
+                <version>${spring-security.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>

@@ -34,10 +34,10 @@ mvn -pl iotter-flow-ui spring-boot:run \
 
 mvn -pl iotter-flow-rest -am -DskipTests compile
 
-mvn -pl iotter-flow-rest spring-boot:run -Dspring-boot.run.fork=false
+mvn -pl iotter-flow-rest spring-boot:run 
 
 
- mvn -pl iotter-flow-ui-core install && mvn -pl iotter-flow-ui spring-boot:run -Dspring-boot.run.fork=false
+ mvn -pl iotter-flow-ui-core install && mvn -pl iotter-flow-ui spring-boot:run 
 
 
 
