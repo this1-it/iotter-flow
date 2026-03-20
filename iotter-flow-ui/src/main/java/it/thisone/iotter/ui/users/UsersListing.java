@@ -59,6 +59,7 @@ import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.util.PopupNotification;
 
 @Component
@@ -82,20 +83,13 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private UserRepository userRepository;
 	@Autowired
 	private UserService userService;
+
 	@Autowired
-	private DeviceService deviceService;
-	@Autowired
-	private RoleService roleService;
-	@Autowired
-	private NetworkService networkService;
-	@Autowired
-	private NetworkGroupService networkGroupService;
-	@Autowired
-	private GroupWidgetService groupWidgetService;
+	private BackendServices backendServices;
+
 	@Autowired
 	private UIEventBus eventBus;
-	@Autowired
-	private ObjectProvider<UserForm> userFormProvider;
+
 
 	private Grid<User> grid;
 	private LazyQueryDataProvider<User, UsersFilter> dataProvider;
@@ -157,10 +151,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		UserDetailsAdapter currentUser = authenticatedUser.get()
 				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit users"));
 
-		// logger.error("Editor {} {} {}",item.getUsername(), formatRoles(item),
-		// formatGroups(item));
-		return userFormProvider.getObject(item, network, currentUser, roleService, networkService, networkGroupService,
-				groupWidgetService, eventBus, readOnly);
+		return new UserForm(item, network, currentUser, backendServices, eventBus, readOnly);
 	}
 
 	private void refreshData() {
@@ -416,6 +407,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		}
 		AbstractBaseEntityForm<User> editor = getEditor(item, false);
 		SideDrawer dialog = (SideDrawer) createDialog(label, editor);
+		dialog.addThemeName("side-drawer-middlescreen");
 		editor.setSavedHandler(entity -> {
 			try {
 				if (entity.isNew()) {
@@ -439,6 +431,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 		AbstractBaseEntityForm<User> details = getEditor(item, true);
 		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("view_dialog"), details);
+		dialog.addThemeName("side-drawer-middlescreen");
 
 		dialog.open();
 	}

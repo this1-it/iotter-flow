@@ -26,6 +26,13 @@
     box-sizing: border-box;
 }
 
+/* Middlescreen variant used by UserDetails */
+:host([theme~="side-drawer"][theme~="side-drawer-middlescreen"]) [part="overlay"] {
+    width: 70vw;
+    min-width: 70vw;
+    max-width: 70vw;
+}
+
 /* Fullscreen variant used by the GraphicWidget editor */
 :host([theme~="side-drawer"][theme~="side-drawer-fullscreen"]) [part="overlay"] {
     left: 0;

@@ -86,10 +86,7 @@ import it.thisone.iotter.ui.common.EditorSavedEvent;
 import it.thisone.iotter.ui.common.EditorSavedListener;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
 import it.thisone.iotter.ui.common.EditorSelectedListener;
-import it.thisone.iotter.ui.common.EntityRemovedEvent;
-import it.thisone.iotter.ui.common.EntityRemovedListener;
-import it.thisone.iotter.ui.common.EntitySelectedEvent;
-import it.thisone.iotter.ui.common.EntitySelectedListener;
+
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.common.UIUtils;
@@ -103,7 +100,7 @@ import it.thisone.iotter.ui.ifc.IProvisioningWizard;
 import it.thisone.iotter.ui.provisioning.ProvisioningWizard;
 import it.thisone.iotter.ui.providers.BackendServices;
 
-import it.thisone.iotter.ui.users.UserForm;
+
 import it.thisone.iotter.util.PopupNotification;
 
 @org.springframework.stereotype.Component

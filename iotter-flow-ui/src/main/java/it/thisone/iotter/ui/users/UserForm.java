@@ -46,6 +46,7 @@ import it.thisone.iotter.ui.common.fields.NetworkSelect;
 import it.thisone.iotter.ui.common.fields.RoleSelect;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetAdapterListing;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.ui.validators.AntiReDoSEmailValidator;
 
 @Component
@@ -108,14 +109,12 @@ public class UserForm extends AbstractBaseEntityForm<User> {
     private GroupWidgetAdapterListing visualizations;
 
     @Autowired
-    public UserForm(User entity, Network network, UserDetailsAdapter currentUser, RoleService roleService,
-            NetworkService networkService, NetworkGroupService networkGroupService,
-            GroupWidgetService groupWidgetService, UIEventBus eventBus, boolean readOnly) {
+    public UserForm(User entity, Network network, UserDetailsAdapter currentUser, BackendServices backendServices, UIEventBus eventBus, boolean readOnly) {
         super(entity, User.class, "user.editor", network, currentUser, readOnly);
-        this.roleService = roleService;
-        this.networkService = networkService;
-        this.networkGroupService = networkGroupService;
-        this.groupWidgetService = groupWidgetService;
+        this.roleService = backendServices.getRoleService();
+        this.networkService = backendServices.getNetworkService();
+        this.networkGroupService = backendServices.getNetworkGroupService();
+        this.groupWidgetService = backendServices.getGroupWidgetService();
 
         // Wire up event bus for PendingChangesEvent
         setEventPoster(eventBus::post);

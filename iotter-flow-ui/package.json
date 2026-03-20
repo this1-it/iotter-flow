@@ -28,7 +28,6 @@
     "leaflet.heat": "0.2.0",
     "leaflet.markercluster": "1.5.3",
     "lit": "3.3.2",
-    "lumo-css-framework": "3.0.11",
     "proj4": "2.15.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -82,7 +81,6 @@
       "leaflet.heat": "0.2.0",
       "leaflet.markercluster": "1.5.3",
       "lit": "3.3.2",
-      "lumo-css-framework": "3.0.11",
       "proj4": "2.15.0",
       "react": "18.3.1",
       "react-dom": "18.3.1",
@@ -109,7 +107,7 @@
       "workbox-core": "7.4.0",
       "workbox-precaching": "7.4.0"
     },
-    "hash": "debe3ede2488675ff5e939be5d9ec16645f27c3955706dd1c9e21488dae3b7cb"
+    "hash": "700c4f3e151367f569c200cfac5b4a021b43e76d880ed9d0db66c94dcee89943"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -129,7 +127,6 @@
     "date-fns": "$date-fns",
     "leaflet-kmz": "$leaflet-kmz",
     "@googlemaps/markerclusterer": "$@googlemaps/markerclusterer",
-    "lumo-css-framework": "$lumo-css-framework",
     "leaflet.fullscreen": "$leaflet.fullscreen",
     "proj4": "$proj4",
     "esri-leaflet-vector": "$esri-leaflet-vector",

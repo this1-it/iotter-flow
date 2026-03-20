@@ -395,8 +395,13 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
         }
         @SuppressWarnings("unchecked")
         final AbstractBaseEntityForm<T> otherObject = (AbstractBaseEntityForm<T>) obj;
-        return new EqualsBuilder().append(this.getEntity().getId(),
-                otherObject.getEntity().getId()).isEquals();
+        T thisEntity = this.getEntity();
+        T otherEntity = otherObject.getEntity();
+        if (thisEntity == null || otherEntity == null) {
+            return thisEntity == otherEntity;
+        }
+        return new EqualsBuilder().append(thisEntity.getId(),
+                otherEntity.getId()).isEquals();
     }
 
     
