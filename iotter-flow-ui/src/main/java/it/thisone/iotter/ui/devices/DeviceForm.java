@@ -26,7 +26,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-import it.thisone.iotter.cassandra.CassandraFeeds;
+
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.DeviceStatus;
 import it.thisone.iotter.enums.TracingAction;
