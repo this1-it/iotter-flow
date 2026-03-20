@@ -378,7 +378,11 @@ public abstract class AbstractBaseEntityForm<T extends BaseEntity> extends Abstr
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(this.getEntity().getId()).toHashCode();
+        T entity = this.getEntity();
+        if (entity == null) {
+            return new HashCodeBuilder(17, 37).append(name).toHashCode();
+        }
+        return new HashCodeBuilder(17, 37).append(entity.getId()).toHashCode();
     }
 
     @Override

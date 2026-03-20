@@ -58,7 +58,6 @@ extends AbstractCompositeField<HorizontalLayout, EditableResourceData, ResourceD
 			}
 		});
 		uploadField.setAcceptedFileTypes(ACCEPTED_FILE_TYPES);
-		uploadField.setMaxFiles(1);
 		uploadField.setUploadButton(new Button(getI18nKey("choose_file")));
 
 		download = new Button(VaadinIcon.DOWNLOAD.create());
