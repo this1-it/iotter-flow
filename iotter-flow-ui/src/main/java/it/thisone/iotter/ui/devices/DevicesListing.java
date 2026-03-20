@@ -68,6 +68,7 @@ import it.thisone.iotter.persistence.repository.DeviceRepository;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
+import it.thisone.iotter.persistence.service.ModbusProfileService;
 import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.persistence.service.UserService;
@@ -129,13 +130,10 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private AuthenticatedUser authenticatedUser;
 	@Autowired
 	private UIEventBus uiEventBus;
-	@Autowired
-	private ObjectProvider<DeviceWidgetBox> deviceWidgetBoxProvider;
+
 	@Autowired
 	private DeviceRepository deviceRepository;
 
-	@Autowired
-	private ObjectProvider<DeviceForm> deviceFormProvider;
 
 	@Autowired
 	private DeviceService deviceService;
@@ -165,7 +163,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private BackendServices backendServices;
 
 	@Autowired
-	private it.thisone.iotter.persistence.service.ModbusProfileService modbusProfileService;
+	private ModbusProfileService modbusProfileService;
 
 	private Network network;
 	private boolean hasParameters = true;
@@ -250,7 +248,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 	@Override
 	public AbstractBaseEntityForm<Device> getEditor(Device item, boolean readOnly) {
-		DeviceForm editor = deviceFormProvider.getObject(item, network, currentUser, readOnly);
+		DeviceForm editor = new DeviceForm(item, network, currentUser, readOnly,uiEventBus,backendServices);
 		editor.initialize();
 		return editor;
 
@@ -843,7 +841,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		if (!hasParameters) {
 			return;
 		}
-		boxes = deviceWidgetBoxProvider.getObject();
+		boxes = new DeviceWidgetBox(currentUser, backendServices);
 
 		table.addSelectionListener(event -> boxes.refresh(event.getFirstSelectedItem().orElse(null)));
 		boxes.addListener(new EditorSavedListener() {

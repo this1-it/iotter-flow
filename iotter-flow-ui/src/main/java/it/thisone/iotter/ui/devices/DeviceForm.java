@@ -43,7 +43,7 @@ import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
 import it.thisone.iotter.persistence.service.NetworkGroupService;
 import it.thisone.iotter.persistence.service.NetworkService;
-import it.thisone.iotter.persistence.service.RoleService;
+
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.channels.ChannelAlarmListing;
 import it.thisone.iotter.ui.channels.ChannelLastMeasuresListing;
@@ -61,11 +61,11 @@ import it.thisone.iotter.ui.common.fields.NetworkGroupSelect;
 import it.thisone.iotter.ui.common.fields.NetworkSelect;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.ifc.ITabContent;
+import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.util.EncryptUtils;
 import it.thisone.iotter.util.Utils;
 
-@Component
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+
 public class DeviceForm extends AbstractBaseEntityForm<Device> {
 
 	private static final long serialVersionUID = 1L;
@@ -139,74 +139,31 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 	private DeviceRollup rollup;
 	private Collection<NetworkGroup> groups = new ArrayList<NetworkGroup>();
 
-	@Autowired
-	private DeviceService deviceService;
 
-	@Autowired
-	private AlarmService alarmService;
+	private final DeviceService deviceService;
+	private final AlarmService alarmService;
+	private final NetworkService networkService;
+	private final NetworkGroupService networkGroupService;
+	private final GroupWidgetService groupWidgetService;
+	private final MeasureUnitTypeService measureUnitTypeService;
+	private final BackendServices backendServices;
+	private final UIEventBus uiEventBus;
 
-	@Autowired
-	private NetworkService networkService;
 
-	@Autowired
-	private NetworkGroupService networkGroupService;
+	public DeviceForm(Device entity, Network network, UserDetailsAdapter currentUser, boolean readOnly, 
+		UIEventBus uiEventBus,
+		BackendServices backendServices
 
-	@Autowired
-	private GroupWidgetService groupWidgetService;
-
-	@Autowired
-	private CassandraService cassandraService;
-
-	@Autowired
-	private MeasureUnitTypeService measureUnitTypeService;
-
-	@Autowired
-	private it.thisone.iotter.ui.providers.BackendServices backendServices;
-
-	@Autowired
-	private UIEventBus uiEventBus;
-
-	// @Autowired
-	// public DeviceForm(Device entity, Network network, UserDetailsAdapter
-	// currentUser, boolean readOnly,
-	// DeviceService deviceService, AlarmService alarmService, NetworkService
-	// networkService,
-	// NetworkGroupService networkGroupService, GroupWidgetService
-	// groupWidgetService,
-	// CassandraService cassandraService,MeasureUnitTypeService
-	// measureUnitTypeService) {
-	// super(entity, Device.class, NAME, network, currentUser, readOnly);
-	// this.deviceService = deviceService;
-	// this.alarmService = alarmService;
-	// this.networkService = networkService;
-	// this.networkGroupService = networkGroupService;
-	// this.groupWidgetService = groupWidgetService;
-	// this.cassandraService = cassandraService;
-	// this.measureUnitTypeService = measureUnitTypeService;
-	// if (isCreateBean()) {
-	// initializeDefaults();
-	// }
-	// populateFields();
-	// bindFields();
-	// }
-
-	// @Autowired
-	public DeviceForm(Device entity, Network network, UserDetailsAdapter currentUser, boolean readOnly
-	// DeviceService deviceService, AlarmService alarmService, NetworkService
-	// networkService,
-	// NetworkGroupService networkGroupService, GroupWidgetService
-	// groupWidgetService,
-	// CassandraService cassandraService,MeasureUnitTypeService
-	// measureUnitTypeService
 	) {
 		super(entity, Device.class, NAME, network, currentUser, readOnly);
-		// this.deviceService = deviceService;
-		// this.alarmService = alarmService;
-		// this.networkService = networkService;
-		// this.networkGroupService = networkGroupService;
-		// this.groupWidgetService = groupWidgetService;
-		// this.cassandraService = cassandraService;
-		// this.measureUnitTypeService = measureUnitTypeService;
+		this.backendServices = backendServices;
+		this.deviceService = this.backendServices.getDeviceService();
+		this.alarmService = this.backendServices.getAlarmService();
+		this.networkService = this.backendServices.getNetworkService();
+		this.networkGroupService = this.backendServices.getNetworkGroupService();
+		this.groupWidgetService = this.backendServices.getGroupWidgetService();
+		this.measureUnitTypeService = this.backendServices.getMeasureUnitTypeService();
+		this.uiEventBus = uiEventBus;
 
 	}
 
@@ -422,7 +379,7 @@ public class DeviceForm extends AbstractBaseEntityForm<Device> {
 		groupsSelect.asMultiSelect().setValue(currentGroups);
 
 		if (!isCreateBean()) {
-			Date lastContactDateValue = cassandraService.getFeeds().getLastContact(getEntity().getSerial());
+			Date lastContactDateValue = backendServices.getCassandraFeeds().getLastContact(getEntity().getSerial());
 			getEntity().setLastContactDate(lastContactDateValue);
 			lastContactDate.setValue(lastContactDateValue);
 		}

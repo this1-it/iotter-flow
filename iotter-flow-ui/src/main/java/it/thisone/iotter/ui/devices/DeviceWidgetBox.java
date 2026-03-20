@@ -24,30 +24,31 @@ import it.thisone.iotter.enums.Protocol;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.service.DeviceService;
-
+import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
 import it.thisone.iotter.ui.common.EditorSavedListener;
 import it.thisone.iotter.ui.common.ItemSelectedEvent;
 import it.thisone.iotter.ui.common.ItemSelectedListener;
+import it.thisone.iotter.ui.providers.BackendServices;
 
-@org.springframework.stereotype.Component
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+
 public class DeviceWidgetBox extends Composite<Div> {
 	// TODO(flow-migration): manual refactor required for Vaadin 8 APIs removed in Flow (dialogs/tabs/legacy layout or UIUtils context access).
 
 
 	private static final long serialVersionUID = 1L;
 	private static final String NAME = "device.widget.box";
-	@Autowired
-	private DeviceService deviceService;
-	@Autowired
-	private ObjectProvider<DeviceInfo> deviceInfoProvider;
+    private final UserDetailsAdapter currentUser;
+    private final BackendServices backendServices;
+
 
 
 	private Device device;
 
-	public DeviceWidgetBox() {
+	public DeviceWidgetBox(UserDetailsAdapter currentUser, BackendServices backendServices) {
 		super();
+		this.currentUser = currentUser;
+		this.backendServices = backendServices;
 	}
 
 	private VerticalLayout buildLayout(Device bean) {
@@ -62,7 +63,7 @@ public class DeviceWidgetBox extends Composite<Div> {
 		device = bean;
 
 		if (Protocol.NATIVE.equals(device.getProtocol())) {
-			List<Device> slaves = deviceService.findSlaves(device);
+			List<Device> slaves = backendServices.getDeviceService().findSlaves(device);
 			Grid<Device> deviceGrid = new Grid<>();
 			deviceGrid.setItems(slaves);
 			deviceGrid.setSizeFull();
@@ -86,7 +87,7 @@ public class DeviceWidgetBox extends Composite<Div> {
 
 		if (device.isAvailableForVisualization()) {
 	
-			DeviceInfo info = deviceInfoProvider.getObject(device);
+			DeviceInfo info = new DeviceInfo(device,currentUser,backendServices);
 			info.addListener(new ItemSelectedListener() {
 				@Override
 				@SuppressWarnings("unchecked")

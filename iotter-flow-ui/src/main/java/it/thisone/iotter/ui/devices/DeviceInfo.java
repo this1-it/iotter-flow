@@ -32,31 +32,22 @@ import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.User;
-import it.thisone.iotter.persistence.service.DeviceService;
-import it.thisone.iotter.persistence.service.GroupWidgetService;
-import it.thisone.iotter.persistence.service.MeasureUnitTypeService;
-import it.thisone.iotter.persistence.service.NetworkGroupService;
-import it.thisone.iotter.persistence.service.NetworkService;
-import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.security.UserDetailsAdapter;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.ItemSelectedEvent;
 import it.thisone.iotter.ui.common.ItemSelectedListener;
-import it.thisone.iotter.ui.common.UIUtils;
+
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.ifc.IDeviceInfo;
 import it.thisone.iotter.ui.ifc.ITabContent;
 import it.thisone.iotter.ui.model.ChannelAdapter;
 import it.thisone.iotter.ui.model.ChannelAdapterDataProvider;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
+import it.thisone.iotter.ui.providers.BackendServices;
 
 
-@org.springframework.stereotype.Component
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+
+
+
 public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 
 	private static final long serialVersionUID = 1L;
@@ -65,27 +56,13 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	protected ChannelAdapterDataProvider container;
 	protected Collection<GroupWidget> widgets;
 
-	@Autowired
-	private DeviceService deviceService;
-	@Autowired
-	private AlarmService alarmService;
-	@Autowired
-    private  NetworkService networkService;
-	@Autowired
-    private NetworkGroupService networkGroupService;
-	@Autowired
-    private GroupWidgetService groupWidgetService;
-	@Autowired
-    private CassandraService cassandraService;
-    @Autowired
-	private MeasureUnitTypeService measureUnitTypeService;
-	@Autowired
-	private UserService userService;
-	@Autowired
-	private AuthenticatedUser authenticatedUser;
+    private final UserDetailsAdapter currentUser;
+    private final BackendServices backendServices;
 
-	public DeviceInfo(Device device) {
+	public DeviceInfo(Device device, UserDetailsAdapter currentUser, BackendServices backendServices) {
 		super("maps.devices.google", UUID.randomUUID().toString());
+		this.currentUser = currentUser;
+		this.backendServices = backendServices;
 		multicomponent = new Accordion();
 		multicomponent.setHeight("vh80");
 		// multicomponent.addClassName(ValoTheme.TABSHEET_FRAMED);
@@ -230,7 +207,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	}
 
 	protected Component buildContent() {
-		Date lastContact = cassandraService.getFeeds().getLastContact(device.getSerial());
+		Date lastContact = backendServices.getCassandraFeeds().getLastContact(device.getSerial());
 		device.setLastContactDate(lastContact);
 		VerticalLayout general = buildGeneral();
 		multicomponent.add(device.getLabel(), general);
@@ -238,7 +215,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
  
 		if (!device.getChannels().isEmpty()) {
 			container = new ChannelAdapterDataProvider();
-			container.setMeasureRenderer(measureUnitTypeService.getMeasureUnitChoiceFormat());
+			container.setMeasureRenderer(backendServices.getMeasureUnitTypeService().getMeasureUnitChoiceFormat());
 			container.addChannels(device.getChannels());
 			List<ChannelAdapter> selected = filterSelected();
 
@@ -252,7 +229,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 				general.add(label);
 			}
 
-			widgets = groupWidgetService.findByDevice(device);
+			widgets = backendServices.getGroupWidgetService().findByDevice(device);
 			if (widgets != null && !widgets.isEmpty()) {
 				multicomponent.add(getI18nLabel("visualizations"), buildLinks());
 			} else {
@@ -263,7 +240,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 				label.setSizeFull();
 				general.add(label);
 			}
-			long count = cassandraService.getAlarms().countActiveAlarms(device.getSerial());
+			long count = backendServices.getCassandraAlarms().countActiveAlarms(device.getSerial());
 			boolean hasAlarms = (count > 0);
 
 			if (hasAlarms) {
@@ -424,12 +401,12 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	
 	// Bug #2053
 	public Collection<GroupWidget> filteredWidgetsByUser(Collection<GroupWidget> widgets) {
-		UserDetailsAdapter details = authenticatedUser.get().orElse(null);
-		if (details.hasRole(Constants.ROLE_ADMINISTRATOR) || details.hasRole(Constants.ROLE_SUPERVISOR) ) {
+		
+		if (currentUser.hasRole(Constants.ROLE_ADMINISTRATOR) || currentUser.hasRole(Constants.ROLE_SUPERVISOR) ) {
 			return widgets;
 		}
 		Collection<GroupWidget> filtered = new ArrayList<GroupWidget>();
-		User user = userService.findOne(details.getUserId());
+		User user = backendServices.getUserService().findOne(currentUser.getUserId());
 		for (GroupWidget gw : widgets) {
 			if (user.getGroups().contains(gw.getGroup())) {
 				filtered.add(gw);
@@ -439,7 +416,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	}
 
 
-		private GraphicFeed resetFeed;
+	private GraphicFeed resetFeed;
 
 
 
@@ -467,14 +444,16 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 		}
 
 	this.device = device;
-	this.widgets = filteredWidgetsByUser(widgets);
+	this.widgets = (currentUser != null && !widgets.isEmpty())
+			? filteredWidgetsByUser(widgets)
+			: new ArrayList<>(widgets);
 
 
 	}
 
 	private Device updateContent(String sn, Collection<GroupWidget> widgets) throws BackendServiceException {
 		boolean changed = false;
-		Device device = deviceService.findBySerial(sn);
+		Device device = backendServices.getDeviceService().findBySerial(sn);
 		try {
 			List<String> keys = new ArrayList<String>();
 			Map<String, Channel> map = new HashMap<String, Channel>();
@@ -512,7 +491,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 						}
 					}
 					if (changed) {
-						groupWidgetService.update(gwidget);
+						backendServices.getGroupWidgetService().update(gwidget);
 					}
 				}
 			}
@@ -524,12 +503,12 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 					channel.getConfiguration().setSelected(selected);
 					Feed item = new Feed(device.getSerial(), channel.getKey());
 					item.setSelected(selected);
-					cassandraService.getFeeds().updateOnSelected(item);
+					backendServices.getCassandraFeeds().updateOnSelected(item);
 					changed = true;
 				}
 			}
 			if (changed) {
-				deviceService.update(device);
+				backendServices.getDeviceService().update(device);
 			}
 		} catch (Throwable t) {
 			t.printStackTrace();

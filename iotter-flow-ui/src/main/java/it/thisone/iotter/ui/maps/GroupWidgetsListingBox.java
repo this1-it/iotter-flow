@@ -1,5 +1,7 @@
 package it.thisone.iotter.ui.maps;
 
+import static org.apache.commons.io.FileUtils.current;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ import it.thisone.iotter.integration.CassandraService;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
+import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.devices.DeviceInfo;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.providers.BackendServices;
@@ -44,8 +47,8 @@ public class GroupWidgetsListingBox extends Composite<Div> {
     private Grid<Device> grid;
     private VerticalLayout infoPanel;
 
-    @Autowired
-    private ObjectProvider<DeviceInfo> deviceInfoProvider;
+	@Autowired
+	private AuthenticatedUser authenticatedUser;
 
 
 
@@ -158,13 +161,9 @@ public class GroupWidgetsListingBox extends Composite<Div> {
         }
 
         Collection<GroupWidget> widgets = map.get(device);
-        if (deviceInfoProvider == null) {
-            // TODO(flow-migration): this component must be instantiated by Spring/ObjectProvider.
-            infoPanel.add(new Span(device.getSerial()));
-            return;
-        }
 
-        DeviceInfo info = deviceInfoProvider.getObject(device);
+
+        DeviceInfo info = new DeviceInfo(device,authenticatedUser.get().orElse(null), backendServices);
         info.addListener(event -> {
             if (event.getSelected() instanceof GroupWidget) {
                 openVisualization((GroupWidget) event.getSelected());

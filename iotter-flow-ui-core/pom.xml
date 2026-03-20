@@ -112,6 +112,14 @@
 				</executions>
 			</plugin>
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>src/demo/resources</directory>
+			</resource>
+		</resources>
 	</build>
 
 </project>
