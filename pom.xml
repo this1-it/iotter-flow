@@ -21,15 +21,15 @@
         <vaadin.version>24.10.0</vaadin.version>
 
         <!-- Spring -->
-        <spring.framework.version>6.2.3</spring.framework.version>
-        <org.springframework.version>6.2.3</org.springframework.version>
-        <spring-security.version>6.5.6</spring-security.version>
+        <spring.framework.version>6.2.5</spring.framework.version>
+        <org.springframework.version>6.2.5</org.springframework.version>
+        <spring-security.version>6.5.9</spring-security.version>
         <spring.data.jpa.version>3.4.3</spring.data.jpa.version>
         <spring.data.cassandra.version>4.4.3</spring.data.cassandra.version>
         <spring.integration.version>6.4.3</spring.integration.version>
 
         <!-- Boot -->
-        <spring.boot.version>3.4.3</spring.boot.version>
+        <spring-boot.version>3.4.3</spring-boot.version>
         <jaxrs.version>3.1.0</jaxrs.version>
         <jersey2.version>3.1.9</jersey2.version>
         <jersey2.scope>compile</jersey2.scope>
@@ -41,9 +41,6 @@
         <jakarta.persistence.version>3.1.0</jakarta.persistence.version>
 		<org.slf4j.version>2.0.16</org.slf4j.version>
 
-
-        <!-- Encoding -->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     </properties>
 
@@ -126,6 +123,22 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <modules>
 
