@@ -1,185 +1,223 @@
 # External Integrations
 
-**Analysis Date:** 2026-02-02
+**Analysis Date:** 2026-03-23
 
 ## APIs & External Services
 
-**MQTT (IoT Device Communication):**
-- Eclipse Paho MQTT Client 1.2.5 - Device message ingestion
-  - SDK/Client: `org.eclipse.paho:org.eclipse.paho.client.mqttv3`
-  - Configuration: `iotter-mqtt/src/main/java/it/thisone/iotter/config/MqttConfig.java`
-  - Integration: Spring Integration 5.5.20 (`spring-integration-mqtt`)
-  - Inbound adapter: `MqttPahoMessageDrivenChannelAdapter` for device subscriptions
-  - Outbound handler: `MqttPahoMessageHandler` for command publishing
-  - Settings (from `mqtt.default.properties`):
-    - Host: `mqtt.host` (default: docker_mqtt)
-    - Port: `mqtt.port` (default: 1883)
-    - QoS: `mqtt.qos` (default: 2)
-    - Application name: `mqtt.application` (default: aernet)
-    - Provisioning topic: `iotter/device/{deviceId}/provisioning`
-    - Auth: Optional username/password (`mqtt.username`, `mqtt.password`)
+**Maps & Geospatial:**
+- Google Maps - Embedded interactive maps on UI
+  - Package: `@flowingcode/google-map` 3.9.0
+  - Integration: Frontend React component
+  - Auth: None (public API, may require API key for production)
 
-**SMTP/Email (Notifications):**
-- JavaMail API 1.6.2 - Email sending for alerts and notifications
-  - SDK/Client: `com.sun.mail:javax.mail`
-  - Configuration: Email service in `iotter-integration/src/main/java/it/thisone/iotter/integration/EmailService.java`
-  - Settings (from `smtp.default.properties`):
-    - Host: `mail.smtp.host` (default: webmail.aermec.com)
-    - Port: `mail.smtp.port` (default: 587)
-    - Username: `mail.smtp.username` for authentication
-    - Password: `mail.smtp.password` (env variable recommended)
-    - TLS: `mail.smtp.starttls.enable=true`
-    - No-reply address: `mail.no-reply`
-    - Catch-all fallback: `mail.catch-all`
-  - Email types supported:
-    - User registration confirmation
-    - Password reset
-    - Alarm notifications (configurable via `mail.alert` setting)
-    - Data export notifications
-  - Template engine: Apache Velocity 1.7 for HTML email templates
+- Esri ArcGIS Services - GIS data and mapping
+  - Package: `esri-leaflet`, `esri-leaflet-vector` (frontend)
+  - Integration: Leaflet plugin for map service layers
+  - Auth: Inline URL-based authentication (API key in URL)
+
+- OpenStreetMap (via Leaflet) - Base map tiles
+  - Integration: Free tile service via Leaflet
+  - Auth: No authentication required
 
 ## Data Storage
 
 **Databases:**
 
-**Relational (Device metadata, users, configuration):**
-- MySQL 5.7+ (via JNDI datasource)
-  - Connection: `java:comp/env/jdbc/iotter2` (JNDI name)
-  - Client: EclipseLink 2.6.2 JPA provider
-  - Driver: mysql-connector-j 8.0.33
-  - Configuration file: `iotter-backend/src/main/resources/persistence.default.properties`
-  - ORM: Spring Data JPA 2.7.18 with repository pattern
-  - Repositories: `iotter-backend/src/main/java/it/thisone/iotter/persistence/repository/`
+- **MySQL** (Relational)
+  - Connection: JNDI lookup at `java:comp/env/` via `iotter-flow-backend`
+  - Client: EclipseLink JPA (Jakarta Persistence 3.1.0)
+  - Config: `iotter-backend/src/main/java/it/thisone/iotter/config/PersistenceJPAConfig.java`
+  - Driver: MySQL Connector/J 8.3.0
+  - DataSource: Tomcat JDBC connection pool
+  - Purpose: Device metadata, user accounts, configuration, alerts
   - Entities: `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/`
-  - DDL generation: `create-or-extend-tables` (can be overridden to drop-and-create)
 
-**Time-series (IoT device measurements):**
-- Apache Cassandra 4.x
-  - Connection: Native transport protocol on port 9042
-  - Contact points: `cassandra.cluster` (default: docker_cassandra)
-  - Keyspace: `cassandra.keyspace` (default: aernet)
-  - Client: Spring Data Cassandra 3.4.18
-  - Driver: DataStax java-driver-core 4.17.0
-  - Configuration: `iotter-cassandra/src/main/java/it/thisone/iotter/config/CassandraConfig.java`
-  - Data access: `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/`
-  - TTL: Configurable per data type (default measurements TTL: 604800 seconds = 7 days)
-  - Rollup jobs: Scheduled cron job for data aggregation (default: every 2 hours `0 0 0/2 * * ?`)
-  - Replication: Simple strategy with configurable replication factor (default: 1)
-  - Data serialization: Jackson CBOR format for binary efficiency
+- **Apache Cassandra** (Time-Series)
+  - Connection: Direct cluster connection configured in `iotter-cassandra/src/main/java/it/thisone/iotter/config/CassandraConfig.java`
+  - Client: Spring Data Cassandra 4.4.3 + DataStax Java Driver 4.17.0
+  - Purpose: High-frequency telemetry, sensor readings, time-windowed data
+  - Config: External `cassandra.properties` file (classpath resource)
+  - Keyspace: Auto-created on startup (master node only)
+  - Replication: Configurable (default: 1)
+  - Entities: `iotter-cassandra-model/src/main/java/it/thisone/iotter/cassandra/entity/`
 
 **File Storage:**
-- Local filesystem only - No cloud storage integration
-  - Export files (CSV, Excel, PDF) written to temp directory
-  - Exported files attached to email notifications
-  - No persistent cloud storage backend configured
+- Local filesystem only - No cloud storage integration detected
 
 **Caching:**
-- EHCache 2.6.9 - In-memory cache (local, not distributed)
-  - Used for: JPA entity caching, query result caching
-  - Configuration: Spring `@EnableCaching` annotation
-  - Not suitable for multi-node deployments without coordination
+- Spring Cache abstraction enabled in `PersistenceJPAConfig` and `CassandraConfig`
+- Implementation: Not explicitly configured (likely defaults to No-Op cache)
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Custom Spring Security implementation (no OAuth/SAML)
-  - Configuration: `it.thisone.iotter.config.SecurityConfig` (excluded from component scan in `Application.java`)
-  - Password encoding: BCryptPasswordEncoder (Spring Security Crypto 5.8.15)
-  - Implementation: Form-based login via Spring Security
+- Custom Spring Security implementation
+- Location: `iotter-flow-rest/src/main/java/it/thisone/iotter/config/SecurityConfig.java`
 
-**User Management:**
-- Local user database in MySQL
-  - Service: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java`
-  - Entities: User model in `it.thisone.iotter.persistence.model`
-  - Default user: `supervisor.user` and `supervisor.pass` from bootstrap.properties
+**Implementation Details:**
+- Session-based authentication via Spring Security
+- Single session per user enforced: `sessionManagement.maximumSessions(1)`
+- SessionRegistry implementation: `SessionRegistryImpl`
+- Password encoding: BCrypt (via `BCryptPasswordEncoder`)
+- No OAuth2/OpenID Connect detected
+- No LDAP/SSO integration detected
 
-**Authorization:**
-- Spring Security roles and permissions
-- Device-based access control (users assigned to devices)
+**User Details:**
+- Adapter: `iotter-integration/src/main/java/it/thisone/iotter/security/UserDetailsAdapter.java`
+- User service: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java`
+
+## Messaging
+
+**MQTT** (IoT Device Communication)
+- Broker Connection: TCP/IP configured in `iotter-mqtt/src/main/java/it/thisone/iotter/config/MqttConfig.java`
+- Client Library: Eclipse Paho 1.2.5
+- Framework: Spring Integration MQTT 6.4.3
+- Connection Details:
+  - Host: Configurable via `mqtt.properties`
+  - Port: Configurable (default: 1883)
+  - QoS: Configurable (inbound: default 2, outbound: default 0)
+  - Client ID: Generated dynamically with application name prefix
+  - Auth: Optional username/password from `mqtt.properties`
+  - Max inflight: 32000
+  - Retained messages: Disabled
+
+**Channels:**
+- Inbound: `MqttPahoMessageDrivenChannelAdapter` (managed by Spring Integration)
+  - Topic subscriptions: Dynamically configured per device
+  - Auto-startup: Disabled by default
+  - Payload: Raw bytes
+  - Scheduler: Thread pool task scheduler
+
+- Outbound: `MqttPahoMessageHandler`
+  - Default retained: False
+  - Default async: False
+
+**Message Routing:**
+- Location: `iotter-mqtt/src/main/java/it/thisone/iotter/mqtt/`
+- Pattern: Spring Integration message-driven channel adapters
+- Processing: Asynchronous via `@Async` annotation
+
+## Email Notifications
+
+**Email Service:**
+- Implementation: `iotter-integration/src/main/java/it/thisone/iotter/integration/EmailService.java`
+- Transport: Jakarta Mail (Angus Mail 2.0.3)
+- Configuration: Spring `JavaMailSender` bean in `IntegrationConfig`
+
+**Email Features:**
+- Template rendering: Apache Velocity 1.7
+- Supported types: Text, HTML, attachments (MIME multipart)
+- Mock implementation: `iotter-integration/src/main/java/it/thisone/iotter/config/JavaMailSenderMock.java`
+- Location: `iotter-integration/src/main/resources/mail.properties` (configuration file)
+
+**Message Types:**
+- Notifications via `NotificationService`
+- Alarms via `AlarmService`
+- Exports via `ExportService`
+
+## Job Scheduling
+
+**Quartz Scheduler** (Transitive via Cassandra config)
+- Framework: Quartz 2.2.1
+- Configuration: `iotter-core/src/main/java/it/thisone/iotter/config/QuartzConfig.java`
+- Factory Bean: `SchedulerFactoryBean`
+- Custom Job Factory: `AutowiringSpringBeanJobFactory` for Spring autowiring support
+
+**Scheduled Jobs:**
+- Location: `iotter-core/src/main/java/it/thisone/iotter/quartz/`
+- Health Check Job: `HealthCheckJob` - Periodic health monitoring
+- Rollup Job: `RollupCronJob` - Time-series data aggregation
+- Custom cron expressions in `QuartzConfig` constants (e.g., every 10s, 30s, 5m, etc.)
+
+**Datasource:**
+- Uses JNDI lookup via `lookUpDataSource()` in QuartzConfig
+- Direct connection pool lookup at: `java:comp/env/`
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- Not detected - No external error tracking service (Sentry, Rollbar, etc.)
+- No dedicated error tracking service detected (Sentry, Datadog, etc.)
+- Default Java exception handling
 
 **Logs:**
-- SLF4J 1.7.36 (facade)
-- Configuration via Log4J or Logback (implementation in classpath)
-- Component-based logging categories:
-  - `Constants.AsyncExecutor.LOG4J_CATEGORY` - Async operations
-  - `Constants.MQTT.LOG4J_CATEGORY` - MQTT integration
-  - `Constants.Notifications.LOG4J_CATEGORY` - Email/alerts
-  - `Constants.RollUp.ROLL_UP_LOG4J_CATEGORY` - Data rollup jobs
-- EclipseLink logging: Configured via `eclipselink.logging.level` property
+- Framework: SLF4J 2.0.16 (facade)
+- Logger category constants: `Constants.LOG4J_CATEGORY` throughout modules
+- Categories: AsyncExecutor, MQTT, Cassandra, Notifications, etc.
+- Implementation: Not specified (runtime selection via SLF4J bindings)
+
+**Metrics:**
+- Spring Management endpoints: `/actuator` endpoints available
+  - Shutdown endpoint: Enabled (`management.endpoints.shutdown.enabled=true`)
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Spring Boot executable JAR deployment
-- Embedded Tomcat servlet container (spring-boot-starter-web)
-- Expected deployment environment: Application server with JNDI datasource configuration
+- Not specified - Can run on any Java application server
+- Tested with: Tomcat (embedded via Spring Boot)
+- Embedded Jetty: Used for integration tests
 
 **CI Pipeline:**
-- Not detected - No GitHub Actions, Jenkins, GitLab CI configuration visible
-- Maven-based local builds only
+- Not detected in codebase - External CI/CD system assumed
+
+**Build Process:**
+- Maven multi-module builds
+- Vaadin frontend compilation via `vaadin-maven-plugin:prepare-frontend` (dev)
+- Vaadin frontend optimization via `vaadin-maven-plugin:build-frontend` (production)
+- Spring Boot fat JAR packaging via `spring-boot-maven-plugin`
 
 ## Environment Configuration
 
-**Required env vars:**
-- Database connection (via JNDI):
-  - Tomcat/servlet container JNDI datasource `jdbc/iotter2` must be configured
-- Cassandra cluster:
-  - `cassandra.cluster` - Host(s) for Cassandra connectivity
-  - `cassandra.keyspace` - Keyspace name
-- MQTT broker:
-  - `mqtt.host` - MQTT broker address
-  - `mqtt.port` - MQTT port (optional, defaults to 1883)
-- SMTP:
-  - `mail.smtp.host` - Email server
-  - `mail.smtp.username` - SMTP auth username
-  - `mail.smtp.password` - SMTP auth password (CRITICAL: Must be externalized from default properties)
+**Required Environment Variables:**
+- Database connection properties (JNDI datasource configuration)
+- MQTT broker host and port
+- MQTT broker credentials (if authentication enabled)
+- Cassandra cluster contact points and port
+- Email server SMTP configuration (host, port, credentials)
 
-**Secrets location:**
-- DANGER: Hard-coded in `smtp.default.properties`:
-  - `mail.smtp.password=G!uliano_2016` (SECURITY ISSUE)
-  - Should be moved to environment variables or encrypted property source
-- Bootstrap defaults in `bootstrap.properties`:
-  - `supervisor.user=supervisor` (default admin)
-  - `supervisor.pass=iotter` (default password - should be changed on first run)
-- Cassandra replication properties in system properties or `cassandra.properties`
+**Configuration File Locations:**
+- Classpath properties files:
+  - `cassandra.properties` - Cassandra connection and replication
+  - `mqtt.properties` - MQTT broker connection details
+  - `mail.properties` - Email server configuration
+  - `quartz.properties` - Job scheduler configuration
+  - `application.properties` - Application-level settings
+
+**Secrets Storage:**
+- Environment variables expected (external configuration)
+- `mqtt.properties` contains credentials (username/password)
+- JNDI datasources managed by application server
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- Not detected - No webhook endpoints for external systems
+- REST endpoints defined in `iotter-rest-endpoints/` module
+- Jersey 2.x REST framework (JAX-RS 3.1.0)
+- Config: `iotter-rest-endpoints/src/main/java/it/thisone/iotter/config/JerseyConfig.java`
+- JSON serialization: Custom Jackson configuration with GZIP compression support
+
+**Device Data Endpoints:**
+- DataPoint ingestion endpoints
+- Device status endpoints
+- Configuration endpoints
 
 **Outgoing:**
-- Not detected - No outbound webhooks to external services
-- Internal event publishing via Spring's `EventBus` for intra-system communication
-  - UI module publishes/listens to domain events for reactive updates
+- None detected (no outbound webhooks/callbacks to external services)
+- Internal event bus via Spring Event mechanism
+- Location: `iotter-core/src/main/java/it/thisone/iotter/config/EventBusConfig.java`
 
-## Data Serialization
+## Data Export
 
-**JSON:**
-- Jackson 2.8.5 - JSON serialization for REST APIs and inter-component communication
-  - REST models: `iotter-rest-model/src/main/java/it/thisone/iotter/rest/model/`
-  - Annotations: `com.fasterxml.jackson` (JsonInclude, JsonProperty, etc.)
+**Export Formats:**
+- CSV - Via Apache Commons CSV
+- Excel (.xlsx, .xls) - Via Apache POI 5.2.5
+- PDF - Via iText 5.5.13.1
 
-**Binary Formats:**
-- CBOR (Concise Binary Object Representation):
-  - jackson-dataformat-cbor 2.8.5 - Efficient binary serialization for Cassandra
-  - Used for storing/retrieving data points in time-series database
-  - Mapper configured in `CassandraConfig`: `cborMapper()` bean
-
-## Export Capabilities
-
-**Data Export Formats:**
-- CSV - Apache Commons CSV 1.0
-- Excel - Apache POI 3.13 (poi, poi-ooxml)
-- PDF - iTextPDF 5.3.4
-- All exports: `iotter-exporter/src/main/java/it/thisone/iotter/exporter/`
-- Exported files sent via email or downloaded by users
+**Export Service:**
+- Location: `iotter-integration/src/main/java/it/thisone/iotter/integration/ExportService.java`
+- Event: `ExportStartEvent` published on UI
+- Processing: Asynchronous via `@Async`
+- Delivery: Email attachment or download
 
 ---
 
-*Integration audit: 2026-02-02*
+*Integration audit: 2026-03-23*

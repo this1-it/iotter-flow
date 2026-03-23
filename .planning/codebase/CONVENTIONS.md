@@ -1,284 +1,225 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-02-02
+**Analysis Date:** 2026-03-23
 
 ## Naming Patterns
 
 **Files:**
-- View classes: `*View.java` (e.g., `LoginScreen.java`, `MainView.java`, `UsersView.java`)
-- Form classes: `*Form.java` (e.g., `UserForm.java`)
-- Service classes: `*Service.java` (e.g., `UserService.java`, `NetworkService.java`)
-- Helper/Utility classes: `*Helper.java`, `*Utils.java` (e.g., `UIEventBusHelper.java`, `MapUtils.java`)
-- DAO/Repository interfaces: `I*Dao.java` (e.g., `IUserDao.java`, `INetworkDao.java`)
-- Custom field components: `*Select.java`, `*Field.java` (e.g., `RoleSelect.java`, `GeoLocationField.java`)
-- Integration test classes: `*IT.java` (e.g., `LoginScreenIT.java`, `AboutViewIT.java`)
+- Classes: PascalCase (e.g., `UserService`, `MainLayout`, `GraphicFeedForm`)
+- Test classes: Test name + `IT` suffix for integration tests (e.g., `LoginScreenIT.java`, `AboutViewIT.java`)
+- Test base classes: `Abstract` prefix (e.g., `AbstractViewTest.java`)
+- Test element classes (TestBench): Component name + `Element` suffix (e.g., `LoginFormElement`, `MainLayoutElement`)
 
-**Packages:**
-- Lowercase, hierarchical organization (e.g., `it.thisone.iotter.persistence.service`)
-- View packages by feature: `it.thisone.iotter.ui.users`, `it.thisone.iotter.ui.authentication`, `it.thisone.iotter.ui.about`
-- Shared components: `it.thisone.iotter.ui.common`
-- Event system: `it.thisone.iotter.ui.eventbus`
-- Configuration: `it.thisone.iotter.config`, `it.thisone.iotter.i18n`
-
-**Classes:**
-- PascalCase: `UserForm`, `LoginScreen`, `MainLayout`, `UserService`
-- Interfaces: Prefixed with `I`: `IUserDao`, `IDeviceUiFactory`, `IMainUI`
-- Enums: PascalCase (e.g., `AccountStatus`, `NetworkGroupType`, `TracingAction`)
-
-**Methods:**
-- camelCase: `buildUI()`, `populateFields()`, `navigateAfterLogin()`, `isCreateBean()`, `setRequiredIndicatorVisible()`
-- Boolean getters: `isReadOnly()`, `isCreateBean()`, `hasRole()`, `containsNetwork()`
-- Builder methods: `build*()` (e.g., `buildLoginInformation()`, `buildFailureMessage()`)
-- Helper methods: `get*()`, `load*()`, `create*()` (e.g., `getFieldsLayout()`, `loadNetworks()`, `createFormLayout()`)
+**Functions/Methods:**
+- camelCase (e.g., `findDeviceCacheable()`, `getUnitOfMeasureName()`, `ensureFieldsInitialized()`)
+- Accessor methods follow Java conventions: `get`/`set` prefixes (e.g., `getCurrentUser()`, `setCurrentUser()`)
+- Boolean methods may use `is` prefix (e.g., `isReadOnly()`, `isUsingHub()`)
 
 **Variables:**
-- camelCase: `username`, `accountStatus`, `firstName`, `loginForm`, `selectedGroups`
-- Constants: `UPPERCASE_WITH_UNDERSCORES` (e.g., `SESSION_AUTHENTICATION_KEY`, `VIEW_NAME`)
-- Serialization: `serialVersionUID` (e.g., `private static final long serialVersionUID = 1L;`)
+- camelCase for local variables and fields (e.g., `currentUser`, `formLayout`, `eventPoster`)
+- Constants: UPPER_SNAKE_CASE (e.g., `ACTION_BUTTON_WIDTH`, `USE_HUB_PROPERTY`)
+- Static logger fields: `logger` or prefixed (e.g., `public static Logger logger`)
+
+**Types:**
+- Classes: PascalCase
+- Interfaces: PascalCase with optional `I` prefix (e.g., `IDeviceDao`, `IUiFactory`)
+- Enums: PascalCase (e.g., `GraphicWidgetType`, `NetworkGroupType`)
+- Packages: lowercase with dots (e.g., `it.thisone.iotter.persistence.service`)
+
+**UI Components/Views:**
+- View classes: Named by feature + `View` suffix (e.g., `MainView`, `UsersView`, `DevicesView`)
+- Form classes: Named by entity + `Form` suffix (e.g., `GraphicFeedForm`, `ChartThresholdForm`)
+- Listing classes: Named by entity + `Listing` suffix (e.g., `GraphicFeedListing`)
+- Field component classes: Named by type + `Field` suffix (e.g., `ChannelSelect`, `ChartPlotOptionsField`)
 
 ## Code Style
 
 **Formatting:**
-- Indentation: 4 spaces (observed in all source files)
-- Line endings: Unix/LF
-- Braces: K&R style (opening brace on same line): `public void method() {`
-- No automatic formatter configured in project; follow surrounding code style
+- Indentation: 4 spaces (tabs converted to spaces)
+- Braces: K&R style (opening brace on same line as declaration)
+- Line length: No strict limit enforced; aim for readability
+- No automatic formatter configured (follow surrounding code style)
 
-**Brace Usage:**
-```java
-// Good: single-line bodies get their own lines
-if (selectedNetwork == null) {
-    if (getNetwork() != null) {
-        networkSelect.setValue(getNetwork());
-    }
-}
-
-// Try-catch blocks follow same pattern
-try {
-    Authentication authentication = authManager.authenticate(...);
-} catch (AuthenticationException e) {
-    event.getSource().setError(true);
-}
-```
-
-**Line Length:**
-- Typical wrapped at 100-120 characters
-- Long method calls can span multiple lines with proper indentation
-
-**Semicolons:**
-- Always required; no Scala-style omission
+**Linting:**
+- No project-specific linting rules configured
+- Follow Java conventions and Spring best practices
 
 ## Import Organization
 
-**Order (observed pattern):**
-1. Standard Java imports (`java.*`)
-2. Java collections and utilities (`java.util.*`)
-3. Third-party libraries (Spring, Vaadin, etc.)
-4. Project-specific imports (`it.thisone.iotter.*`)
+**Order:**
+1. Standard Java imports (`java.*`, `javax.*`, `jakarta.*`)
+2. Third-party imports (Spring, Vaadin, Apache Commons, etc.)
+3. Project imports (`it.thisone.iotter.*`)
 
 **Path Aliases:**
-- No custom path aliases used
-- Full package paths in imports
-- Avoid wildcard imports (`import x.y.*;`)
+- No path aliases used; imports use full package paths
 
-**Example from LoginScreen.java:**
-```java
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.*;
-import com.vaadin.flow.component.*;
-import it.thisone.iotter.integration.AuthManager;
-import it.thisone.iotter.ui.common.AuthenticatedUser;
-```
+**Wildcard imports:**
+- Not used; explicit imports preferred
 
 ## Error Handling
 
 **Patterns:**
-- Specific exception catching: Catch specific exception types, not generic `Exception`
-  ```java
-  try {
-      Authentication authentication = authManager.authenticate(...);
-  } catch (AuthenticationException e) {
-      event.getSource().setError(true);
-      Notification.show(buildFailureMessage(e));
-  }
-  ```
+- Custom exception: `BackendServiceException` used for business logic errors
+- Service methods throw `BackendServiceException` with descriptive messages
+- DAO methods may catch generic exceptions and re-throw with context
+- Try-catch blocks used for checked exceptions; failures logged to SLF4J
 
-- Graceful degradation: Logged but non-fatal issues caught and handled
-  ```java
-  try {
-      // operation
-  } catch (IllegalArgumentException ignored) {
-      // Already unregistered or never registered
-      logger.trace("Subscriber was not registered: {}", subscriber.getClass().getSimpleName());
-  }
-  ```
-
-- Exception type checking for user messages
-  ```java
-  if (e instanceof AccountExpiredException) {
-      return getTranslation("login.account_expired");
-  }
-  if (e instanceof LockedException) {
-      return getTranslation("login.account_locked");
-  }
-  ```
-
-- Business logic exceptions: Use domain-specific exceptions like `EditorConstraintException`, `BackendServiceException`, `MaximumNumberSimultaneousLoginsException`
-
-**Silent Failures (Antipattern):**
-- Avoid empty catch blocks unless absolutely necessary and commented
-- If ignored exception: Always add comment explaining why (see UIEventBus pattern)
+**Example:**
+```java
+@Transactional
+public void create(User entity) throws BackendServiceException {
+    try {
+        userDao.create(entity);
+    } catch (Throwable t) {
+        logger.error("Error creating user", t);
+        throw new BackendServiceException("Failed to create user", t);
+    }
+}
+```
 
 ## Logging
 
-**Framework:** SLF4J with Logback
+**Framework:** SLF4J with LoggerFactory
 
-**Initialization:**
+**Logger declaration:**
 ```java
-private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-// Note: Some legacy code uses: public static Logger logger = LoggerFactory.getLogger(...);
+public static Logger logger = LoggerFactory.getLogger(ClassName.class);
 ```
 
 **Patterns:**
-- Debug logs for method entry/exit: `logger.debug("Registering subscriber: {}", subscriber.getClass().getSimpleName())`
-- Error logs for exceptions: `logger.error("{} cannot add to group {} which belongs to owner {}", user.getUsername(), group.getName(), group.getOwner())`
-- Trace logs for detail: `logger.trace("Subscriber was not registered: {}", ...)`
-- Use parameterized messages: `logger.debug("User: {}", username)` NOT `logger.debug("User: " + username)`
+- Info level: Configuration, service initialization (e.g., `logger.info("PersistenceJPAConfig initialized.")`)
+- Error level: Exceptions and failures (e.g., `logger.error("Error creating user", t)`)
+- Debug level: Detailed diagnostics in configuration (e.g., `logger.debug("AppConfig initialized")`)
+- Use parameterized logging: `logger.info("Configuring JPA DataSource: {}", env)` instead of string concatenation
 
-**Where to Log:**
-- Service layer: Log business logic events and errors
-- Event bus operations: Log subscriber registration/unregistration
-- Authentication events: Log login attempts and failures
-- Data persistence: Log create/update/delete operations
-- UI layer: Log event handling, user actions leading to state changes
+**When to log:**
+- Service initialization and configuration changes
+- Error conditions and exceptions
+- Business operation outcomes (create, update, delete)
+- Data validation failures
 
 ## Comments
 
-**When to Comment:**
-- Complex business logic that isn't obvious from reading code
-- Migration notes and compatibility workarounds (Vaadin 8 → Flow migration notes included)
-- Performance-critical sections
-- Unusual patterns or design decisions
-- API contract descriptions for public methods
+**When to comment:**
+- Algorithm-heavy code requiring explanation
+- Non-obvious business logic (e.g., validation rules, calculations)
+- Complex conditionals or state management
+- References to external specifications or standards
+- Known limitations or workarounds
 
-**Inline Comments:**
-- Precede code blocks: `// Wire up event bus for PendingChangesEvent`
-- Explain "why" not "what": Code shows what, comments explain why
-- Keep comments close to relevant code
+**JavaDoc/Documentation:**
+- Sparse use of JavaDoc in backend services
+- Method-level JavaDoc used for public API methods with `@throws` documentation
+- Class-level JavaDoc limited; code is self-documenting where possible
+- UI components include JavaDoc headers describing purpose
 
-**Disabled Code:**
-- Commented-out old implementations are acceptable during migration phases
-- Example in `RoleSelect.java`: Legacy method implementations left as comments for reference
-- Example in `UserForm.java`: `//configureExclusiveGroups(...)` marked but not used
-
-**JSDoc/JavaDoc:**
-- Used for public classes and public methods
-- Format:
-  ```java
-  /**
-   * UI content when the user is not logged in yet.
-   */
-  @Route("login")
-  public class LoginScreen extends FlexLayout {
-
-      /**
-       * Register a subscriber to receive events.
-       * Call this in onAttach() of your component.
-       *
-       * @param subscriber the object with @Subscribe methods
-       */
-      public void register(Object subscriber) {
-  ```
-
-- Used for complex behaviors and contracts
-- Rarely seen on getters/setters with obvious purposes
+**Example:**
+```java
+/**
+ * Register a user device association.
+ *
+ * @param entity user entity
+ * @param serial device serial number
+ * @throws BackendServiceException if device or user not found
+ */
+public void userRegistration(User entity, String serial) throws BackendServiceException {
+    // validation and registration logic
+}
+```
 
 ## Function Design
 
-**Size:**
-- Methods are typically 10-50 lines; avoid exceeding 100 lines
-- Single responsibility: Each method does one thing
-- Example: `buildLoginInformation()` creates and returns a login info component; `login()` handles authentication flow
+**Size:** Methods average 10-50 lines; longer methods (100+ lines) are specialized like `GraphicFeedForm.getFieldsLayout()`
 
 **Parameters:**
-- Use value objects and domain entities, not primitive parameters when describing entities
-- Dependency injection for service dependencies, not parameters
-- Optional parameters: Use nullable references or builder pattern
-- Example from `UserForm`: Constructor takes all dependencies injected, entity and network passed as parameters
+- Simple types and entity objects passed as parameters
+- Collections passed as parameters for batch operations
+- Avoid builder patterns; use constructor injection for Spring components
 
 **Return Values:**
-- Void for operations (create, update, delete)
-- Domain objects for queries: `loadNetworks()` returns `List<Network>`
-- Booleans for checks: `containsNetwork()`, `isCreateBean()`
-- Components for UI building: `buildLoginInformation()` returns `Component`
+- Services return entities or collections
+- DAO methods may return null for missing entities (checked by callers)
+- Cacheable methods use null-checking: `unless="#result == null"`
+- Form methods return layout components or void
 
-**Naming Matches Purpose:**
-- `get*()`: Returns a property or related object
-- `load*()`: Fetches from a service/database
-- `build*()`: Constructs and returns a component/object
-- `create*()`: Factory method creating new instances
-- `*Listener`: Method handling events
+**Null handling:**
+- Defensive null checks before dereferencing
+- Null checks before collection operations (e.g., `if (user != null) { user.getRoles().size(); }`)
+- Optional not widely used; explicit null checks preferred
 
 ## Module Design
 
 **Exports:**
-- Spring-managed components: Use `@Component`, `@Service`, `@Controller` annotations
-- Public APIs in service layer for UI to consume
-- Package-private classes for implementation details
+- Service classes decorated with `@Service` for Spring autowiring
+- DAO interfaces (e.g., `IUserDao`) define contracts; implementations in same package
+- UI components exported as public classes in view packages
+- Util classes in `it.thisone.iotter.util` package
 
 **Barrel Files:**
-- Not used; each class in its own file
+- Not used; direct imports from specific classes preferred
 
-**Dependency Injection:**
-- Constructor injection preferred for immutable dependencies
-- `@Autowired` on constructors or field injection
-- Example from `LoginScreen`:
-  ```java
-  @Autowired
-  public LoginScreen(AuthManager authManager) {
-      this.authManager = authManager;
-  }
-  ```
+**Spring Component Annotations:**
+```java
+@Service           // Service layer classes
+@Configuration     // Configuration classes
+@Component         // Generic Spring components
+```
 
-**Spring Scopes:**
-- `@UIScope` for components tied to a single browser tab/window
-- `@Service` for singleton services
-- `@Component` with `@Scope(SCOPE_PROTOTYPE)` for components needing multiple instances (e.g., `UserForm`)
+## Transactional Boundaries
+
+**Pattern:** `@Transactional` decorator on service methods managing data modifications
+
+**Variants:**
+- `@Transactional` - Read-write transaction
+- `@Transactional(readOnly=true)` - Read-only transaction (optimization)
+- Some commented-out transactional annotations suggest migration work
+
+**Example:**
+```java
+@Transactional
+public void create(User entity) {
+    userDao.create(entity);
+}
+
+@Transactional(readOnly=true)
+public User findOne(String id) {
+    return userDao.findOne(id);
+}
+```
+
+## Caching
+
+**Pattern:** `@Cacheable` and `@CacheEvict` decorators on service methods
+
+**Common cached methods:**
+- Device lookups by serial: `@Cacheable(value = Constants.Cache.DEVICE, key="#serial")`
+- Unit of measure codes: `@Cacheable(value = Constants.Cache.UNIT_OF_MEASURE)`
+- Condition: `unless="#result == null"` prevents caching null results
+
+**Example:**
+```java
+@Cacheable(value = Constants.Cache.DEVICE, key="#serial", unless="#result == null")
+public Device findDeviceCacheable(String serial) {
+    // lookup and return
+}
+```
 
 ## Serialization
 
-**SerialVersionUID:**
-- All serializable classes include: `private static final long serialVersionUID = 1L;`
-- Format: Use `1L` regardless of actual serialization needs (historical pattern)
+**Pattern:** `private static final long serialVersionUID` field in components
 
-## Exception Naming
+**Usage:**
+- Required in Vaadin Flow components and forms (serializable across sessions)
+- Value is generated unique ID, not versioned
 
-**Domain Exceptions:**
-- `BackendServiceException`: Business logic violations, service failures
-- `EditorConstraintException`: Form validation or data constraints
-- `MaximumNumberSimultaneousLoginsException`: Login policy violations
-- Inherit from meaningful base exceptions (not raw `Exception`)
-
-## Enums and Constants
-
-**Constants Location:**
-- `it.thisone.iotter.config.Constants`: Application-wide constants (roles, field names, status values)
-- `it.thisone.iotter.ui.main.UiConstants`: UI-specific constants
-- Used for role names: `Constants.ROLE_ADMINISTRATOR`, `Constants.ROLE_SUPERUSER`, `Constants.ROLE_USER`
-
-**Enum Usage:**
-- Enums for finite, well-defined sets: `AccountStatus`, `NetworkGroupType`, `NetworkType`, `TracingAction`
-- Methods on enums for behavior: `getRole()`, `equals(String name)`
-
-## Collections
-
-**Patterns Observed:**
-- `List<T>` for ordered collections: `List<Role>`, `List<Network>`
-- `Set<T>` for unique collections: `Set<NetworkGroup>` (in User entity)
-- `Map<K,V>` for key-value: `LinkedHashMap<String, Object>` when order matters
-- Stream API: `.stream().filter().map().collect()` for transformations
-- Example: `groups.stream().filter(Objects::nonNull).forEach(groups::select);`
+**Example:**
+```java
+public class MainView extends VerticalLayout {
+    private static final long serialVersionUID = 1L;
+}
+```
 
 ---
 
-*Convention analysis: 2026-02-02*
+*Convention analysis: 2026-03-23*

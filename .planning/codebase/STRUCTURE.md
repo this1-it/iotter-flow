@@ -1,279 +1,394 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-02-02
+**Analysis Date:** 2026-03-23
 
 ## Directory Layout
 
 ```
-iotter-flow/                                  # Maven parent module
-├── iotter-core/                             # Shared domain models, enums, config
-│   └── src/main/java/it/thisone/iotter/
-│       ├── enums/                           # Domain enums (AccountStatus, NetworkType, etc.)
-│       ├── config/                          # Spring config (EventBusConfig, CachingConfig, QuartzConfig)
-│       ├── util/                            # Shared utilities
-│       ├── eventbus/                        # Application-wide event definitions
-│       ├── exceptions/                      # Domain exceptions
-│       └── concurrent/                      # Threading/concurrency utilities
+iotter-flow/                          # Maven parent project root
+├── pom.xml                           # Parent POM with modules, dependency management, Java 21 config
+├── .planning/                        # Planning and design documentation
+├── .codegraph/                       # Code knowledge graph (if initialized)
+├── .agents/                          # GSD execution plans and research
 │
-├── iotter-rest-model/                       # REST API DTOs and models
-│   └── src/main/java/it/thisone/iotter/
-│       └── rest/                            # REST request/response models
-│
-├── iotter-cassandra-model/                  # Cassandra entity definitions
-│   └── src/main/java/it/thisone/iotter/
-│       └── cassandra/model/                 # @Table entities for Cassandra
-│
-├── iotter-backend/                          # Service layer and JPA persistence
-│   └── src/main/java/it/thisone/iotter/
-│       ├── persistence/
-│       │   ├── service/                     # Business logic (UserService, DeviceService, etc.)
-│       │   ├── repository/                  # Spring Data JPA repositories
-│       │   ├── dao/                         # Data access objects
-│       │   ├── ifc/                         # DAO interfaces
-│       │   ├── model/                       # JPA @Entity classes
-│       │   ├── canonical/                   # Canonical data structures
-│       │   ├── proftpd/                     # ProFTPD integration
-│       │   └── util/                        # Persistence utilities
-│       ├── config/                          # JPA/database config
-│       └── util/                            # Backend utilities
-│
-├── iotter-cassandra/                        # Cassandra time-series data access
-│   └── src/main/java/it/thisone/iotter/
-│       ├── cassandra/                       # Query builders, client wrappers
-│       ├── quartz/                          # Scheduled jobs for Cassandra
-│       ├── exporter/                        # Data export from Cassandra
-│       └── config/                          # Cassandra connection config
-│
-├── iotter-mqtt/                             # MQTT device communication
-│   └── src/main/java/it/thisone/iotter/
-│       ├── mqtt/                            # MQTT handlers, adapters
-│       └── config/                          # MQTT/Spring Integration config
-│
-├── iotter-exporter/                         # Data export (CSV, Excel)
-│   └── src/main/java/it/thisone/iotter/
-│       └── exporter/                        # Export format handlers
-│
-├── iotter-integration/                      # Cross-module orchestration
-│   └── src/main/java/it/thisone/iotter/
-│       └── integration/                     # Email, webhooks, service coordination
-│
-├── iotter-flow-ui-core/                     # Shared UI abstractions
-│   └── src/main/java/it/thisone/iotter/
-│       ├── ui/
-│       │   ├── common/                      # BaseView, utilities
-│       │   ├── ifc/                         # UI factory interfaces
-│       │   ├── main/                        # Main UI constants/interfaces
-│       │   └── eventbus/                    # UI event definitions
-│       └── util/                            # UI utilities (PopupNotification, MapUtils)
-│
-├── iotter-flow-ui-shim/                     # Vaadin 8 → Flow compatibility
-│   └── src/main/java/it/thisone/iotter/
-│       └── ui/shim/                         # Compatibility wrappers (e.g., chart components)
-│
-├── iotter-flow-ui/                          # Spring Boot + Vaadin Flow UI
+├── iotter-core/                      # Foundation: enums, exceptions, constants
 │   ├── src/main/java/it/thisone/iotter/
-│   │   ├── ui/
-│   │   │   ├── Application.java             # Spring Boot entry point
-│   │   │   ├── MainLayout.java              # Main app layout with navigation
-│   │   │   ├── Menu.java                    # Navigation menu
-│   │   │   ├── ErrorView.java               # 404 error handler
-│   │   │   ├── AuthenticationErrorView.java # Auth error handler
-│   │   │   ├── main/
-│   │   │   │   └── MainView.java            # Root view/dashboard
-│   │   │   ├── authentication/
-│   │   │   │   ├── LoginScreen.java         # Login form
-│   │   │   │   └── CurrentUser.java         # Current user provider
-│   │   │   ├── users/
-│   │   │   │   ├── UsersView.java           # User management view
-│   │   │   │   ├── UsersListing.java        # User list component
-│   │   │   │   ├── UserDetails.java         # User detail display
-│   │   │   │   └── UserForm.java            # User edit form
-│   │   │   ├── about/
-│   │   │   │   └── AboutView.java           # About/info view
-│   │   │   ├── groupwidgets/
-│   │   │   │   └── GroupWidgetAdapterListing.java
-│   │   │   ├── eventbus/                    # UI-scoped event bus
-│   │   │   │   ├── UIEventBus.java          # UI event bus instance
-│   │   │   │   ├── UIEventBusInitializer.java
-│   │   │   │   └── UIEventBus*.java         # Supporting classes
-│   │   │   └── i18n/                        # i18n configuration
-│   │   └── config/
-│   │       ├── Application.java             # App configuration
-│   │       ├── VaadinConfig.java            # Vaadin-specific config
-│   │       ├── SecurityConfig.java          # Spring Security config
-│   │       ├── SessionRegistryConfig.java   # Session management
-│   │       └── TomcatJndiConfig.java        # JNDI data source config
-│   └── src/main/resources/
-│       ├── application.properties           # Spring Boot config
-│       ├── cassandra.properties             # Cassandra connection
-│       ├── bootstrap.properties             # Bootstrap config
-│       ├── app.properties                   # Application settings
-│       ├── messages_en.properties           # English i18n
-│       ├── messages_es.properties           # Spanish i18n
-│       ├── messages_fr.properties           # French i18n
-│       ├── messages_de.properties           # German i18n
-│       ├── messages_it.properties           # Italian i18n
-│       └── simplelogger.properties          # SLF4J config
+│   │   ├── enums/                    # DeviceType, Period, ExportFormat, Modbus*, TracingAction
+│   │   ├── eventbus/                 # Event definitions (DeviceDataMessageEvent, DeviceConfiguredEvent, etc.)
+│   │   ├── config/                   # Constants interface, SecurityConfig
+│   │   ├── concurrent/               # Async executor configuration
+│   │   ├── util/                     # Shared utility classes
+│   │   ├── exceptions/               # BackendServiceException, custom domain exceptions
+│   │   └── common/                   # Common shared logic
 │
-└── iotter-flow-it/                          # Integration tests (Vaadin TestBench)
-    └── src/test/java/...                    # *IT.java test classes
+├── iotter-backend/                   # Service & persistence layer (JPA/EclipseLink)
+│   ├── src/main/java/it/thisone/iotter/
+│   │   ├── config/                   # PersistenceJPAConfig (Entity manager, datasource, transaction manager)
+│   │   └── persistence/
+│   │       ├── service/              # UserService, DeviceService, NetworkService, etc. (@Service, @Transactional)
+│   │       ├── model/                # JPA entities (User, Device, Network, Role, Channel*, etc.)
+│   │       ├── dao/                  # Interface-based DAOs (IUserDao, IDeviceDao, INetworkDao, etc.)
+│   │       ├── ifc/                  # DAO interfaces (IUserDao.java, etc.)
+│   │       ├── repository/           # Spring Data repositories for standard CRUD
+│   │       ├── canonical/            # Canonical/DTO forms for API responses
+│   │       └── proftpd/              # FTP importer related classes
+│
+├── iotter-cassandra-model/           # Cassandra entity definitions
+│   ├── src/main/java/it/thisone/iotter/cassandra/model/
+│   │   └── [Cassandra @Table entities for time-series data]
+│
+├── iotter-cassandra/                 # Cassandra data access layer
+│   ├── src/main/java/it/thisone/iotter/
+│   │   ├── config/                   # CassandraConfig (cluster config, keyspace setup, ObjectMapper)
+│   │   └── cassandra/
+│   │       ├── CassandraClient.java  # Main client for Cassandra operations
+│   │       ├── CassandraFeeds.java   # Feed (channel data) queries
+│   │       ├── CassandraMeasures.java # Measurement (sensor reading) queries
+│   │       ├── CassandraRollup.java  # Rollup (aggregated) data operations
+│   │       ├── CassandraAlarms.java  # Alarm-related queries
+│   │       ├── CassandraAuth.java    # Authentication/authorization queries
+│   │       ├── CassandraRegistry.java # Device registry queries
+│   │       ├── *QueryBuilder.java    # Query builders (MeasuresQueryBuilder, FeedsQueryBuilder, etc.)
+│   │       ├── RollupQueries.java    # Rollup aggregation queries
+│   │       └── CustomRetryPolicy.java # Retry logic for transient failures
+│
+├── iotter-mqtt/                      # MQTT integration
+│   ├── src/main/java/it/thisone/iotter/
+│   │   ├── config/                   # MqttConfig, MqttDevelConfig (Spring Integration configuration)
+│   │   └── mqtt/
+│   │       ├── MqttInboundService.java  # Receives device messages from MQTT broker
+│   │       ├── MqttOutboundService.java # Sends configuration to devices
+│   │       └── MqttServiceException.java
+│
+├── iotter-integration/               # Background processing & integrations
+│   ├── src/main/java/it/thisone/iotter/
+│   │   ├── config/                   # IntegrationConfig (Quartz scheduler, email config, event bus)
+│   │   ├── quartz/                   # Scheduled jobs
+│   │   │   ├── RollupJob.java        # Data aggregation (min/max/avg over time windows)
+│   │   │   ├── AlarmJob.java         # Alarm evaluation and notification
+│   │   │   ├── ExporterJob.java      # Periodic data export
+│   │   │   └── HealthCheckJob.java   # Device connectivity checks
+│   │   ├── provisioning/             # Device provisioning events
+│   │   ├── security/                 # Password hashing (StandardStringDigester)
+│   │   └── AuthManager.java          # Authentication orchestration
+│
+├── iotter-exporter/                  # Data export functionality
+│   ├── src/main/java/it/thisone/iotter/exporter/
+│   │   ├── CDataPoint.java           # Export-specific data point format
+│   │   └── [Export format converters and generators]
+│
+├── iotter-rest-model/                # REST API data transfer objects
+│   ├── src/main/java/it/thisone/iotter/rest/
+│   │   ├── model/                    # DTOs (DataPoint, DataRead, DataWrite, DeviceOnlineStatus, etc.)
+│   │   └── util/                     # DataPointUtil for DTO conversion
+│
+├── iotter-rest-endpoints/            # REST API entry point
+│   ├── src/main/java/it/thisone/iotter/
+│   │   ├── config/                   # JerseyConfig (servlet registration, GZIP compression)
+│   │   └── rest/
+│   │       ├── DeviceDataService.java     # @Path("/device/data") - device measurements
+│   │       ├── DeviceConfigurationService.java # Device config CRUD
+│   │       ├── MonitorService.java        # @Path("/monitor") - health checks
+│   │       ├── LoggingFilter.java         # Request/response logging
+│   │       ├── GZIPReaderInterceptor.java # GZIP compression
+│   │       ├── GenericExceptionMapper.java # Exception → JSON response mapping
+│   │       └── ConstraintViolationExceptionMapper.java
+│
+├── iotter-rest-billings/             # Billing-related endpoints (optional module)
+│
+├── iotter-rest-client-endpoints/     # Client-specific endpoints
+│
+├── iotter-flow-rest/                 # Vaadin Flow - REST integration (if needed)
+│
+├── iotter-flow-ui-core/              # Vaadin Flow UI core components
+│   ├── src/main/java/it/thisone/iotter/
+│   │   └── ui/
+│   │       ├── ifc/                  # UI factory interfaces (IUiFactory, IDeviceUiFactory, etc.)
+│   │       └── util/                 # UI utilities (PopupNotification, MapUtils, etc.)
+│
+├── iotter-flow-ui-shim/              # Compatibility shim for chart components
+│   ├── src/main/java/it/thisone/iotter/
+│   │   └── ui/                       # Wrapper components for Vaadin Charts compatibility
+│
+├── iotter-flow-ui/                   # Main Vaadin Flow application (Spring Boot)
+│   ├── pom.xml                       # Spring Boot 3.4.3, Vaadin 24.10.0, includes DevTools
+│   ├── src/main/java/it/thisone/iotter/
+│   │   ├── Application.java          # @SpringBootApplication, AppShellConfigurator, main() entry point
+│   │   ├── ui/
+│   │   │   ├── Application.java      # (redundant with above)
+│   │   │   ├── MainLayout.java       # @RouterLayout - main app container with Menu
+│   │   │   ├── Menu.java             # Navigation menu component
+│   │   │   ├── ErrorView.java        # Error handling for 404s
+│   │   │   ├── AuthenticationErrorView.java
+│   │   │   │
+│   │   │   ├── main/
+│   │   │   │   └── MainView.java     # Dashboard/home view
+│   │   │   ├── devices/
+│   │   │   │   ├── DevicesView.java  # List/manage IoT devices (@Route)
+│   │   │   │   └── DevicesListing.java # Reusable device grid component
+│   │   │   ├── users/
+│   │   │   │   ├── UsersView.java    # User administration
+│   │   │   │   └── [User management components]
+│   │   │   ├── networks/
+│   │   │   │   ├── NetworksView.java # Network/group administration
+│   │   │   │   └── [Network components]
+│   │   │   ├── networkgroups/
+│   │   │   │   └── NetworkGroupsView.java
+│   │   │   ├── deviceconfigurations/
+│   │   │   │   └── DeviceConfigurationsView.java
+│   │   │   ├── groupwidgets/
+│   │   │   │   └── GroupWidgetsView.java # Dashboard widgets (charts, gauges)
+│   │   │   ├── tracing/
+│   │   │   │   └── TracingView.java  # Device activity/data tracing
+│   │   │   ├── modbusprofiles/
+│   │   │   │   └── ModbusProfilesView.java # Modbus configuration
+│   │   │   ├── modbusregisters/
+│   │   │   ├── channels/
+│   │   │   ├── charts/
+│   │   │   ├── graphicfeeds/
+│   │   │   ├── graphicwidgets/
+│   │   │   ├── visualizers/
+│   │   │   │   └── controlpanel/ # Visualization controls
+│   │   │   ├── maps/              # Geographic mapping
+│   │   │   ├── gridstack/         # Dashboard grid layout
+│   │   │   ├── designer/          # Widget designer
+│   │   │   ├── provisioning/      # Device provisioning UI
+│   │   │   ├── signup/            # User registration
+│   │   │   ├── authentication/
+│   │   │   │   ├── LoginScreen.java  # @Route("login") - login form
+│   │   │   │   └── CurrentUser.java  # Current user provider
+│   │   │   ├── about/
+│   │   │   │   └── AboutView.java  # About & version info
+│   │   │   ├── eventbus/
+│   │   │   │   └── [UI-level event listeners]
+│   │   │   ├── providers/
+│   │   │   │   └── [Provider factories for dependency injection]
+│   │   │   ├── common/
+│   │   │   │   ├── AuthenticatedUser.java # Current user wrapper
+│   │   │   │   └── BaseView.java    # Base class for views
+│   │   │   │
+│   │   ├── config/
+│   │   │   ├── Application.java      # Spring Boot config (excludes, component scan)
+│   │   │   ├── SecurityConfig.java   # Spring Security (session management, filter chain)
+│   │   │   └── [Other UI-specific configs]
+│   │   │
+│   │   └── i18n/
+│   │       └── [i18n support classes]
+│   │
+│   ├── src/main/resources/
+│   │   ├── application.properties    # Spring Boot config (port, logging, etc.)
+│   │   ├── messages_en.properties    # English translations
+│   │   ├── messages_de.properties    # German translations
+│   │   ├── messages_es.properties    # Spanish translations
+│   │   ├── messages_fr.properties    # French translations
+│   │   ├── messages_it.properties    # Italian translations
+│   │   ├── app.properties            # Custom application properties
+│   │   ├── bootstrap.properties      # Bootstrap/initialization config
+│   │   ├── cassandra.properties      # Cassandra connection details
+│   │   └── simplelogger.properties   # Logging configuration
+│   │
+│   └── src/main/frontend/
+│       ├── styles/
+│       │   └── shared-styles.css     # Global CSS (included in MainLayout via @CssImport)
+│       ├── [Vaadin Flow frontend code and custom components]
+│
+├── iotter-flow-it/                   # Integration tests with TestBench
+│   ├── src/test/java/it/thisone/iotter/
+│   │   └── ui/
+│   │       ├── AbstractViewTest.java # Base test class with ChromeDriver setup
+│   │       ├── authentication/
+│   │       │   └── LoginScreenIT.java
+│   │       └── about/
+│   │           └── AboutViewIT.java
+│   │
+│   └── pom.xml                       # TestBench, Failsafe, ChromeDriver plugins
+│
+└── .git/                             # Version control
 ```
 
 ## Directory Purposes
 
-**iotter-core:**
-- Purpose: Foundation module with domain models, enums, and shared Spring config
-- Contains: Enums (`AccountStatus`, `NetworkType`, `TracingAction`), utility classes, event bus factory, constants
-- Key files: `enums/`, `config/EventBusConfig.java`, `config/QuartzConfig.java`
+**Core Foundation (iotter-core):**
+- Purpose: Shared domain constants, enums, exception definitions
+- Contains: Error codes, device types, periods, event classes
+- Key files: `Constants.java`, `enums/`, `eventbus/`
 
-**iotter-backend:**
-- Purpose: Service layer and JPA persistence for relational data
-- Contains: Services (UserService, DeviceService), repositories, JPA entities, DAOs
-- Key files: `persistence/service/`, `persistence/repository/`, `persistence/model/`
+**Backend Services & Persistence (iotter-backend):**
+- Purpose: Business logic, JPA entity definitions, data access
+- Contains: Spring @Service classes managing domain operations, JPA @Entity models, DAO interfaces
+- Key files: `persistence/service/UserService.java`, `persistence/model/Device.java`, `PersistenceJPAConfig.java`
 
-**iotter-cassandra:**
-- Purpose: Time-series data access layer for telemetry and measurements
-- Contains: Query builders (MeasuresQueryBuilder, FeedsQueryBuilder), Cassandra client, rollup logic
-- Key files: `cassandra/CassandraClient.java`, `cassandra/MeasuresQueries.java`, `cassandra/RollupQueries.java`
+**Time-Series Data (iotter-cassandra, iotter-cassandra-model):**
+- Purpose: Efficient query and aggregation of IoT measurements
+- Contains: Cassandra client, query builders, rollup calculations
+- Key files: `CassandraClient.java`, `MeasuresQueryBuilder.java`, `RollupJob` processing
 
-**iotter-flow-ui:**
-- Purpose: Main web application with Spring Boot and Vaadin Flow
-- Contains: Views, components, layouts, authentication, configuration
-- Key files: `ui/Application.java` (Spring Boot entry), `ui/MainLayout.java`, `ui/authentication/`
+**REST APIs (iotter-rest-endpoints, iotter-rest-model):**
+- Purpose: External integration endpoints for device data ingestion
+- Contains: Jersey @Path services, DTO models, exception mappers
+- Key files: `DeviceDataService.java`, `DataPoint.java`, `JerseyConfig.java`
 
-**iotter-flow-ui-core:**
-- Purpose: Shared UI abstractions and event definitions
-- Contains: `BaseView`, UI event classes, UI factory interfaces
-- Key files: `ui/common/BaseView.java`, `ui/eventbus/` event definitions
+**Integration Services (iotter-integration, iotter-mqtt, iotter-exporter):**
+- Purpose: Cross-cutting concerns (scheduling, messaging, export)
+- Contains: Quartz jobs, MQTT services, event handling
+- Key files: `RollupJob.java`, `MqttInboundService.java`
 
-**iotter-flow-ui-shim:**
-- Purpose: Compatibility layer for Vaadin 8 → Flow migration
-- Contains: Wrapper components for chart and other Vaadin 8 add-ons
-- Used by: `iotter-flow-ui` for backward compatibility
+**Web UI (iotter-flow-ui, iotter-flow-ui-core, iotter-flow-ui-shim):**
+- Purpose: Vaadin Flow web application for administration
+- Contains: Views with @Route, Spring-managed components, UI factories
+- Key files: `Application.java`, `MainLayout.java`, `DevicesView.java`, `LoginScreen.java`
 
-**iotter-integration:**
-- Purpose: Cross-module orchestration, email, export, MQTT coordination
-- Contains: Email services, export coordination, domain event listeners
-- Key files: Integration service classes that coordinate between modules
-
-**iotter-mqtt:**
-- Purpose: IoT device communication via MQTT protocol
-- Contains: MQTT client configuration, message handlers, adapters
-- Key files: `mqtt/` MQTT handler classes
-
-**iotter-exporter:**
-- Purpose: Data export functionality
-- Contains: CSV/Excel export format handlers, document generators
-- Key files: Export service classes
+**Testing (iotter-flow-it):**
+- Purpose: End-to-end UI testing with TestBench
+- Contains: Vaadin TestBench integration tests
+- Key files: `*IT.java` test classes
 
 ## Key File Locations
 
 **Entry Points:**
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/Application.java`: Spring Boot application start point
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/MainLayout.java`: Main layout router for views
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/authentication/LoginScreen.java`: Login entry point
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/Application.java`: Spring Boot application entry point
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/MainLayout.java`: Main UI layout and routing container
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/config/JerseyConfig.java`: REST API servlet registration
 
 **Configuration:**
-- `iotter-flow-ui/src/main/resources/application.properties`: Spring Boot app configuration
-- `iotter-flow-ui/src/main/resources/cassandra.properties`: Cassandra connection
-- `iotter-backend/src/main/java/it/thisone/iotter/config/PersistenceJPAConfig.java`: JPA/EclipseLink setup
-- `iotter-cassandra/src/main/java/it/thisone/iotter/config/CassandraConfig.java`: Cassandra client config
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/config/SecurityConfig.java`: Spring Security
+- `iotter-backend/src/main/java/it/thisone/iotter/config/PersistenceJPAConfig.java`: JPA entity manager, datasource, transactions
+- `iotter-cassandra/src/main/java/it/thisone/iotter/config/CassandraConfig.java`: Cassandra cluster, keyspace initialization
+- `iotter-integration/src/main/java/it/thisone/iotter/config/IntegrationConfig.java`: Quartz scheduler, EventBus, background jobs
+- `iotter-mqtt/src/main/java/it/thisone/iotter/config/MqttConfig.java`: MQTT broker connection, Spring Integration channels
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/config/SecurityConfig.java`: Spring Security, session management
 
-**Core Logic:**
-- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java`: User management business logic
-- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/DeviceService.java`: Device management logic
-- `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraMeasures.java`: Time-series queries
-- `iotter-integration/`: Service orchestration and email/webhooks
+**Core Models:**
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/User.java`: User entity with roles
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/Device.java`: IoT device entity
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/Network.java`: Device network/group
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/ChannelConfiguration.java`: Sensor channel definition
+- `iotter-cassandra-model/src/main/java/it/thisone/iotter/cassandra/model/`: Cassandra @Table entities for time-series
+
+**Core Services:**
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java`: User management
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/DeviceService.java`: Device operations
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/NetworkService.java`: Network management
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/TracingService.java`: Audit/tracing
+
+**REST Services:**
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceDataService.java`: Device data ingestion API
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceConfigurationService.java`: Config management API
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/MonitorService.java`: Health check endpoints
+
+**Scheduled Jobs:**
+- `iotter-integration/src/main/java/it/thisone/iotter/quartz/RollupJob.java`: Data aggregation
+- `iotter-integration/src/main/java/it/thisone/iotter/quartz/AlarmJob.java`: Alarm evaluation
+- `iotter-integration/src/main/java/it/thisone/iotter/quartz/ExporterJob.java`: Data export
+
+**Views:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/authentication/LoginScreen.java`: Login
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/main/MainView.java`: Dashboard
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/devices/DevicesView.java`: Device list/admin
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/users/UsersView.java`: User administration
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/groupwidgets/GroupWidgetsView.java`: Dashboard widgets
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/tracing/TracingView.java`: Activity logs
+
+**UI Components & Utilities:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/Menu.java`: Navigation menu builder
+- `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/util/PopupNotification.java`: Toast notifications
+- `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/ifc/`: UI factory interfaces
 
 **Testing:**
-- `iotter-flow-it/src/test/java/`: Vaadin TestBench integration tests (*IT.java)
-- `iotter-backend/src/test/java/`: Backend unit tests (*Test.java)
+- `iotter-flow-it/src/test/java/it/thisone/iotter/ui/AbstractViewTest.java`: TestBench base class
+- `iotter-flow-it/src/test/java/it/thisone/iotter/ui/authentication/LoginScreenIT.java`: Login test
+
+**Resources:**
+- `iotter-flow-ui/src/main/resources/messages_en.properties`: English i18n strings (51.7K)
+- `iotter-flow-ui/src/main/resources/application.properties`: Spring Boot configuration
+- `iotter-flow-ui/src/main/resources/cassandra.properties`: Cassandra connection
+- `iotter-flow-ui/src/main/resources/bootstrap.properties`: Startup configuration
+- `iotter-flow-ui/src/main/frontend/styles/shared-styles.css`: Global CSS
 
 ## Naming Conventions
 
 **Files:**
-- Views: `*View.java` (e.g., `UsersView.java`, `AboutView.java`)
-- Services: `*Service.java` (e.g., `UserService.java`, `DeviceService.java`)
-- Repositories: `*Repository.java` (e.g., `UserRepository.java`, `DeviceRepository.java`)
-- DAOs: `*Dao.java` (e.g., `UserDao.java`) interfaces in `ifc/` directory
-- Models/Entities: PascalCase without suffix (e.g., `User.java`, `Device.java`)
-- Components: `*Listing.java`, `*Details.java`, `*Form.java` for UI components
-- Query Builders: `*QueryBuilder.java` (e.g., `MeasuresQueryBuilder.java`)
-- Test files: `*Test.java` (unit) or `*IT.java` (integration)
+- Views: `[Feature]View.java` (e.g., `DevicesView.java`, `UsersView.java`)
+- Services: `[Domain]Service.java` (e.g., `UserService.java`, `DeviceService.java`)
+- DAOs: `I[Domain]Dao.java` (e.g., `IUserDao.java`, `IDeviceDao.java`) - interface-based
+- Tests: `[Class]Test.java` (unit) or `[Class]IT.java` (integration/TestBench)
+- Entities: `[Domain].java` (e.g., `User.java`, `Device.java`, `Network.java`)
+- Events: `[Domain][Action]Event.java` (e.g., `DeviceConfiguredEvent.java`, `DeviceDataMessageEvent.java`)
+- Job classes: `[Action]Job.java` (e.g., `RollupJob.java`, `AlarmJob.java`)
+- Utilities: `[Domain]Utils.java` or `[Domain][Purpose].java` (e.g., `MapUtils.java`, `PopupNotification.java`)
 
 **Directories:**
-- Package structure: `it.thisone.iotter.[module].[layer]` (e.g., `it.thisone.iotter.persistence.service`)
-- UI views: Grouped by feature under `ui/` (e.g., `ui/users/`, `ui/authentication/`)
-- Services: Grouped in `persistence/service/`
-- Repositories: Grouped in `persistence/repository/`
-- Models: Grouped in `persistence/model/`
+- Feature modules: `iotter-[feature]` (e.g., `iotter-mqtt`, `iotter-cassandra`)
+- UI packages: `ui/[domain]/` (e.g., `ui/devices/`, `ui/users/`, `ui/authentication/`)
+- Service layer: `persistence/service/`
+- Model entities: `persistence/model/`
+- Data access: `persistence/dao/`, `persistence/repository/`
+- Configuration: `config/` at module root level
+- Events: `eventbus/` at core module level
+- Enums: `enums/` at core module level
+
+**Packages:**
+- Base: `it.thisone.iotter` (company domain)
+- Feature: `it.thisone.iotter.[feature]` (e.g., `it.thisone.iotter.mqtt`, `it.thisone.iotter.cassandra`)
+- Persistence: `it.thisone.iotter.persistence.[layer]` (service, model, dao, repository)
+- UI: `it.thisone.iotter.ui.[feature]` (e.g., `it.thisone.iotter.ui.devices`, `it.thisone.iotter.ui.users`)
 
 ## Where to Add New Code
 
-**New Feature (e.g., "Devices"):**
-- Primary code: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/DeviceService.java`
-- Repository: `iotter-backend/src/main/java/it/thisone/iotter/persistence/repository/DeviceRepository.java`
-- Model: `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/Device.java`
-- UI View: `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/devices/DevicesView.java`
-- Tests: `iotter-backend/src/test/java/it/thisone/iotter/persistence/service/DeviceServiceTest.java`
+**New Feature (e.g., sensor alerts):**
+- Primary code: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/AlertService.java`
+- Data model: `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/Alert.java`
+- DAO: `iotter-backend/src/main/java/it/thisone/iotter/persistence/dao/IAlertDao.java`
+- REST endpoint: `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/AlertService.java`
+- Event: `iotter-core/src/main/java/it/thisone/iotter/eventbus/AlertEvent.java`
+- UI view: `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/alerts/AlertsView.java`
+- Tests: `iotter-flow-it/src/test/java/it/thisone/iotter/ui/alerts/AlertsViewIT.java`
 
-**New UI Component:**
-- Implementation: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/` (if reusable) or `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/[feature]/` (if feature-specific)
-- Event definitions: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/eventbus/` (if needs cross-component communication)
-- Base class: Extend `BaseView` for top-level views or Vaadin layout components
+**New Cassandra Query:**
+- Add to: `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/[Purpose]QueryBuilder.java`
+- Reference in service: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/[Domain]Service.java`
 
-**New Service:**
-- Implementation: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/[Name]Service.java`
-- Interface: `iotter-backend/src/main/java/it/thisone/iotter/persistence/ifc/I[Name]Dao.java`
-- Annotation: Use `@Service` on class
-- Dependencies: Inject repositories via `@Autowired`
+**New Component/Module:**
+- Create module: `mkdir iotter-[feature]`
+- Add to parent POM: `pom.xml` (new `<module>` entry)
+- Follow standard Maven structure: `src/main/java`, `src/main/resources`, `src/test/java`
+- Create module pom.xml with parent reference and dependencies
 
-**Shared Utilities:**
-- Backend utils: `iotter-core/src/main/java/it/thisone/iotter/util/`
-- UI utils: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/util/`
-- Shared enums: `iotter-core/src/main/java/it/thisone/iotter/enums/`
-
-**Cassandra Time-Series Data:**
-- Queries: Add to `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/[Domain]Queries.java`
-- Query Builder: Add to `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/[Domain]QueryBuilder.java`
-- Models: `iotter-cassandra-model/src/main/java/it/thisone/iotter/cassandra/model/`
-
-**Integration/Orchestration:**
-- Email: `iotter-integration/src/main/java/it/thisone/iotter/integration/email/`
-- MQTT handlers: `iotter-mqtt/src/main/java/it/thisone/iotter/mqtt/`
-- Exports: `iotter-exporter/src/main/java/it/thisone/iotter/exporter/`
-
-**i18n Messages:**
-- Add keys to: `iotter-flow-ui/src/main/resources/messages_en.properties`
-- Usage in code: `getTranslation("key")` in views
+**Utilities/Helpers:**
+- Shared across modules: `iotter-core/src/main/java/it/thisone/iotter/util/`
+- UI utilities: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/util/`
+- Module-specific: `[module]/src/main/java/it/thisone/iotter/[feature]/util/`
 
 ## Special Directories
 
-**iotter-flow-ui/src/main/resources:**
-- Purpose: Application configuration and localization
-- Generated: No
+**iotter-flow-ui/src/main/frontend/ (Frontend Assets):**
+- Purpose: Vaadin Flow client-side resources, custom components, styles
+- Generated: No (managed by developer)
 - Committed: Yes
-- Contains: property files for app config, Cassandra, logging, i18n
+- Webpack 4 bundles frontend resources during Maven build
+- CSS imported via @CssImport annotations in Java components
 
-**iotter-flow-ui/src/main/webapp:**
-- Purpose: Static web assets (images, icons)
-- Generated: No
-- Committed: Yes
-- Contains: `icons/`, `img/` directories with PNG files
+**iotter-flow-ui/target/ (Build Output):**
+- Purpose: Compiled WAR, generated frontend bundles
+- Generated: Yes (mvn package)
+- Committed: No
+- Contains compiled classes, Vaadin bundled resources
 
-**iotter-flow-ui/target:**
-- Purpose: Maven build output and Vaadin frontend build
-- Generated: Yes (by Maven)
-- Committed: No (in .gitignore)
-- Contains: Compiled classes, bundled frontend, war/jar artifacts
+**iotter-cassandra-model/ (Cassandra Entities):**
+- Purpose: Separate from main backend model for time-series-specific annotations
+- Contains: @Table entities for Cassandra (not JPA)
+- Usage: Referenced by iotter-cassandra layer, not JPA persistence
 
-**iotter-flow-ui/frontend:**
-- Purpose: Vaadin Flow client-side components and resources
-- Generated: Partially (by vaadin-maven-plugin during build)
-- Committed: Yes
-- Contains: CSS, TypeScript, HTML fragments for custom components
+**iotter-flow-ui-shim/ (Compatibility Layer):**
+- Purpose: Bridge chart components from Vaadin 8 to Flow
+- Contains: Wrapper/proxy classes for chart compatibility
+- Usage: Included in UI module for gradual migration
+
+**iotter-rest-* Modules:**
+- `iotter-rest-model/`: DTO definitions for REST API contracts
+- `iotter-rest-endpoints/`: Main REST service implementations
+- `iotter-rest-billings/`, `iotter-rest-client-endpoints/`: Optional feature-specific endpoints
+- `iotter-rest-cod-endpoints/`, `iotter-rest-sat-endpoints/`: Commented out (inactive)
 
 ---
 
-*Structure analysis: 2026-02-02*
+*Structure analysis: 2026-03-23*

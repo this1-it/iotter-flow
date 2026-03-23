@@ -1,393 +1,574 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-02-02
+**Analysis Date:** 2026-03-23
 
-## Vaadin 8 to Flow Migration Incompatibilities
+## Tech Debt
 
-**Critical Migration Anti-patterns:**
-- Issue: Code still uses `UI.getCurrent()` directly, a pattern incompatible with Vaadin Flow
-- Files:
-  - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/authentication/LoginScreen.java:110,112`
-  - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/Menu.java:70`
-  - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/MainLayout.java:49`
-  - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/AuthenticationErrorView.java:33`
-  - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/eventbus/UIEventBusHelperFactory.java:42`
-  - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/eventbus/UIEventBus.java:71`
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/UIUtils.java:275`
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/MarkupsUtils.java:354,356`
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/export/ExportDialog.java:498`
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/export/EnhancedFileDownloader.java:150`
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/charts/ChannelUtils.java:117`
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/util/MapUtils.java:73`
-- Impact: These calls will fail at runtime in Vaadin Flow; Flow requires dependency injection and explicit service wiring
-- Fix approach: Replace all `UI.getCurrent()` usages with injected dependencies or UI scoped beans; refactor to use Flow's service injection patterns
+### Incomplete Vaadin 8 to Flow Migration
 
-**IMainUI Interface References (Legacy Pattern):**
-- Issue: `IMainUI` interface pattern used to pull services from Spring context; no longer supported in Vaadin Flow
-- Files:
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/main/IMainUI.java` - interface definition
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/UIUtils.java:48` - imports/uses IMainUI
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/AbstractWidgetVisualizer.java:70,71` - casts UI to IMainUI
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/MarkupsUtils.java:30,356` - casts to IMainUI
-  - `iotter-flow-ui-core/src/main/java/it/thisone/iotter/util/MapUtils.java:26,73` - uses IMainUI pattern
-- Impact: Component access to Spring context will fail; breaks dependency injection model
-- Fix approach: Remove IMainUI interface entirely; inject services directly into components via Spring's `@Autowired` or constructor injection
+**Issue:** Large portions of the UI codebase still contain Vaadin 8 patterns and APIs that are not compatible with Vaadin Flow (14.8.14). Migration is incomplete and blocking further UI development.
 
----
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/devices/DeviceRollup.java` - Manual refactor required for dialogs/tabs/legacy layout
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/visualizers/ControlPanelBaseAdapter.java` (786 lines) - Window/Dialog replacement issues, GridLayout/FormLayout conversion gaps, TabSheet replacement incomplete
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/AbstractChartAdapter.java` (621 lines) - Legacy IMainUI/UIUtils context access, dialog/window handling incomplete
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/designer/ResizePanel.java` - Absolute layout emulation, replaceComponent semantics not available
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/TypeVarMultiTraceAdapter.java` - Still contains Vaadin 8 APIs
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/TableAdapter.java` - Still contains Vaadin 8 APIs
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/maps/DevicesGoogleMap.java` - Marker click listeners integration incomplete
+- `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/designer/IPlaceHolder.java` - Needs refactor to component base class
 
-## Incomplete Feature Implementations
+**Related issues:** 35 TODO(flow-migration) comments throughout codebase indicating incomplete migrations
 
-**Summary Measure Statistics (Cassandra Model):**
-- Issue: Multiple unsupported statistic types have TODO markers indicating missing implementation
-- Files: `iotter-cassandra-model/src/main/java/it/thisone/iotter/cassandra/model/SummaryMeasure.java:147,168-170`
-- Unsupported qualifiers:
-  - `INSTANT_MIN` (line 168)
-  - `INSTANT_MAX` (line 169)
-  - `ALM` (line 170)
-- Current behavior: Falls back to `stats.getMean()` for these types, silently losing qualifier intent
-- Impact: Data aggregation queries return incorrect statistics; users cannot rely on ALM/INSTANT_* measures
-- Priority: Medium - affects data accuracy for specific measure types
-- Fix approach: Implement proper handling for each qualifier type or explicitly raise exception if unsupported
+**Impact:**
+- UI components may malfunction or display incorrectly
+- New features cannot be reliably added to affected UI areas
+- Performance issues may occur with workaround code
+- Testing and validation gaps introduced
 
-**Exporter Job Scheduler:**
-- Issue: `destroy()` method has empty implementation with TODO comment
-- Files: `iotter-integration/src/main/java/it/thisone/iotter/integration/ExporterJobScheduler.java:31-34`
-- Impact: Scheduler may not clean up properly on application shutdown; potential resource leaks or orphaned jobs
-- Fix approach: Implement proper Quartz scheduler shutdown (e.g., `scheduler.shutdown()`)
-
-**Authentication Audit Logging:**
-- Issue: Two login-related methods in UserService are unimplemented stubs
-- Files: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java:108-115`
-  - `registerLogin()` - TODO: register last login date, reset failures
-  - `registerLoginFailure()` - TODO: increase failure counter, lock user
-- Impact: No login attempt tracking, no brute-force protection, no security audit trail
-- Priority: High - security gap
-- Fix approach: Implement login tracking with timestamp and failure counter; add lockout logic after N failures
+**Fix approach:**
+- Complete Chart adapter migrations first (AbstractChartAdapter, TypeVarMultiTraceAdapter, TableAdapter are critical visualization paths)
+- Migrate ControlPanelBaseAdapter to use Vaadin Flow Dialog/Tabs/FormLayout patterns
+- Complete map component listener integration
+- Remove legacy UIUtils/IMainUI dependency injection patterns
+- Use dependency injection for service access instead of UIUtils pattern
+- Migrate plan tracked in `.agents/vaadin14-ui-core-migration/PLAN.md` and related agent plans
 
 ---
 
-## Unimplemented Abstract Methods
+### Chart.js Adapter Gaps vs Highcharts
 
-**FileBuilder Export Methods:**
-- Issue: Abstract method stubs with "TODO Auto-generated" comments
-- Files: `iotter-exporter/src/main/java/it/thisone/iotter/exporter/filegenerator/FileBuilder.java:122,178`
-- Impact: File export functionality incomplete; export may fail at runtime
-- Fix approach: Implement required export format generation methods
+**Issue:** Migration from Highcharts (Vaadin 8) to Chart.js (Vaadin Flow) has feature/API mismatches. Not all visual behaviors map 1:1.
 
-**CassandraExportQuery Methods:**
-- Issue: Unimplemented methods with TODO comments
-- Files: `iotter-exporter/src/main/java/it/thisone/iotter/exporter/cassandra/CassandraExportQuery.java:256,262`
-- Impact: Export queries incomplete; export workflow cannot execute
-- Fix approach: Complete Cassandra query implementation for export
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/HistogramChartAdapter.java` - Column padding and tooltip templates don't map directly
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/VariationChartAdapter.java` - Column padding and tooltip inconsistencies
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/WindRoseChartAdapter.java` (265 line comment) - Polar stacked wind-rose petals approximated with radar datasets, not exact match
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/MultiTraceChartAdapter.java` - Marker-reference arrow symbols unavailable in Chart.js
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/TandemTraceChartAdapter.java` - zoomType(X) behavior has no direct Chart.js API
 
-**Configuration.java Chart Shim:**
-- Issue: TODO Auto-generated comment in Vaadin 8 compatibility shim
-- Files: `iotter-flow-ui-shim/src/main/java/com/vaadin/addon/charts/model/Configuration.java:844`
-- Impact: Chart compatibility may be incomplete
-- Fix approach: Complete the chart compatibility implementation
+**Impact:**
+- Historical chart exports may show different visual formatting than expected
+- Wind rose and multi-trace charts show approximations, not exact mathematical representations
+- Tooltip behavior differs from legacy charts
+- Zoom functionality limited
 
----
-
-## Debug Code Left in Production
-
-**Email Service Debug Flag:**
-- Issue: Hardcoded `DEBUG = true` flag in EmailService permanently enables JavaMail debug output
-- Files: `iotter-integration/src/main/java/it/thisone/iotter/integration/EmailService.java:68`
-- Usage: `((JavaMailSenderImpl) mailSender).getSession().setDebug(DEBUG);` (line 250)
-- Impact: Debug logs spam email session details in production; potential exposure of SMTP credentials/config in logs
-- Priority: High - security concern
-- Fix approach: Move to configuration property (`application.properties` or environment variable); default to false for production
+**Fix approach:**
+- Document visual differences between legacy and current renderings
+- Implement custom Chart.js plugins for missing features (arrow markers, exact zoom behavior)
+- Add tooltip configuration standardization across all chart types
+- Consider creating wrapper layer for consistent tooltip/padding behavior
 
 ---
 
-## Code Comments and Documentation Issues
+### Incomplete Auto-Generated Stubs in UI
 
-**Unfinished Widget Code:**
-- Issue: Incomplete TODO comment in GroupWidget model
-- Files: `iotter-backend/src/main/java/it/thisone/iotter/persistence/model/GroupWidget.java:74` - just "// TODO"
-- Impact: Unclear what needs to be done; code intent undocumented
-- Fix approach: Either complete the TODO or remove obsolete marker
+**Issue:** Multiple UI components have auto-generated TODO stubs indicating incomplete implementation or placeholder code generation.
 
-**Widget Positioning Logic:**
-- Issue: TODO comment indicating incomplete positioning feature
-- Files: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/AbstractWidgetVisualizer.java:112`
-- Description: "TODO assign properly 'top','left','right' and 'bottom' to specify the position"
-- Impact: Widget positioning may not work correctly in custom layouts
-- Fix approach: Implement proper CSS positioning or raise warning if feature not available
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/signup/SignUpWizard.java` - 4 auto-generated method stubs
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/channels/ChannelRemoteControlListing.java` - Auto-generated method stubs
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/signup/LegalInfoStep.java` - 5 auto-generated method stubs
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/signup/CredentialStep.java` - 4 auto-generated method stubs
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/channels/ChannelAlarmListing.java` - Auto-generated method stubs
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/designer/ResizePanel.java` - Auto-generated method stub
+- `iotter-exporter/src/main/java/it/thisone/iotter/exporter/filegenerator/FileBuilder.java` - Auto-generated stubs
+- `iotter-exporter/src/main/java/it/thisone/iotter/exporter/cassandra/CassandraExportQuery.java` - Auto-generated stubs
+- `iotter-integration/src/main/java/it/thisone/iotter/integration/ExporterJobScheduler.java` - Auto-generated stub
+- `iotter-integration/src/main/java/it/thisone/iotter/integration/RecoveryService.java` - Auto-generated stub
 
-**Field Component TODOs (Migration Incomplete):**
-- Issue: Multiple incomplete field implementations with TODO comments
-- Files: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/fields/NetworkGroupSelect.java:46,80,83,101,114`
-  - Missing validator implementation (line 46)
-  - Network selection handling incomplete (line 80,83)
-  - Pending validators (line 101)
-  - Value change listener awaiting migration (line 114)
-- Impact: Form field validation and event handling incomplete; users may input invalid data
-- Fix approach: Complete Vaadin Flow field migration for these components
+**Impact:**
+- Sign-up workflow may be incomplete or non-functional
+- Channel alarm and remote control features untested
+- Export functionality may not work properly
+- Missing error handling
 
----
-
-## Brute-Force Protection and Security Gaps
-
-**Missing Login Failure Tracking:**
-- Issue: `registerLoginFailure()` method is empty stub with no implementation
-- Files: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java:113-115`
-- Impact: No brute-force attack prevention; accounts vulnerable to password guessing
-- Blocked by: Requires implementation of failure counter and lockout mechanism
-- Priority: High - security vulnerability
-- Fix approach: Track failed login attempts per user; lock account after configurable threshold (e.g., 5 failures)
+**Fix approach:**
+- Complete implementation of all auto-generated stubs
+- Add proper error handling and validation
+- Create tests to ensure workflows function end-to-end
 
 ---
 
-## Large Classes and Complexity
+## Known Bugs
 
-**Services with Excessive Complexity:**
-- SubscriptionService: 1432 lines
-  - Files: `iotter-integration/src/main/java/it/thisone/iotter/integration/SubscriptionService.java`
-  - Reason: Event listeners for MQTT, device updates, modbus profiles consolidated in single class
-  - Risk: Hard to test, modify, or debug; high cognitive load
-  - Recommendation: Break into smaller focused services (e.g., MqttEventHandler, DeviceStatusManager, ModbusEventHandler)
+### Broken SimpleDateFormat Pattern "XXX"
 
-- DeviceService: 934 lines
-  - Files: `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/DeviceService.java`
-  - Reason: Handles device CRUD, channel management, widget management, modbus registration
-  - Risk: Difficult to maintain; high coupling between concerns
-  - Recommendation: Extract concerns into DeviceChannelManager, WidgetOrchestrator, ModbusRegistrationService
+**Issue:** Multiple files use SimpleDateFormat with "XXX" pattern which is not a valid Java SimpleDateFormat pattern. This will cause parsing/formatting failures or exceptions at runtime.
 
-- ChartUtils: 860 lines
-  - Files: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/charts/ChartUtils.java`
-  - Reason: Consolidated chart configuration and rendering logic
-  - Risk: Brittle; difficult to add chart types or modify visualization logic
-  - Recommendation: Create chart type-specific builders/factories
+**Symptoms:**
+- IllegalArgumentException when formatting timestamps with timezone information
+- Timezone display broken in UI
+- Date/time operations fail silently or throw exceptions
 
----
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/networks/NetworkForm.java:129` - formatTimeZone method
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/controls/TimeIntervalField.java:101` - Time display
+- `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/fields/TimeZoneSelect.java:46` - Timezone formatting
 
-## Commented Out Code and Disabled Features
+**Trigger:** Access any timezone selection UI, try to display time with zone offset
 
-**Disabled EventBus Wiring:**
-- Issue: EventBus dependency commented out in multiple services
-- Files:
-  - `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/DeviceService.java:72-73` - EventBus commented
-  - `iotter-integration/src/main/java/it/thisone/iotter/integration/config/IntegrationConfig.java:54-55` - EventBus commented
-  - `iotter-core/src/main/java/it/thisone/iotter/eventbus/EventBusWrapper.java:43` - AsyncEventBus commented
-- Impact: Unclear if event publishing is disabled intentionally or accidentally; event-driven features may not work
-- Fix approach: Either restore EventBus wiring with clear documentation or remove commented code entirely
+**Workaround:** None - must be fixed
 
-**Disabled DAO Autowiring:**
-- Issue: FtpUserDao autowiring commented out
-- Files: `iotter-backend/src/main/java/it/thisone/iotter/persistence/dao/FtpUserDao.java:39`
-- Impact: FTP user functionality may be non-functional
-- Fix approach: Either restore with documentation or remove if feature is deprecated
-
-**Commented Cassandra Initialization:**
-- Issue: Multiple catch blocks commented in CassandraInitializator
-- Files: `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraInitializator.java:352`
-- Impact: Error handling disabled; application may crash without proper recovery on Cassandra connection failure
-- Fix approach: Restore proper exception handling or document why it's disabled
+**Fix:** Replace "XXX" with valid SimpleDateFormat pattern:
+- "Z" for timezone offset (e.g., +0000)
+- "z" for timezone identifier (e.g., GMT)
+- "X" for ISO 8601 offset variant (Java 7+)
 
 ---
 
-## Broad Exception Handling
+### DEBUG Flag Hard-coded to true in EmailService
 
-**Swallowed Exceptions:**
-- Issue: Multiple locations catch generic `Exception` and either log or swallow without proper recovery
-- Files:
-  - `iotter-integration/src/main/java/it/thisone/iotter/integration/RecoveryService.java:324` - empty catch block
-  - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/users/UsersListing.java:439,459` - catches Exception with minimal handling
-  - `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraRollup.java:95,114` - broad Exception catches
-- Impact: Difficult to diagnose failures; errors silently fail or produce vague log messages
-- Fix approach: Catch specific exception types (e.g., `CassandraException`, `BackendServiceException`) and implement meaningful recovery or re-throw
+**Issue:** EmailService has DEBUG flag set to true, enabling JavaMail debug output which exposes sensitive information and degrades performance.
 
----
+**Files:** `iotter-integration/src/main/java/it/thisone/iotter/integration/EmailService.java:68`
 
-## Test Coverage Gaps
+**Symptoms:**
+- JavaMail session debug output includes SMTP credentials/traffic in logs
+- Performance degradation from verbose logging
+- Sensitive email content may appear in log files
 
-**Minimal Unit Test Coverage:**
-- Issue: Only 1 unit test file found across entire codebase (`*Test.java`)
-- Files: `iotter-backend/src/test/java/` - essentially empty
-- Impact: Core business logic untested; regressions undetected; refactoring risky
-- Critical untested areas:
-  - Device registration and activation logic
-  - User authentication and authorization
-  - Cassandra time-series queries
-  - MQTT message processing
-  - Email notification service
-- Priority: High - affects code confidence and maintainability
-- Fix approach: Implement unit tests for services layer, especially UserService, DeviceService, CassandraService
+**Impact:**
+- Security risk: credentials and email content visible in logs
+- Production logs become bloated
+- Debugging harder due to noise
 
-**Integration Test Sparseness:**
-- Issue: Only 2 integration tests found (`*IT.java`): LoginScreenIT.java, AboutViewIT.java
-- Files: `iotter-flow-it/src/test/java/it/thisone/iotter/ui/`
-- Impact: Major UI flows and backend integrations untested
-- Missing test coverage:
-  - Device creation and management workflows
-  - Data export functionality
-  - Chart rendering and widget management
-  - MQTT device provisioning
-- Fix approach: Add comprehensive Vaadin TestBench integration tests for critical user workflows
+**Fix approach:**
+- Move DEBUG flag to environment configuration or application properties
+- Default to false in production
+- Make configurable per environment
+- Ensure log files do not capture sensitive email content
 
 ---
 
-## Dependency and Version Concerns
+### Unimplemented Authentication/Authorization Methods in UserService
 
-**Outdated Dependencies:**
-- Jackson 2.8.5 (from 2015) - known vulnerabilities
-  - Files: `pom.xml:35`
-  - Risk: JSON processing security issues
-  - Recommendation: Update to Jackson 2.17+ (latest security fixes)
+**Issue:** UserService has TODO markers for critical security methods that are not implemented.
 
-- Log4j 1.2.17 (EOL since 2015) - known vulnerabilities
-  - Files: `pom.xml:39`
-  - Risk: Logging system has unfixed security issues
-  - Recommendation: Migrate to Log4j 2.x or keep SLF4j with Logback
+**Files:**
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java:113` - registerLogin() not implemented
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java:117` - registerLoginFailure() not implemented
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java:257,272` - Role extension checks incomplete
 
-- Hibernate Validator 5.1.1 (2015) - very outdated
-  - Files: `pom.xml:34`
-  - Recommendation: Update to 8.x (compatible with Java 8)
+**Impact:**
+- User login tracking absent
+- Failed login attempts not tracked/logged
+- Account lockout on repeated failed attempts not enforced
+- Role delegation logic incomplete
 
-- EclipseLink 2.6.2 (2017) - outdated JPA provider
-  - Files: `pom.xml:37`
-  - Impact: Missing modern ORM features and bug fixes
-  - Recommendation: Update to 4.x or migrate to Hibernate 6.x
+**Fix approach:**
+- Implement last login timestamp tracking
+- Implement failed login counter with exponential backoff
+- Add account lockout after N failed attempts
+- Complete role extension validation logic
 
-- Spring Data Cassandra 2.2.14 - several versions behind current
-  - Files: `pom.xml:28`
-  - Impact: Missing latest Cassandra driver optimizations
-  - Recommendation: Update to 3.4.18+ (current as of 2026)
+---
+
+### Channel Summary Measure Statistics Not Fully Supported
+
+**Issue:** SummaryMeasure contains unsupported statistic types with explicit TODOs marking them.
+
+**Files:** `iotter-cassandra-model/src/main/java/it/thisone/iotter/cassandra/model/SummaryMeasure.java:147-170`
+
+**Symptoms:**
+- INSTANT_MIN, INSTANT_MAX, ALM statistics return no data or null values
+- Alarms and instant measurements may show incorrect aggregations
+- Data exports missing critical statistics
+
+**Impact:** Medium - affects alarm thresholds and real-time data accuracy
+
+**Fix approach:**
+- Implement missing statistic calculations for INSTANT_MIN/MAX
+- Add ALM (Alarm) statistic aggregation logic
+- Test against actual IoT device data
+
+---
+
+## Security Considerations
+
+### User Context Not Properly Validated in Channel Listing
+
+**Issue:** Channel UI listings have TODO comments indicating missing authenticated user context validation for role-based filtering.
+
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/channels/ChannelListing.java:301`
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/channels/ChannelRemoteControlListing.java:300`
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/channels/ChannelGrid.java:180`
+
+**Risk:** Users may see channels they shouldn't have access to if role filtering is not properly implemented
+
+**Current mitigation:** Spring Security role checks at controller level (incomplete UI-level validation)
+
+**Recommendations:**
+- Inject AuthenticatedUser context into all listing components
+- Validate user permissions before rendering sensitive channels
+- Add unit tests for permission-based data filtering
+
+---
+
+### REST Endpoints Lack Comprehensive Input Validation
+
+**Issue:** REST services have minimal @Valid annotation usage and constraint violation handling is limited.
+
+**Files:**
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceConfigurationService.java` - 3 @Valid annotations across 1122 lines
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceDataService.java` - 2 @Valid annotations across 990 lines
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/ConstraintViolationExceptionMapper.java` - Exception handling exists but minimal validation
+
+**Risk:**
+- SQL injection via unvalidated parameters
+- Type coercion attacks
+- Business logic bypass through malformed input
+- DoS via large payloads
+
+**Recommendations:**
+- Add @Valid, @NotNull, @NotBlank annotations to all REST parameters
+- Implement size/pattern validators for string inputs
+- Add comprehensive ConstraintViolationException handling
+- Add request size limits in Jersey/Tomcat configuration
 
 ---
 
 ## Performance Bottlenecks
 
-**Synchronous Email Processing:**
-- Issue: EmailService methods are not documented as async; may block on SMTP operations
-- Files: `iotter-integration/src/main/java/it/thisone/iotter/integration/EmailService.java:75-88`
-- Impact: Email sending delays can block device data processing or UI requests
-- Fix approach: Mark methods with `@Async` annotation or ensure called from background thread
+### Large Monolithic Service Classes
 
-**Cassandra Query Filtering:**
-- Issue: Multiple ALLOW FILTERING queries used in time-series queries
-- Files: `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/AlarmsQueryBuilder.java:107,113`
-- Impact: Scans entire partition (expensive); will slow down as data grows
-- Fix approach: Re-design schema or implement client-side filtering instead of Cassandra-side ALLOW FILTERING
+**Issue:** Multiple core service classes exceed 1000 lines, making them difficult to test, maintain, and optimize.
 
-**Chart Rendering Large Datasets:**
-- Issue: ChartUtils may render full dataset in memory without pagination/windowing
-- Files: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/charts/ChartUtils.java`
-- Impact: Browser memory exhaustion; UI freezes with large device datasets
-- Fix approach: Implement data windowing, sampling, or lazy-loading in chart components
+**Files:**
+- `iotter-integration/src/main/java/it/thisone/iotter/integration/SubscriptionService.java` (1422 lines) - Main event handler for device subscriptions and data processing
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/devices/DevicesListing.java` (1164 lines) - Device management UI
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceConfigurationService.java` (1122 lines) - Device configuration REST API
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceDataService.java` (990 lines) - Data ingestion endpoint
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/DeviceService.java` (934 lines) - Device persistence layer
+- `iotter-backend/src/main/java/it/thisone/iotter/util/BacNet.java` (918 lines) - BACnet protocol utilities
 
----
+**Cause:**
+- Complex device management logic combined with UI layer
+- Multiple responsibilities mixed (data access, caching, event publishing)
+- No separation between query builders and query execution
 
-## Configuration and Secrets Management
+**Impact:**
+- Difficult to test individual features
+- Cache coherency hard to maintain
+- Memory pressure from large object instantiation
+- Slower compilation times
 
-**Hardcoded Debug Settings:**
-- Issue: EmailService has hardcoded `DEBUG = true` (line 68)
-- Files: `iotter-integration/src/main/java/it/thisone/iotter/integration/EmailService.java:68`
-- Impact: Debug logs exposed in production; potential credential exposure
-- Fix approach: Move to `application.properties` with environment-specific profiles
-
-**Cron Job Hardcoded:**
-- Issue: ExporterJobScheduler has hardcoded cron schedule "0 0 0/4 * * ?"
-- Files: `iotter-integration/src/main/java/it/thisone/iotter/integration/ExporterJobScheduler.java:55`
-- Impact: Schedule cannot be changed without code modification
-- Fix approach: Move to `application.properties` with property substitution
-
-**Cassandra Logger Configuration in Code:**
-- Issue: Log4j configuration embedded as comments in CassandraInitializator (lines 367-368)
-- Files: `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraInitializator.java:367-368`
-- Impact: Configuration not applied; debug logging for Cassandra driver disabled
-- Fix approach: Move to `log4j.properties` or `logback.xml`
+**Improvement path:**
+1. Extract DevicesListing into separate query layer, UI adapter layer, and presentation layer
+2. Split SubscriptionService into: EventProcessor, DeviceRegistryManager, AlarmProcessor
+3. Extract DeviceConfigurationService query logic into DeviceConfigurationQueryBuilder
+4. Use strategy pattern for device type-specific processing (BACnet, Modbus, etc.)
 
 ---
 
-## Fragile Migration Artifacts
+### Missing Query Performance Optimizations
 
-**Vaadin 8 Shim Module (Entire Module):**
-- Issue: Large compatibility layer with ~60+ auto-generated chart model classes
-- Files: `iotter-flow-ui-shim/src/main/java/com/vaadin/addon/charts/`
-- Risk: Shim adds complexity without full compatibility; chart features may work partially
-- Status: Acknowledged as "migration in progress" in CLAUDE.md
-- Recommendation: Plan incremental replacement with Vaadin Flow chart components or third-party alternatives
+**Issue:** Cassandra and JPA queries lack pagination and result limiting, potentially returning huge datasets.
 
-**UIUtils Partially Removed Methods:**
-- Issue: Many UIUtils methods are gutted (commented out) but imports remain
-- Files: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/UIUtils.java:48-395`
-- Risk: References to removed functionality will fail at runtime; confusing API
-- Fix approach: Complete removal of dead code and IMainUI references
+**Files:**
+- `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/RollupQueries.java` (696 lines)
+- `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraRollup.java` (596 lines)
 
----
+**Impact:**
+- Memory exhaustion on large device datasets
+- UI becomes unresponsive with thousands of device records
+- Export operations timeout
 
-## Custom Retry and Policy Logic
-
-**CustomRetryPolicy:**
-- Issue: Custom Cassandra retry policy implementation may diverge from current best practices
-- Files: `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CustomRetryPolicy.java:83`
-- Risk: Difficult to debug connection issues; may mask underlying problems
-- Recommendation: Review against DataStax Cassandra driver documentation; consider using default policies
-
-**CustomRoundRobinPolicy:**
-- Issue: Custom load balancing policy may have edge cases not covered
-- Files: `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CustomRoundRobinPolicy.java`
-- Risk: Uneven node utilization; potential hotspots
-- Recommendation: Test load distribution under real-world conditions
+**Improvement path:**
+- Implement cursor-based pagination for all list endpoints
+- Add result size limits (default 100, max 1000)
+- Use streaming iterators for bulk exports
+- Add database indexes on frequently queried columns
 
 ---
 
-## Missing Validator Implementations
+## Fragile Areas
 
-**NetworkGroupSelect Validators:**
-- Issue: Validator references with TODO comments indicating incomplete migration
-- Files: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/common/fields/NetworkGroupSelect.java:46,101`
-- Impact: Form fields may accept invalid input during migration period
-- Fix approach: Implement Vaadin Flow validators for network group selection
+### Chart Adapter Component Hierarchy
 
-**NetworkGroupsMembershipValidator Debug Code:**
-- Issue: Debug comment left in validator
-- Files: `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/validators/NetworkGroupsMembershipValidator.java:30`
-- Impact: Indicates incomplete testing or debugging
-- Fix approach: Remove debug marker and ensure validator tested
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/AbstractChartAdapter.java` (621 lines) - Base class
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/HistogramChartAdapter.java` - Child
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/MultiTraceChartAdapter.java` - Child
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/TypeVarMultiTraceAdapter.java` - Complex child
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/VariationChartAdapter.java` - Child
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/TandemTraceChartAdapter.java` - Child
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/WindRoseChartAdapter.java` - Child
 
----
+**Why fragile:**
+- AbstractChartAdapter contains 621 lines with multiple responsibilities (rendering, caching, event handling)
+- Child classes override methods inconsistently
+- Flow migration incomplete in base class affects all children
+- Chart.js API mismatches appear in multiple places
 
-## Session and Resource Management
+**Safe modification:**
+- Only change specific child adapter for specialized chart type
+- Do not modify AbstractChartAdapter rendering logic without testing all chart types
+- Add visual regression tests before modifying chart rendering
 
-**Unclosed Resources:**
-- Issue: Several I/O classes implement close() but no evidence of try-with-resources usage
-- Files:
-  - `iotter-cassandra/src/main/java/it/thisone/iotter/exporter/RecordPrinter.java:8` - interface definition
-  - `iotter-cassandra/src/main/java/it/thisone/iotter/exporter/ExcelPrinter.java:139,141` - close() implementation
-  - `iotter-cassandra/src/main/java/it/thisone/iotter/exporter/CSVPrinterAdapter.java:32-33` - close() implementation
-- Risk: File handles may not be released if exceptions occur during export
-- Fix approach: Use try-with-resources in all export operations to guarantee cleanup
-
----
-
-## Summary of Priorities
-
-**Critical (Security/Stability):**
-1. Brute-force protection implementation (UserService login tracking)
-2. Debug flag configuration in EmailService
-3. Broad exception handling review and specific exception catching
-4. Cassandra connection failure recovery (commented catch blocks)
-
-**High (Functional):**
-5. Vaadin Flow migration - remove all UI.getCurrent() and IMainUI patterns
-6. Test coverage expansion (unit and integration tests)
-7. Unimplemented feature stubs (Summary statistics, export builders)
-8. Update vulnerable dependencies (Jackson, Log4j, Hibernate Validator)
-
-**Medium (Code Quality):**
-9. Break down large services into focused classes (SubscriptionService, DeviceService)
-10. Replace ALLOW FILTERING with proper schema design
-11. Resource cleanup with try-with-resources
-12. Remove commented-out code and document disabled features
-
-**Low (Documentation/Cleanup):**
-13. Remove obsolete TODOs or document clearly
-14. Finalize UIUtils and remove dead code
-15. Complete Vaadin 8 shim assessment and plan replacement
+**Test coverage:** No unit tests found for chart adapters; only integration tests exist
 
 ---
 
-*Concerns audit: 2026-02-02*
+### Device Registration and Provisioning Logic
+
+**Files:**
+- `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/DeviceService.java` (934 lines)
+- `iotter-integration/src/main/java/it/thisone/iotter/integration/SubscriptionService.java` (provisioning method)
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/devices/DeviceRollup.java` (incomplete Flow migration)
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceProvisioningService.java`
+
+**Why fragile:**
+- Multiple entry points for device creation (REST, UI, Modbus provisioning)
+- Provisioning state distributed across Device, Channel, and ModbusProfile entities
+- Cache invalidation logic fragmented across services
+- Error recovery paths not well tested
+
+**Safe modification:**
+- Change one provisioning path at a time
+- Run full device lifecycle tests after any change
+- Monitor Cassandra registry consistency after provisioning
+
+**Test coverage:** Only 3 integration tests in entire project; Device provisioning untested
+
+---
+
+### Event Bus Architecture
+
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/eventbus/UIEventBus.java` - Flow replacement for Vaadin 8 UIUtils pattern
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/eventbus/UIEventBusInitializer.java`
+- `iotter-core/src/main/java/it/thisone/iotter/eventbus/EventBusWrapper.java`
+
+**Why fragile:**
+- Multiple event bus implementations (Spring EventBus, Vaadin 8 legacy, new UIEventBus)
+- Migration path from old UIUtils.getUIEventBus() to injected UIEventBus incomplete
+- Some views still use legacy patterns, others use new DI approach
+- Session handling during UI initialization can fail silently
+
+**Safe modification:**
+- Use UIEventBus exclusively, not legacy UIUtils patterns
+- Test that subscribers receive events in correct UI context
+- Verify session availability in initialization sequence
+
+---
+
+## Scaling Limits
+
+### Cassandra Connection Pool Configuration
+
+**Issue:** Cassandra driver configuration limits unknown; defaults may not scale to production load.
+
+**Files:**
+- `iotter-cassandra/src/main/java/it/thisone/iotter/config/CassandraConfig.java`
+- `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraInitializator.java` (Contains log4j debug config comments)
+
+**Current capacity:** Not documented
+
+**Limit:** Unknown - requires profiling under load
+
+**Scaling path:**
+1. Profile connection pool saturation with production-like device counts
+2. Configure appropriate pool size: max = (CPU cores * 2) + available disk spindle count
+3. Add connection pool monitoring
+4. Implement circuit breaker for Cassandra unavailability
+5. Add read replica load balancing
+
+---
+
+### JavaMail SMTP Connection Limits
+
+**Issue:** EmailService creates JavaMail sessions without connection pooling or rate limiting.
+
+**Files:**
+- `iotter-integration/src/main/java/it/thisone/iotter/integration/EmailService.java:250` - Creates new session per send
+
+**Current capacity:** Single SMTP connection
+
+**Limit:** Will fail with connection timeouts under 10+ concurrent email operations
+
+**Scaling path:**
+- Implement javax.mail.Session pooling
+- Add email queue with background worker thread
+- Implement exponential backoff for SMTP failures
+- Monitor SMTP server connection limits
+
+---
+
+### Time-Series Data Ingestion Rate
+
+**Issue:** DeviceDataService accepts POST of raw measurements but no rate limiting or batching configured.
+
+**Files:**
+- `iotter-rest-endpoints/src/main/java/it/thisone/iotter/rest/DeviceDataService.java` (990 lines)
+
+**Current capacity:** Unknown - no metrics
+
+**Limit:** Cassandra commit log may become bottleneck at 1000+ measurements/second
+
+**Scaling path:**
+1. Add rate limiting per device (e.g., 100 msg/sec per device)
+2. Implement server-side message batching before Cassandra write
+3. Add backpressure handling and queue depth monitoring
+4. Consider Cassandra batch statement consolidation
+
+---
+
+## Dependencies at Risk
+
+### Quartz Scheduler Version 2.2.1
+
+**Risk:** Quartz 2.2.1 is outdated; recommend upgrade to 2.3.x for security patches
+
+**Impact:**
+- Job execution vulnerabilities
+- Memory leaks in long-running jobs
+- No support for Java 17+ features
+
+**Files:**
+- `iotter-core/src/main/java/it/thisone/iotter/config/QuartzConfig.java`
+- `iotter-integration/src/main/java/it/thisone/iotter/quartz/RollupJob.java`
+- `iotter-cassandra/src/main/java/it/thisone/iotter/quartz/RollupCronJob.java`
+
+**Migration plan:**
+- Update Quartz to 2.3.x in pom.xml
+- Test all job types (RollupJob, ExporterJob)
+- Verify scheduler persistence continues working
+
+---
+
+### EclipseLink 2.x Compatibility with Java 21
+
+**Risk:** Project targets Java 21 but EclipseLink 4.0.4 may have issues with newer Java versions
+
+**Impact:**
+- JPA entity mapping failures
+- Query optimization problems
+- Reflection-based code generation incompatibilities
+
+**Files:**
+- `iotter-backend/src/main/java/it/thisone/iotter/config/PersistenceJPAConfig.java`
+- pom.xml: EclipseLink 4.0.4
+
+**Migration plan:**
+- Verify EclipseLink 4.0.4 compatibility with Java 21
+- Test entity fetch/persist operations
+- Profile query performance
+
+---
+
+## Test Coverage Gaps
+
+### Minimal Integration Tests for Core Flows
+
+**Issue:** Only 3 integration tests exist in `iotter-flow-it` module for entire 18-module project
+
+**Files:**
+- `iotter-flow-it/src/test/java/it/thisone/iotter/ui/authentication/LoginScreenIT.java`
+- `iotter-flow-it/src/test/java/it/thisone/iotter/ui/about/AboutViewIT.java`
+
+**Untested critical paths:**
+- Device provisioning workflow (REST + database + cache)
+- Data ingestion pipeline (REST → Cassandra → event publishing)
+- Alarm threshold evaluation and notification
+- User permission enforcement across UI
+- Chart rendering with different device types
+- Export functionality (CSV, Excel)
+- Network and group management CRUD
+
+**Risk:** High - Critical features may break undetected
+
+**Priority:** High
+
+**Recommendations:**
+1. Add integration tests for device provisioning (both REST and Modbus)
+2. Add data ingestion pipeline tests with mock Cassandra
+3. Add permission-based UI access tests
+4. Add alarm threshold evaluation tests
+5. Configure test database (embedded Cassandra or TestContainers)
+6. Set test coverage target to 70% for business logic
+
+---
+
+### No Unit Tests for Chart Adapters
+
+**Issue:** Chart rendering has complex logic but no unit tests
+
+**Files:**
+- All files in `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/`
+
+**Risk:** Regression in chart visualization goes undetected
+
+**Untested:**
+- Data series transformation and aggregation
+- Tooltip formatting
+- Zoom and pan behavior
+- Timezone handling in time axes
+
+**Recommendations:**
+1. Create ChartAdapterTest base class
+2. Add tests for each chart type with sample data
+3. Mock Chart.js component
+4. Add visual regression tests (screenshot comparison)
+
+---
+
+### Cassandra Query Testing Gaps
+
+**Issue:** Cassandra data access layer has complex queries but no unit tests
+
+**Files:**
+- `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/RollupQueries.java`
+- `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraMeasures.java`
+- `iotter-cassandra/src/main/java/it/thisone/iotter/cassandra/CassandraRollup.java`
+
+**Risk:** Data aggregation errors go undetected
+
+**Recommendations:**
+1. Use TestContainers for embedded Cassandra in tests
+2. Add tests for rollup aggregation with known datasets
+3. Test query performance on large result sets
+4. Verify timezone handling in time-series queries
+
+---
+
+## Missing Critical Features
+
+### User Login Tracking and Account Lockout
+
+**Issue:** UserService has empty implementations for login tracking and failed login handling
+
+**Problem:** Security monitoring impossible; brute force attacks not detected
+
+**Blocks:**
+- User activity audit logs
+- Compromise detection
+- Account lockout after N failed attempts
+
+**Files:** `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java:112-119`
+
+---
+
+### Role Inheritance/Delegation Validation
+
+**Issue:** UserService has incomplete role extension checking logic
+
+**Problem:** Role hierarchy may be violated; users may inherit unintended permissions
+
+**Files:** `iotter-backend/src/main/java/it/thisone/iotter/persistence/service/UserService.java:257,272`
+
+---
+
+### Responsive UI Design for Mobile
+
+**Issue:** Chart popup time controls explicitly marked as not responsive
+
+**Files:**
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/controls/TimeFieldPopup.java:111` - TODO: replace with real responsive strategy
+- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/controls/TimeFieldPopup.java:243` - TODO: mobile detection
+
+**Blocks:** Mobile device access to charts and time selection
+
+---
+
