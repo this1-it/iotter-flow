@@ -20,7 +20,6 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.sidenav.SideNav;
@@ -45,6 +44,7 @@ import it.thisone.iotter.ui.users.UsersView;
  * The main layout. Contains the navigation menu.
  */
 @CssImport("./styles/shared-styles.css")
+@CssImport(value = "./styles/app-layout.css", themeFor = "vaadin-app-layout")
 public class MainLayout extends AppLayout implements AfterNavigationObserver, BeforeEnterObserver {
         private final AuthenticatedUser authenticatedUser;
         private final H2 viewTitle;
@@ -105,9 +105,8 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
                 nav.addItem(createNavItem(DeviceConfigurationsView.VIEW_NAME, DeviceConfigurationsView.class, VaadinIcon.COGS));
                 nav.addItem(createNavItem(TracingView.VIEW_NAME, TracingView.class, VaadinIcon.ARCHIVES));
 
-                Scroller drawerScroller = new Scroller(nav);
-                drawerScroller.addClassNames("drawer-section", "app-nav");
-                addToDrawer(drawerHeader, drawerScroller);
+                nav.addClassNames("drawer-section", "app-nav");
+                addToDrawer(drawerHeader, nav);
                 updateUserInfo(authenticatedUser.get().orElse(null));
         }
 

@@ -68,9 +68,6 @@ body {
     overflow: hidden;
 }
 
-.app-nav::part(content) {
-    overflow: hidden;
-}
 
 .product-form {
     position: absolute;
