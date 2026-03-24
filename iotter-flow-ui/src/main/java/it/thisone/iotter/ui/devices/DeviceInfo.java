@@ -13,11 +13,17 @@ import java.util.stream.Collectors;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.accordion.AccordionPanel;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.provider.ListDataProvider;
 
 import it.thisone.iotter.cassandra.model.Feed;
@@ -140,7 +146,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 		grid.addClassName("smallgrid");
 		// grid.setHeightMode(HeightMode.CSS);
 		// grid.setSelectionMode(SelectionMode.SINGLE);
-		grid.setSizeFull();
+		// grid.setSizeFull();
 		grid.setEnabled(false);
 		//grid.setHeaderVisible(false);
 
@@ -155,16 +161,23 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 		ListDataProvider<GroupWidget> dataProvider = new ListDataProvider<>(new ArrayList<>(widgets));
 		grid.setDataProvider(dataProvider);
 		
-		//grid.addColumn(nameValueProvider()).setRenderer(new HtmlRenderer());
+		grid.addColumn(new ComponentRenderer<>(this::buildLinkLabel))
+				.setHeader(getI18nLabel("visualizations"))
+				.setAutoWidth(true)
+				.setFlexGrow(1)
+				.setTextAlign(ColumnTextAlign.START);
 		
 		return grid;
 	}
 	
-	// private ValueProvider<GroupWidget, String> nameValueProvider() {
-	// 	return groupWidget -> String.format("%s %s", 
-	// 			VaadinIcon.EXTERNAL_LINK.getHtml(),
-	// 			groupWidget.getName());
-	// }
+	private Component buildLinkLabel(GroupWidget groupWidget) {
+		HorizontalLayout row = new HorizontalLayout();
+		row.setPadding(false);
+		row.setSpacing(true);
+		row.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+		row.add(VaadinIcon.EXTERNAL_LINK.create(), new Span(groupWidget.getName()));
+		return row;
+	}
 
 	
 
@@ -172,37 +185,10 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 		String status = getTranslation(device.getStatus().getI18nKey());
 		Date date = device.getLastContactDate();
 		String timestamp = date != null ? ChartUtils.formatDate(date, null) : "";
-		StringBuffer sb = new StringBuffer();
-		sb.append(VaadinIcon.FLAG.create());
-		sb.append("&nbsp;");
-		sb.append(device.getSerial());
-		sb.append("&nbsp;");
-		//sb.append(VaadinIcon.COGS.getHtml());
-		sb.append("&nbsp;");
-		sb.append(status.toUpperCase());
-		sb.append("<br/>");
-		if (device.checkInactive(date)) {
-			sb.append("<span style=\"color: #ff0000;\">");
-			//sb.append(VaadinIcon.PLUG.getHtml());
-			sb.append("&nbsp;OFFLINE");
-			sb.append("&nbsp;");
-			sb.append(timestamp);
-			sb.append("</span>");
-			sb.append("&nbsp;");
-		} else {
-			//sb.append(VaadinIcon.PLUG.getHtml());
-			sb.append("&nbsp;ONLINE");
-			sb.append("&nbsp;");
-			sb.append(timestamp);
-			sb.append("&nbsp;");
-		}
-
-		Label label = new Label(sb.toString());
-		//label.addClassName(ValoTheme.LABEL_TINY);
-		label.setSizeFull();
 		VerticalLayout layout = new VerticalLayout();
 		layout.setPadding(true);
-		layout.add(label);
+		layout.setSpacing(false);
+		layout.add(buildGeneralStatusRow(status, timestamp, device.checkInactive(date)));
 		return layout;
 	}
 
@@ -210,7 +196,8 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 		Date lastContact = backendServices.getCassandraFeeds().getLastContact(device.getSerial());
 		device.setLastContactDate(lastContact);
 		VerticalLayout general = buildGeneral();
-		multicomponent.add(device.getLabel(), general);
+		AccordionPanel generalPanel = multicomponent.add("", general);
+		generalPanel.setSummary(buildDeviceSummary(lastContact));
 		//generalTab.setClassName(ValoTheme.LABEL_BOLD);
  
 		if (!device.getChannels().isEmpty()) {
@@ -222,23 +209,14 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 			if (lastContact != null && device.isRunning() && !selected.isEmpty()) {
 				multicomponent.add(getI18nLabel("measures"), buildLastMeasures(selected));
 			} else {
-				String content = String.format("%s %s", VaadinIcon.SIGNAL.create(), getI18nLabel("no_measures"));
-				Label label = new Label(content);
-				//label.addClassName(ValoTheme.LABEL_TINY);
-				label.setSizeFull();
-				general.add(label);
+				general.add(buildInfoRow(VaadinIcon.SIGNAL, getI18nLabel("no_measures")));
 			}
 
 			widgets = backendServices.getGroupWidgetService().findByDevice(device);
 			if (widgets != null && !widgets.isEmpty()) {
 				multicomponent.add(getI18nLabel("visualizations"), buildLinks());
 			} else {
-				String content = String.format("%s %s", VaadinIcon.BAR_CHART.create(),
-						getI18nLabel("no_visualizations"));
-				Label label = new Label(content);
-				//label.addClassName(ValoTheme.LABEL_TINY);
-				label.setSizeFull();
-				general.add(label);
+				general.add(buildInfoRow(VaadinIcon.BAR_CHART, getI18nLabel("no_visualizations")));
 			}
 			long count = backendServices.getCassandraAlarms().countActiveAlarms(device.getSerial());
 			boolean hasAlarms = (count > 0);
@@ -247,15 +225,92 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 				AccordionPanel alarmPanel = multicomponent.add(getI18nLabel("alarms"), buildAlarms());
 				multicomponent.open(alarmPanel);
 			} else {
-				String content = String.format("%s %s", VaadinIcon.BELL_SLASH.create(), getI18nLabel("no_alarms"));
-				Label label = new Label(content);
-				//label.addClassName(ValoTheme.LABEL_TINY);
-				label.setSizeFull();
-				general.add(label);
+				general.add(buildInfoRow(VaadinIcon.BELL_SLASH, getI18nLabel("no_alarms")));
 			}
 
 		}
 		return multicomponent;
+	}
+
+	private Component buildDeviceSummary(Date lastContact) {
+		HorizontalLayout summary = new HorizontalLayout();
+		summary.setWidthFull();
+		summary.setPadding(false);
+		summary.setSpacing(true);
+		summary.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+
+		Icon flag = VaadinIcon.FLAG.create();
+		Span label = new Span(device.getLabel());
+		label.getStyle().set("font-weight", "600");
+
+		Span serial = new Span(device.getSerial());
+		serial.getStyle().set("color", "var(--lumo-secondary-text-color)");
+
+		Span connection = buildStatusBadge(getTranslation(device.getStatus().getI18nKey()).toUpperCase(),
+				device.isRunning() ? "var(--lumo-success-color-10pct)" : "var(--lumo-contrast-10pct)",
+				device.isRunning() ? "var(--lumo-success-text-color)" : "var(--lumo-body-text-color)");
+
+		Span availability = buildStatusBadge(device.checkInactive(lastContact) ? "OFFLINE" : "ONLINE",
+				device.checkInactive(lastContact) ? "var(--lumo-error-color-10pct)" : "var(--lumo-success-color-10pct)",
+				device.checkInactive(lastContact) ? "var(--lumo-error-text-color)" : "var(--lumo-success-text-color)");
+
+		summary.add(flag, label, serial, connection, availability);
+		return summary;
+	}
+
+	private Component buildGeneralStatusRow(String status, String timestamp, boolean inactive) {
+		VerticalLayout wrapper = new VerticalLayout();
+		wrapper.setPadding(false);
+		wrapper.setSpacing(false);
+
+		HorizontalLayout primary = new HorizontalLayout();
+		primary.setPadding(false);
+		primary.setSpacing(true);
+		primary.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+		primary.add(VaadinIcon.FLAG.create(), new Span(device.getSerial()), buildStatusBadge(status.toUpperCase(),
+				"var(--lumo-contrast-10pct)", "var(--lumo-body-text-color)"));
+
+		HorizontalLayout secondary = new HorizontalLayout();
+		secondary.setPadding(false);
+		secondary.setSpacing(true);
+		secondary.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+		secondary.add(VaadinIcon.PLUG.create(),
+				buildStatusBadge(inactive ? "OFFLINE" : "ONLINE",
+						inactive ? "var(--lumo-error-color-10pct)" : "var(--lumo-success-color-10pct)",
+						inactive ? "var(--lumo-error-text-color)" : "var(--lumo-success-text-color)"));
+		if (hasText(timestamp)) {
+			Span time = new Span(timestamp);
+			time.getStyle().set("color", "var(--lumo-secondary-text-color)");
+			secondary.add(time);
+		}
+
+		wrapper.add(primary, secondary);
+		return wrapper;
+	}
+
+	private Component buildInfoRow(VaadinIcon iconType, String text) {
+		HorizontalLayout row = new HorizontalLayout();
+		row.setWidthFull();
+		row.setPadding(false);
+		row.setSpacing(true);
+		row.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+		row.add(iconType.create(), new Span(text));
+		return row;
+	}
+
+	private Span buildStatusBadge(String text, String backgroundColor, String textColor) {
+		Span badge = new Span(text);
+		badge.getStyle().set("background", backgroundColor);
+		badge.getStyle().set("color", textColor);
+		badge.getStyle().set("border-radius", "999px");
+		badge.getStyle().set("font-size", "var(--lumo-font-size-s)");
+		badge.getStyle().set("font-weight", "600");
+		badge.getStyle().set("padding", "0.15rem 0.55rem");
+		return badge;
+	}
+
+	private boolean hasText(String value) {
+		return value != null && !value.trim().isEmpty();
 	}
 
 	

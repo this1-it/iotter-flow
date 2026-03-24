@@ -40,7 +40,9 @@ mvn -pl iotter-flow-rest spring-boot:run
  mvn -pl iotter-flow-ui-core install && mvn -pl iotter-flow-ui spring-boot:run 
 
 
-
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = ["-y", "chrome-devtools-mcp@latest", "--headless", "--no-usage-statistics"]
 
 $vaadin-flow-migration migrate package iotter-flow-ui/src/main/java/it/thisone/iotter/ui/networkgroups
 
@@ -49,4 +51,6 @@ $vaadin-flow-migration migrate package iotter-flow-ui/src/main/java/it/thisone/i
 
 
 
-npm install maplibre-gl
+
+ mvn -pl iotter-flow-ui -am -Pproduction clean package
+

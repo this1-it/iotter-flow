@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -65,21 +64,7 @@ public class GridView extends VerticalLayout {
 
         add(grid3);
 
-        add(new H4("Grid pro"));
-        GridPro<Person> gridPro = new GridPro<>();
-        gridPro.addEditColumn(Person::getFirstName).text(Person::setFirstName)
-                .setHeader("First name");
-        gridPro.addEditColumn(Person::getLastName).text(Person::setLastName)
-                .setHeader("Last name");
-        gridPro.addEditColumn(Person::getEmail).text(Person::setEmail)
-                .setHeader("Email");
-        gridPro.addEditColumn(Person::getProfession).text(Person::setProfession)
-                .setHeader("Profession");
-        List<Person> people2 =  getPeople();
-        gridPro.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
-        gridPro.setItems(people2);
 
-        add(gridPro);
     }
 
     public List<Person> getPeople(){
