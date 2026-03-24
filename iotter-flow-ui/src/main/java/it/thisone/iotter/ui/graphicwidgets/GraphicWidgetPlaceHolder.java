@@ -25,8 +25,6 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.channels.ChannelGrid;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
-import it.thisone.iotter.ui.designer.PlaceHolderChangedEvent;
-import it.thisone.iotter.ui.designer.PlaceHolderRemovedEvent;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.providers.BackendServices;

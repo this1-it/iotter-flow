@@ -1,10 +1,9 @@
-package it.thisone.iotter.ui.designer;
+package it.thisone.iotter.ui.graphicwidgets;
 
-import java.io.Serializable;
 
 import com.vaadin.flow.component.ComponentEventListener;
 
-public interface PlaceHolderChangedListener extends ComponentEventListener<PlaceHolderChangedEvent>, Serializable {
+public interface PlaceHolderChangedListener extends ComponentEventListener<PlaceHolderChangedEvent> {
 	public static final String PLACE_HOLDER_CHANGED = "placeHolderChanged";
 
 	@Override

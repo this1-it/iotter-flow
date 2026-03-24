@@ -19,7 +19,7 @@ import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.model.TimePeriod;
 import it.thisone.iotter.ui.providers.BackendServices;
 
-	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
+
 public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 	private MultiTraceChartAdapter analogChartAdapter;
 	private MultiTraceChartAdapter digitalChartAdapter;
@@ -63,15 +63,11 @@ public class TypeVarMultiTraceAdapter extends AbstractChartAdapter {
 			vlayout.add(digitalChartAdapter.getChart());
 		}
 		
-		// TODO(flow-chartjs): legacy Highcharts margin alignment between split charts is not available.
+		// TODO(flow-chartjs): margin alignment between split charts is not available.
 		
 		return vlayout;
 	}
 
-	
-//	public GraphicWidget getGraphWidget() {
-//		return (GraphicWidget) getWidget();
-//	}
 
 	
 	private MultiTraceChartAdapter buildMultiTraceChart(List<GraphicFeed> feeds) {

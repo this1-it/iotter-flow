@@ -11,12 +11,11 @@
 **Files:**
 - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/devices/DeviceRollup.java` - Manual refactor required for dialogs/tabs/legacy layout
 - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/visualizers/ControlPanelBaseAdapter.java` (786 lines) - Window/Dialog replacement issues, GridLayout/FormLayout conversion gaps, TabSheet replacement incomplete
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/AbstractChartAdapter.java` (621 lines) - Legacy IMainUI/UIUtils context access, dialog/window handling incomplete
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/designer/ResizePanel.java` - Absolute layout emulation, replaceComponent semantics not available
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/TypeVarMultiTraceAdapter.java` - Still contains Vaadin 8 APIs
-- `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/charts/TableAdapter.java` - Still contains Vaadin 8 APIs
+
+
+
+
 - `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/maps/DevicesGoogleMap.java` - Marker click listeners integration incomplete
-- `iotter-flow-ui-core/src/main/java/it/thisone/iotter/ui/designer/IPlaceHolder.java` - Needs refactor to component base class
 
 **Related issues:** 35 TODO(flow-migration) comments throughout codebase indicating incomplete migrations
 

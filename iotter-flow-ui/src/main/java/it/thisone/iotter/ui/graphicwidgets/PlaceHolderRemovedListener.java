@@ -1,10 +1,8 @@
-package it.thisone.iotter.ui.designer;
-
-import java.io.Serializable;
+package it.thisone.iotter.ui.graphicwidgets;
 
 import com.vaadin.flow.component.ComponentEventListener;
 
-public interface PlaceHolderRemovedListener extends ComponentEventListener<PlaceHolderRemovedEvent>, Serializable {
+public interface PlaceHolderRemovedListener extends ComponentEventListener<PlaceHolderRemovedEvent> {
 	public static final String PLACE_HOLDER_REMOVED = "placeHolderRemoved";
 
 	@Override

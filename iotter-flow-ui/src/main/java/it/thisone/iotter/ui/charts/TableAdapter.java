@@ -27,7 +27,7 @@ import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.providers.BackendServices;
 
 
-	// TODO(flow-migration): this class still contains Vaadin 8 APIs and needs manual Flow refactor.
+
 public class TableAdapter extends AbstractChartAdapter {
 
 	/**

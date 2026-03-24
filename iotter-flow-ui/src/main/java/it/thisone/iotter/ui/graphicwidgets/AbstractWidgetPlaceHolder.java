@@ -6,13 +6,6 @@ import com.vaadin.flow.component.html.Span;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.designer.IPlaceHolder;
-import it.thisone.iotter.ui.designer.PlaceHolderChangedEvent;
-import it.thisone.iotter.ui.designer.PlaceHolderChangedListener;
-import it.thisone.iotter.ui.designer.PlaceHolderRemovedEvent;
-import it.thisone.iotter.ui.designer.PlaceHolderRemovedListener;
-import it.thisone.iotter.ui.designer.PlaceHolderSavedEvent;
-import it.thisone.iotter.ui.designer.PlaceHolderSavedListener;
 import it.thisone.iotter.ui.eventbus.GraphWidgetParamsEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.ifc.IGraphicWidgetEditor;
@@ -20,7 +13,7 @@ import it.thisone.iotter.ui.providers.BackendServices;
 
 import it.thisone.iotter.util.PopupNotification;
 
-public abstract class AbstractWidgetPlaceHolder extends BaseComponent implements IPlaceHolder {
+public abstract class AbstractWidgetPlaceHolder extends BaseComponent  {
 
     private static final long serialVersionUID = 1L;
     protected GraphicWidget entity;
@@ -83,62 +76,62 @@ public abstract class AbstractWidgetPlaceHolder extends BaseComponent implements
         return String.format("%s %s: %s", type, provider, label).trim();
     }
 
-    @Override
+
     public void addListener(PlaceHolderSavedListener listener) {
         addListener(PlaceHolderSavedEvent.class, listener);
     }
 
-    @Override
+
     public void addListener(PlaceHolderRemovedListener listener) {
         addListener(PlaceHolderRemovedEvent.class, listener);
     }
 
-    @Override
+
     public void addListener(PlaceHolderChangedListener listener) {
         addListener(PlaceHolderChangedEvent.class, listener);
     }
 
-    @Override
+
     public String getIdentifier() {
         return entity.getId();
     }
 
-    @Override
+
     public int getX() {
         return (int) entity.getX();
     }
 
-    @Override
+
     public int getY() {
         return (int) entity.getY();
     }
 
-    @Override
+
     public int getPixelWidth() {
         return (int) entity.getWidth();
     }
 
-    @Override
+
     public int getPixelHeight() {
         return (int) entity.getHeight();
     }
 
-    @Override
+
     public void setX(int value) {
         entity.setX(value);
     }
 
-    @Override
+
     public void setY(int value) {
         entity.setY(value);
     }
 
-    @Override
+
     public void setPixelWidth(int value) {
         entity.setWidth(value);
     }
 
-    @Override
+
     public void setPixelHeight(int value) {
         entity.setHeight(value);
     }

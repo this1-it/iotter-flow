@@ -28,13 +28,13 @@ import it.thisone.iotter.ui.common.BaseEditor;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
 import it.thisone.iotter.ui.common.EditorSelectedListener;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
-import it.thisone.iotter.ui.designer.PlaceHolderRemovedEvent;
-import it.thisone.iotter.ui.designer.PlaceHolderRemovedListener;
-import it.thisone.iotter.ui.designer.PlaceHolderSavedEvent;
-import it.thisone.iotter.ui.designer.PlaceHolderSavedListener;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.graphicwidgets.GraphicWidgetPlaceHolder;
+import it.thisone.iotter.ui.graphicwidgets.PlaceHolderRemovedEvent;
+import it.thisone.iotter.ui.graphicwidgets.PlaceHolderRemovedListener;
+import it.thisone.iotter.ui.graphicwidgets.PlaceHolderSavedEvent;
+import it.thisone.iotter.ui.graphicwidgets.PlaceHolderSavedListener;
 import it.thisone.iotter.ui.gridstack.GridstackBoard;
 import it.thisone.iotter.ui.gridstack.GridstackLayoutUtils;
 import it.thisone.iotter.ui.providers.BackendServices;
@@ -210,7 +210,7 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         dialog.open();
     }
 
-    @SuppressWarnings("serial")
+
     private void placeHolderListeners(GraphicWidgetPlaceHolder placeHolder) {
         placeHolder.addListener(new PlaceHolderRemovedListener() {
             @Override

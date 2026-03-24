@@ -1,4 +1,4 @@
-package it.thisone.iotter.ui.designer;
+package it.thisone.iotter.ui.graphicwidgets;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEvent;

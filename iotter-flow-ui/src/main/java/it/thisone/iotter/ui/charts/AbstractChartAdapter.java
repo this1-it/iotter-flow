@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 
 import com.google.common.collect.Range;
 import com.google.common.eventbus.Subscribe;
@@ -31,7 +30,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.shared.Registration;
 
-import it.thisone.iotter.cassandra.model.FeedKey;
 import it.thisone.iotter.cassandra.model.Interpolation;
 import it.thisone.iotter.enums.ExportFileMode;
 import it.thisone.iotter.exporter.ExportConfig;
@@ -73,14 +71,12 @@ import it.thisone.iotter.ui.uitask.UIRunnable;
  */
 
 
-// Bug #1960
-// AbstractChartAdapter : useless layout in createContentWrapper
+
 
 
 @JsModule("./src/chartjs-init.js")
 public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer implements IExportable {
-	// TODO(flow-migration): manual refactor still needed here for IMainUI/UIUtils legacy access,
-	// dialog/window handling, and Vaadin 8 layout APIs.
+
 
 	private static Logger logger = LoggerFactory.getLogger(AbstractChartAdapter.class);
 
