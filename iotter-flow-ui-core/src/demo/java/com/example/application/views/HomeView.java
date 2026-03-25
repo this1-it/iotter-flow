@@ -11,7 +11,6 @@ import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridMultiSelectionModel;
 import com.vaadin.flow.component.html.Div;
@@ -25,9 +24,10 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+
 import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
@@ -64,6 +64,8 @@ public class HomeView extends FlexLayout {
         col2.add(createGridExample());
         col2.add(createTabsExample());
         col2.add(createMessagesExample());
+        col2.add(new DialogView());
+        col2.add(new ConfirmDialogView());
 
         add(col1, col2);
     }
@@ -232,16 +234,38 @@ public class HomeView extends FlexLayout {
         radioGroupVertical.setItems("Item 1", "Item 2", "Item 3");
         radioGroupVertical.setValue("Item 1");
 
+        RadioButtonGroup<String> radioGroupHorizontal = new RadioButtonGroup<>();
+        radioGroupHorizontal.setItems("Label 1", "Label 2", "Label 3");
+        radioGroupVertical.setValue("Label 1");
+
         CheckboxGroup<String> checkboxGroupVertical = new CheckboxGroup<>();
         checkboxGroupVertical.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         checkboxGroupVertical.setLabel("Checkboxes");
         checkboxGroupVertical.setItems("Item 1", "Item 2", "Item 3");
         checkboxGroupVertical.select("Item 1");
 
+        CheckboxGroup<String> checkboxGroupHorizontal = new CheckboxGroup<>();
+        checkboxGroupHorizontal.setItems("Label 1", "Label 2", "Label 3");
 
-        left.add(basic, trailingContent, leadingIcon, supportiveText, disabledField);
-        right.add(comboBox, multiSelectComboBox, datePicker, radioGroupVertical, checkboxGroupVertical);
+
+        NumberField leadingTextField = new NumberField();
+        leadingTextField.setLabel("Balance");
+        leadingTextField.setValue(200.0);
+        Div prefix = new Div(new Text("$"));
+        leadingTextField.setPrefixComponent(prefix);
+
+        IntegerField integerField = new IntegerField();
+        integerField.setLabel("Quantity");
+        integerField.setHelperText("Max 10 items");
+        integerField.setMin(0);
+        integerField.setMax(10);
+        integerField.setValue(2);
+
+        left.add(basic, trailingContent, leadingIcon, supportiveText, leadingTextField, radioGroupVertical,radioGroupHorizontal );
+        right.add(comboBox, multiSelectComboBox, datePicker, disabledField, integerField, checkboxGroupVertical, checkboxGroupHorizontal);
         layout.add(left, right);
+
+        
         return layout;
     }
 

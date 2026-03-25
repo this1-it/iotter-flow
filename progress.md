@@ -54,3 +54,4 @@ $vaadin-flow-migration migrate package iotter-flow-ui/src/main/java/it/thisone/i
 
  mvn -pl iotter-flow-ui -am -Pproduction clean package
 
+rm -rf iotter-flow-ui/target/dev-bundle && mvn -pl iotter-flow-ui spring-boot:run

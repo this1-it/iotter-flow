@@ -16,6 +16,12 @@ public class GridView extends VerticalLayout {
     public GridView() {
         setWidth("800px");
 
+        add(new H4("Context Menu"));
+
+        add(new ContextMenuView());
+
+
+
         List<Person> people = getPeople();
 
         add(new H4("Multi-select grid"));

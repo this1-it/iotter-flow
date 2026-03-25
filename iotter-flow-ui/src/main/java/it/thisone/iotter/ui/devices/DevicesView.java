@@ -3,7 +3,7 @@ package it.thisone.iotter.ui.devices;
 import org.springframework.beans.factory.ObjectProvider;
 
 import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 
 import it.thisone.iotter.config.Constants;
@@ -15,7 +15,6 @@ import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseView;
 
 @Route(value = "devices", layout = MainLayout.class)
-@PageTitle("Devices")
 public class DevicesView extends BaseView {
 	private static final long serialVersionUID = 1L;
 

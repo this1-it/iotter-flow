@@ -24,17 +24,21 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import org.vaadin.flow.components.TabSheet;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.Version;
 
 import it.thisone.iotter.ui.MainLayout;
 
-@Route(value = "About", layout = MainLayout.class)
-@PageTitle("About")
-public class AboutView extends VerticalLayout {
+@Route(value = "about", layout = MainLayout.class)
+public class AboutView extends VerticalLayout implements HasDynamicTitle {
 
-    public static final String VIEW_NAME = "About";
+    public static final String VIEW_NAME = "about";
+
+    @Override
+    public String getPageTitle() {
+        return getTranslation("view.about");
+    }
 
     public AboutView() {
         Span versionSpan = new Span(getTranslation("about.view.version",
@@ -51,7 +55,7 @@ public class AboutView extends VerticalLayout {
         multicomponent.addTab("TreeGrid", new TreeGridView());
         multicomponent.addTab("DatePickerV", new DatePickerView());
         multicomponent.addTab("DateTimePicker", new DateTimePickerView());
-        multicomponent.addTab("Icons", buildIcons());
+        multicomponent.addTab("Vaadin Icons", buildVaadinIcons());
         multicomponent.addTab("Font Awesome Regular", buildFontAweSomeIcons());
         multicomponent.addTab("Font Awesome Solid", buildFontAweSomeSolidIcons());
 
@@ -61,7 +65,7 @@ public class AboutView extends VerticalLayout {
         setSizeFull();
     }
 
-    private Component buildIcons() {
+    private Component buildVaadinIcons() {
         List<VaadinIcon> icons = Arrays.stream(VaadinIcon.values())
                 .sorted(Comparator.comparing(VaadinIcon::name))
                 .collect(Collectors.toList());

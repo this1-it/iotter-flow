@@ -5,6 +5,7 @@
   "dependencies": {
     "@flowingcode/font-awesome-iron-iconset": "5.2.0",
     "@flowingcode/google-map": "3.9.0",
+    "@fontsource/roboto": "^5.2.10",
     "@googlemaps/markerclusterer": "2.0.8",
     "@polymer/polymer": "3.5.2",
     "@vaadin/bundles": "24.10.0",
@@ -109,7 +110,7 @@
       "workbox-core": "7.4.0",
       "workbox-precaching": "7.4.0"
     },
-    "hash": "74b2bc196e658c68786fcb1e850a653d07b369117d8b911261bd916c88e6014b"
+    "hash": "515065b0f92df96e5bf3bf2108d9a6cea84ce35c6a1a0741c193d61acf5077f6"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -208,6 +209,7 @@
     "@vaadin/grid-pro": "24.10.0",
     "@vaadin/map": "24.10.0",
     "@vaadin/rich-text-editor": "24.10.0",
-    "@flowingcode/font-awesome-iron-iconset": "$@flowingcode/font-awesome-iron-iconset"
+    "@flowingcode/font-awesome-iron-iconset": "$@flowingcode/font-awesome-iron-iconset",
+    "@fontsource/roboto": "$@fontsource/roboto"
   }
 }

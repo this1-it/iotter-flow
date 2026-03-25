@@ -1,4 +1,10 @@
 {
   "lumoImports" : [ "typography", "color", "spacing", "badge", "utility" ],
-  "parent": "parity"
+  "parent": "parity",
+  "importCss": [
+    "@fontsource/roboto/300.css",
+    "@fontsource/roboto/400.css",
+    "@fontsource/roboto/500.css",
+    "@fontsource/roboto/700.css"
+  ]
 }

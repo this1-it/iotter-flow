@@ -3,14 +3,13 @@ package it.thisone.iotter.ui.tracing;
 import org.springframework.beans.factory.ObjectProvider;
 
 import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 
 import it.thisone.iotter.ui.MainLayout;
 import it.thisone.iotter.ui.common.BaseView;
 
 @Route(value = TracingView.VIEW_NAME, layout = MainLayout.class)
-@PageTitle("Tracing")
 public class TracingView extends BaseView {
 
 	private static final long serialVersionUID = 1L;

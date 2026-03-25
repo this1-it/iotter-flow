@@ -1,3 +1,4 @@
 [part="drawer"] {
+    background-color: var(--gm-app-header-color);
     overflow: hidden;
 }

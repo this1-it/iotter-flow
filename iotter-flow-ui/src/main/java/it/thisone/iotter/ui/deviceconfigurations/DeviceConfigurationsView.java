@@ -6,7 +6,7 @@ import org.vaadin.flow.components.TabSheet;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 
 import it.thisone.iotter.ui.MainLayout;
@@ -14,7 +14,6 @@ import it.thisone.iotter.ui.common.BaseView;
 import it.thisone.iotter.ui.modbusprofiles.ModbusProfileListing;
 
 @Route(value = DeviceConfigurationsView.VIEW_NAME, layout = MainLayout.class)
-@PageTitle("Device Configurations")
 public class DeviceConfigurationsView extends BaseView {
 
 	private static final long serialVersionUID = 1L;

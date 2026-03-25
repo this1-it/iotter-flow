@@ -1,0 +1,104 @@
+/* =============================================================
+   iotter theme – layout overrides
+   Fix parity main-layout.css hardcoded colors that break dark mode
+   ============================================================= */
+
+.view-title,
+.view-toggle {
+    color: var(--lumo-tint) !important;
+}
+
+.view-header {
+    background-color: var(--gm-app-header-color) !important;
+}
+
+/* =============================================================
+   iotter theme – color customization
+   Overrides parity theme CSS variables (Lumo + parity-specific).
+   Edit the values below to restyle the entire application.
+   ============================================================= */
+
+html {
+
+    /* --- Background --- */
+    --lumo-base-color: #ffffff;
+
+    /* --- Primary color --- */
+    --lumo-primary-color:       #186ADE;
+    --lumo-primary-text-color:  #186ADE;
+    --lumo-primary-color-50pct: rgba(24, 106, 222, 0.5);
+    --lumo-primary-color-30pct: rgba(24, 106, 222, 0.3);
+    --lumo-primary-color-10pct: rgba(24, 106, 222, 0.1);
+
+    /* --- Success color --- */
+    --lumo-success-color:       #077D55;
+    --lumo-success-text-color:  #077D55;
+    --lumo-success-color-50pct: rgba(7, 125, 85, 0.5);
+    --lumo-success-color-10pct: rgba(7, 125, 85, 0.1);
+
+    /* --- Error color --- */
+    --lumo-error-color:         #D91F11;
+    --lumo-error-text-color:    #D91F11;
+    --lumo-error-color-50pct:   rgba(217, 31, 17, 0.5);
+    --lumo-error-color-10pct:   rgba(217, 31, 17, 0.1);
+
+    /* --- Foreground / text --- */
+    --lumo-body-text-color:      var(--lumo-shade);
+    --lumo-secondary-text-color: var(--lumo-shade-80pct);
+    --lumo-disabled-text-color:  #6b757c;
+
+    /* --- Shade scale (used for borders, dividers, hover states) --- */
+    --lumo-shade-5pct:  #E8EBED;
+    --lumo-shade-10pct: #DDE3E7;
+    --lumo-shade-20pct: #C3CCD5;
+    --lumo-shade-30pct: #A2B0BC;
+    --lumo-shade-40pct: #7E8F9D;
+    --lumo-shade-50pct: #607180;
+    --lumo-shade-60pct: #435361;
+    --lumo-shade-70pct: #2F3E4C;
+    --lumo-shade-80pct: #1F2B35;
+    --lumo-shade-90pct: #10171E;
+    --lumo-shade:       #0A0F14;
+
+    /* --- Parity-specific: secondary / surface / header --- */
+    --gm-primary-dark-color:    #0D4EA6;
+    --gm-app-header-color:      #11294D;
+    --gm-surface-primary-color: #F2F5F7;
+    --gm-divider-color:         var(--lumo-shade-10pct);
+}
+
+/* --- Dark mode overrides --- */
+[theme~="dark"] {
+
+    /* Background */
+    --lumo-base-color: #0e171f;
+
+    /* Primary */
+    --lumo-primary-color:       #3e8df5;
+    --lumo-primary-text-color:  #3e8df5;
+    --lumo-primary-color-50pct: rgba(62, 141, 245, 0.5);
+    --lumo-primary-color-30pct: rgba(62, 141, 245, 0.3);
+    --lumo-primary-color-10pct: rgba(62, 141, 245, 0.2);
+
+    /* Success */
+    --lumo-success-color:       #16a162;
+    --lumo-success-text-color:  #16a162;
+    --lumo-success-color-50pct: rgba(22, 161, 98, 0.5);
+    --lumo-success-color-10pct: rgba(22, 161, 98, 0.1);
+
+    /* Error */
+    --lumo-error-color:         #f95243;
+    --lumo-error-text-color:    #f95243;
+    --lumo-error-color-50pct:   rgba(249, 82, 67, 0.5);
+    --lumo-error-color-10pct:   rgba(249, 82, 67, 0.1);
+
+    /* Foreground / text */
+    --lumo-secondary-text-color: var(--lumo-contrast-80pct);
+    --lumo-disabled-text-color:  #565e64;
+
+    /* Parity-specific */
+    --gm-primary-dark-color:    #488fee;
+    --gm-app-header-color:      #04090c;
+    --gm-surface-primary-color: #1a252d;
+    --gm-divider-color:         var(--lumo-contrast-5pct);
+}

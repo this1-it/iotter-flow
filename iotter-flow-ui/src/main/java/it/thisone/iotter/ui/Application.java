@@ -27,7 +27,7 @@ import it.thisone.iotter.config.SecurityConfig;
 	        classes = SecurityConfig.class
 	    )
 	)
-@Theme("parity")
+@Theme("iotter")
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

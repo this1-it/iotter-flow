@@ -1,0 +1,114 @@
+/* =============================================================
+   iotter theme – layout overrides
+   Fix parity main-layout.css hardcoded colors that break dark mode
+   ============================================================= */
+
+.view-title,
+.view-toggle {
+    color: var(--lumo-tint) !important;
+}
+
+.view-header {
+    background-color: var(--gm-app-header-color) !important;
+}
+
+/* =============================================================
+   iotter theme – ThingsBoard color scheme
+   Based on https://eu.thingsboard.cloud/ (Material Teal palette)
+   Font: Roboto, "Helvetica Neue", sans-serif — 16px base
+   ============================================================= */
+
+html {
+
+    /* --- Typography (ThingsBoard: Roboto 16px) --- */
+    --lumo-font-family:   Roboto, "Helvetica Neue", sans-serif;
+    --lumo-font-size-xs:  0.75rem;   /* 12px */
+    --lumo-font-size-s:   0.875rem;  /* 14px */
+    --lumo-font-size-m:   1rem;      /* 16px – TB base */
+    --lumo-font-size-l:   1.125rem;  /* 18px */
+    --lumo-font-size-xl:  1.375rem;  /* 22px */
+    --lumo-font-size-xxl: 1.75rem;   /* 28px */
+
+    /* --- Background / Surface --- */
+    --lumo-base-color: #ffffff;      /* TB card/sidenav: white */
+
+    /* --- Primary color (TB toolbar: Teal 800 #00695C) --- */
+    --lumo-primary-color:       #00695C;
+    --lumo-primary-text-color:  #00695C;
+    --lumo-primary-color-50pct: rgba(0, 105, 92, 0.5);
+    --lumo-primary-color-30pct: rgba(0, 105, 92, 0.3);
+    --lumo-primary-color-10pct: rgba(0, 105, 92, 0.1);
+
+    /* --- Success color (Material Green 700) --- */
+    --lumo-success-color:       #388E3C;
+    --lumo-success-text-color:  #388E3C;
+    --lumo-success-color-50pct: rgba(56, 142, 60, 0.5);
+    --lumo-success-color-10pct: rgba(56, 142, 60, 0.1);
+
+    /* --- Error color (TB error: Material Red 500 #f44336) --- */
+    --lumo-error-color:         #F44336;
+    --lumo-error-text-color:    #D32F2F;
+    --lumo-error-color-50pct:   rgba(244, 67, 54, 0.5);
+    --lumo-error-color-10pct:   rgba(244, 67, 54, 0.1);
+
+    /* --- Foreground / text (TB: rgba(0,0,0,.87)) --- */
+    --lumo-body-text-color:      rgba(0, 0, 0, 0.87);
+    --lumo-secondary-text-color: rgba(0, 0, 0, 0.54);
+    --lumo-disabled-text-color:  rgba(0, 0, 0, 0.38);
+
+    /* --- Shade scale (Material Grey tones) --- */
+    --lumo-shade-5pct:  #F5F5F5;  /* Grey 100 */
+    --lumo-shade-10pct: #EEEEEE;  /* Grey 200 – TB page bg */
+    --lumo-shade-20pct: #E0E0E0;  /* Grey 300 */
+    --lumo-shade-30pct: #BDBDBD;  /* Grey 400 */
+    --lumo-shade-40pct: #9E9E9E;  /* Grey 500 */
+    --lumo-shade-50pct: #757575;  /* Grey 600 */
+    --lumo-shade-60pct: #616161;  /* Grey 700 */
+    --lumo-shade-70pct: #424242;  /* Grey 800 */
+    --lumo-shade-80pct: #212121;  /* Grey 900 */
+    --lumo-shade-90pct: #121212;
+    --lumo-shade:       #000000;
+
+    /* --- Parity-specific: header / surface / divider --- */
+    --gm-primary-dark-color:    #004D40;  /* Teal 900 – darker header hover */
+    --gm-app-header-color:      #00695C;  /* Teal 800 – TB toolbar exact match */
+    --gm-surface-primary-color: #EEEEEE;  /* Grey 200 – TB page background */
+    --gm-divider-color:         rgba(0, 0, 0, 0.12);
+}
+
+/* --- Dark mode overrides --- */
+[theme~="dark"] {
+
+    /* Background / Surface (Material dark surface) */
+    --lumo-base-color: #1E1E1E;
+
+    /* Primary (lighter teal for dark bg: Teal 300) */
+    --lumo-primary-color:       #4DB6AC;
+    --lumo-primary-text-color:  #4DB6AC;
+    --lumo-primary-color-50pct: rgba(77, 182, 172, 0.5);
+    --lumo-primary-color-30pct: rgba(77, 182, 172, 0.3);
+    --lumo-primary-color-10pct: rgba(77, 182, 172, 0.15);
+
+    /* Success */
+    --lumo-success-color:       #66BB6A;
+    --lumo-success-text-color:  #66BB6A;
+    --lumo-success-color-50pct: rgba(102, 187, 106, 0.5);
+    --lumo-success-color-10pct: rgba(102, 187, 106, 0.1);
+
+    /* Error */
+    --lumo-error-color:         #EF5350;
+    --lumo-error-text-color:    #EF5350;
+    --lumo-error-color-50pct:   rgba(239, 83, 80, 0.5);
+    --lumo-error-color-10pct:   rgba(239, 83, 80, 0.1);
+
+    /* Foreground / text */
+    --lumo-body-text-color:      rgba(255, 255, 255, 0.87);
+    --lumo-secondary-text-color: rgba(255, 255, 255, 0.6);
+    --lumo-disabled-text-color:  rgba(255, 255, 255, 0.38);
+
+    /* Parity-specific */
+    --gm-primary-dark-color:    #00352D;  /* Teal 900 darkened */
+    --gm-app-header-color:      #00352D;  /* Dark teal header */
+    --gm-surface-primary-color: #121212;  /* Dark page background */
+    --gm-divider-color:         rgba(255, 255, 255, 0.12);
+}

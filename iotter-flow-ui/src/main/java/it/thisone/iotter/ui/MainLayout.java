@@ -28,7 +28,7 @@ import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.server.VaadinSession;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.about.AboutView;
@@ -77,9 +77,10 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
 
                 Button searchButton = createNavbarButton(VaadinIcon.SEARCH);
                 Button notificationsButton = createNavbarButton(VaadinIcon.BELL);
+                Button darkModeButton = createDarkModeToggle();
                 MenuBar accountMenu = createAccountMenu();
 
-                HorizontalLayout navbarRight = new HorizontalLayout(searchButton, notificationsButton, userInfo, userAvatar,
+                HorizontalLayout navbarRight = new HorizontalLayout(searchButton, notificationsButton, darkModeButton, userInfo, userAvatar,
                                 accountMenu);
                 navbarRight.addClassName("navbar-right");
                 navbarRight.setSpacing(false);
@@ -97,13 +98,13 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
                 drawerHeader.addClassName("app-name");
 
                 SideNav nav = new SideNav();
-                nav.addItem(createNavItem(AboutView.VIEW_NAME, AboutView.class, VaadinIcon.INFO_CIRCLE));
-                nav.addItem(createNavItem(UsersView.VIEW_NAME, UsersView.class, VaadinIcon.USERS));
-                nav.addItem(createNavItem(DevicesView.VIEW_NAME, DevicesView.class, VaadinIcon.CONNECT));
-                nav.addItem(createNavItem(GroupWidgetsView.VIEW_NAME, GroupWidgetsView.class, VaadinIcon.CHART_LINE));
-                nav.addItem(createNavItem(NetworksView.VIEW_NAME, NetworksView.class, VaadinIcon.FILE_TREE_SUB));
-                nav.addItem(createNavItem(DeviceConfigurationsView.VIEW_NAME, DeviceConfigurationsView.class, VaadinIcon.COGS));
-                nav.addItem(createNavItem(TracingView.VIEW_NAME, TracingView.class, VaadinIcon.ARCHIVES));
+                nav.addItem(createNavItem(getTranslation("view.about"), AboutView.class, VaadinIcon.INFO_CIRCLE));
+                nav.addItem(createNavItem(getTranslation("view.users"), UsersView.class, VaadinIcon.USERS));
+                nav.addItem(createNavItem(getTranslation("view.devices"), DevicesView.class, VaadinIcon.CONNECT));
+                nav.addItem(createNavItem(getTranslation("view.groupwidgets"), GroupWidgetsView.class, VaadinIcon.CHART_LINE));
+                nav.addItem(createNavItem(getTranslation("view.networks"), NetworksView.class, VaadinIcon.FILE_TREE_SUB));
+                nav.addItem(createNavItem(getTranslation("view.deviceconfigurations"), DeviceConfigurationsView.class, VaadinIcon.COGS));
+                nav.addItem(createNavItem(getTranslation("view.tracing"), TracingView.class, VaadinIcon.ARCHIVES));
 
                 nav.addClassNames("drawer-section", "app-nav");
                 addToDrawer(drawerHeader, nav);
@@ -130,6 +131,15 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
                 ).then(String.class, tz -> {
                         VaadinSession.getCurrent().setAttribute("browserTZ", tz);
                 });
+
+                // Force teal background on drawer — overrides parity's gm-surface-primary-color
+                attachEvent.getUI().getPage().executeJs(
+                        "var layout = document.querySelector('vaadin-app-layout');" +
+                        "if (layout && layout.shadowRoot) {" +
+                        "  var drawer = layout.shadowRoot.querySelector('[part=\"drawer\"]');" +
+                        "  if (drawer) drawer.style.setProperty('background', 'var(--gm-app-header-color)', 'important');" +
+                        "}"
+                );
 
                 attachEvent.getUI()
                                 .addShortcutListener(
@@ -167,13 +177,40 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
         }
 
         private String resolvePageTitle() {
-                PageTitle pageTitle = currentView != null ? currentView.getClass().getAnnotation(PageTitle.class) : null;
-                String title = pageTitle != null ? pageTitle.value() : null;
-                return hasText(title) ? title : "Dashboard";
+                if (currentView instanceof HasDynamicTitle) {
+                        String title = ((HasDynamicTitle) currentView).getPageTitle();
+                        if (hasText(title)) return title;
+                }
+                return "Dashboard";
         }
 
         private SideNavItem createNavItem(String label, Class<? extends Component> viewClass, VaadinIcon icon) {
                 return new SideNavItem(label, viewClass, icon.create());
+        }
+
+        private Button createDarkModeToggle() {
+                Button button = new Button(VaadinIcon.MOON.create());
+                button.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+                button.getElement().setAttribute("title", "Toggle dark mode");
+                button.addClickListener(e -> button.getUI().ifPresent(ui -> ui.getPage().executeJs(
+                        "var el = document.documentElement;" +
+                        "var header = document.querySelector('.view-header');" +
+                        "var isDark = el.getAttribute('theme') === 'dark';" +
+                        "if (isDark) {" +
+                        "  el.removeAttribute('theme');" +
+                        "  if (header) {" +
+                        "    header.style.removeProperty('background-color');" +
+                        "    header.style.removeProperty('--lumo-base-color');" +
+                        "  }" +
+                        "} else {" +
+                        "  el.setAttribute('theme', 'dark');" +
+                        "  if (header) {" +
+                        "    header.style.setProperty('background-color', 'var(--gm-app-header-color)');" +
+                        "    header.style.setProperty('--lumo-base-color', 'var(--lumo-tint)');" +
+                        "  }" +
+                        "}"
+                )));
+                return button;
         }
 
         private Button createNavbarButton(VaadinIcon icon) {
@@ -188,7 +225,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
                 accountMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
 
                 MenuItem rootItem = accountMenu.addItem(VaadinIcon.ELLIPSIS_DOTS_V.create());
-                rootItem.getSubMenu().addItem("Account", event -> {
+                rootItem.getSubMenu().addItem(getTranslation("menu.account"), event -> {
                 });
                 rootItem.getSubMenu().addItem(getTranslation("menu.logout"), event -> logout());
                 return accountMenu;

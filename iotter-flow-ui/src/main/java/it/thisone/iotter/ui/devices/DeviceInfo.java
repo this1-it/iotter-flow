@@ -144,11 +144,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	protected Component buildLinks() {
 		final Grid<GroupWidget> grid = new Grid<>();
 		grid.addClassName("smallgrid");
-		// grid.setHeightMode(HeightMode.CSS);
-		// grid.setSelectionMode(SelectionMode.SINGLE);
-		// grid.setSizeFull();
 		grid.setEnabled(false);
-		//grid.setHeaderVisible(false);
 
 		grid.addSelectionListener(event -> {
 			if (event.getFirstSelectedItem().isPresent()) {
