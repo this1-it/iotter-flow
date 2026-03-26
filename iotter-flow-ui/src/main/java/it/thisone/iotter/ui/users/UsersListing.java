@@ -25,21 +25,16 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
-import com.vaadin.flow.data.value.ValueChangeMode;
 
 import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.AccountStatus;
@@ -131,77 +126,12 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
-		// --- Filter popover --- (outlined secondary style, no fill)
 		Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
+		filterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        filterButton.addThemeName("subtle");
 		buildFilterPopover(filterButton);
 
-		// --- Refresh button --- (minimal icon, no border)
-		Button refreshButton = new Button(VaadinIcon.REFRESH.create());
-		refreshButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-		refreshButton.addClickListener(e -> refreshData());
-
-		// --- Search bar (hidden by default) ---
-		HorizontalLayout searchBar = new HorizontalLayout();
-		searchBar.setWidthFull();
-		searchBar.setAlignItems(Alignment.CENTER);
-		searchBar.setSpacing(false);
-		searchBar.getStyle().set("transition", "all 0.2s ease");
-		searchBar.setVisible(false);
-
-		Icon searchPrefixIcon = VaadinIcon.SEARCH.create();
-		searchPrefixIcon.getStyle().set("margin", "0 8px");
-
-		TextField searchField = new TextField();
-		searchField.setPlaceholder(getI18nLabel("search"));
-		searchField.setValueChangeMode(ValueChangeMode.EAGER);
-		searchField.getStyle().set("flex", "1");
-		searchField.addValueChangeListener(e -> {
-			currentFilter.setSearchText(e.getValue());
-			queryDefinition.setQueryFilter(currentFilter);
-			setFilter(currentFilter);
-			refreshCurrentPage();
-		});
-
-		Button closeSearchButton = new Button(VaadinIcon.CLOSE.create());
-		closeSearchButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-
-		searchBar.add(searchPrefixIcon, searchField, closeSearchButton);
-		searchBar.setFlexGrow(1, searchField);
-
-		// --- Normal toolbar ---
-		HorizontalLayout normalBar = new HorizontalLayout();
-		normalBar.setWidthFull();
-		normalBar.setAlignItems(Alignment.CENTER);
-		normalBar.setSpacing(true);
-
-		Div spacer = new Div();
-		Button searchToggleButton = new Button(VaadinIcon.SEARCH.create());
-		searchToggleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-
-		normalBar.add(filterButton, spacer, refreshButton, searchToggleButton, createAddButton());
-		normalBar.setFlexGrow(1, spacer);
-
-		// Toggle search bar
-		searchToggleButton.addClickListener(e -> {
-			normalBar.setVisible(false);
-			searchBar.setVisible(true);
-			searchField.focus();
-		});
-		closeSearchButton.addClickListener(e -> {
-			searchField.clear();
-			currentFilter.setSearchText(null);
-			queryDefinition.setQueryFilter(currentFilter);
-			setFilter(currentFilter);
-			refreshCurrentPage();
-			searchBar.setVisible(false);
-			normalBar.setVisible(true);
-		});
-
-		HorizontalLayout toolbar = new HorizontalLayout(normalBar, searchBar);
-		toolbar.setWidthFull();
-		toolbar.setPadding(true);
-		toolbar.addClassName(TOOLBAR_STYLE);
-		toolbar.setAlignItems(Alignment.CENTER);
+		HorizontalLayout toolbar = buildSearchToolbar(filterButton, createAddButton());
 
 		getMainLayout().add(toolbar, content);
 		getMainLayout().setFlexGrow(1f, content);
@@ -222,22 +152,34 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		statusBox.setPlaceholder(getI18nLabel("any"));
 		statusBox.setWidthFull();
 
-		TextField ownerField = new TextField(getI18nLabel(OWNER));
-		ownerField.setWidthFull();
-		ownerField.setVisible(permissions.isViewAllMode());
+		ComboBox<String> ownerBox = new ComboBox<>(getI18nLabel(OWNER));
+		ownerBox.setWidthFull();
+		ownerBox.setClearButtonVisible(true);
+		ownerBox.setPlaceholder(getI18nLabel("any"));
+		ownerBox.setVisible(permissions.isViewAllMode());
+		if (permissions.isViewAllMode()) {
+			List<String> owners = new ArrayList<>();
+			owners.add(Constants.ROLE_PRODUCTION.toLowerCase());
+			List<User> admins = userService.findByRole(Constants.ROLE_ADMINISTRATOR);
+			for (User admin : admins) {
+				owners.add(admin.getUsername());
+			}
+			owners.sort(String.CASE_INSENSITIVE_ORDER);
+			ownerBox.setItems((item, filter) -> item.toLowerCase().startsWith(filter.toLowerCase()), owners);
+		}
 
-		Button resetBtn = new Button(getI18nLabel("reset"), e -> {
+		Button resetBtn = new Button(getTranslation("basic.editor.reset"), e -> {
 			statusBox.clear();
-			ownerField.clear();
+			ownerBox.clear();
 		});
 		resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-		Button cancelBtn = new Button(getI18nLabel("cancel"), e -> popover.close());
+		Button cancelBtn = new Button(getTranslation("basic.editor.cancel"), e -> popover.close());
 		cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-		Button updateBtn = new Button(getI18nLabel("update"), e -> {
+		Button updateBtn = new Button(getTranslation("basic.editor.filter"), e -> {
 			currentFilter.setAccountStatus(statusBox.getValue());
-			currentFilter.setOwner(ownerField.getValue().isEmpty() ? null : ownerField.getValue());
+			currentFilter.setOwner(ownerBox.getValue());
 			queryDefinition.setQueryFilter(currentFilter);
 			setFilter(currentFilter);
 			refreshCurrentPage();
@@ -250,7 +192,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		buttons.setJustifyContentMode(JustifyContentMode.END);
 		buttons.setWidthFull();
 
-		VerticalLayout content = new VerticalLayout(statusBox, ownerField, buttons);
+		VerticalLayout content = new VerticalLayout(statusBox, ownerBox, buttons);
 		content.setSpacing(true);
 		content.setPadding(true);
 		content.setWidth("300px");
@@ -274,6 +216,19 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	}
 
 	private void refreshCurrentPage() {
+		refreshData();
+	}
+
+	@Override
+	protected void onSearch(String searchText) {
+		currentFilter.setSearchText(searchText);
+		queryDefinition.setQueryFilter(currentFilter);
+		setFilter(currentFilter);
+		refreshCurrentPage();
+	}
+
+	@Override
+	protected void onRefresh() {
 		refreshData();
 	}
 
@@ -630,6 +585,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			UsersFilter filter = queryDefinition.getQueryFilter();
 			String search = filter != null && filter.hasSearchText() ? filter.getSearchText().trim() : null;
 			AccountStatus statusFilter = filter != null && filter.hasAccountStatus() ? filter.getAccountStatus() : null;
+			String ownerFilter = filter != null && filter.hasOwner() ? filter.getOwner() : null;
 
 			if (queryDefinition.getNetwork() != null) {
 				String owner = queryDefinition.getNetwork().getOwner();
@@ -645,6 +601,17 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			}
 
 			if (queryDefinition.getPermissions().isViewAllMode()) {
+				// owner selected in popover — delegate to owner-scoped queries
+				if (ownerFilter != null) {
+					if (search != null && statusFilter != null) {
+						return userRepository.searchByOwnerAndAccountStatus(ownerFilter, search, statusFilter, pageable);
+					} else if (search != null) {
+						return userRepository.searchByOwner(ownerFilter, search, hidden, pageable);
+					} else if (statusFilter != null) {
+						return userRepository.findByOwnerAndAccountStatus(ownerFilter, statusFilter, pageable);
+					}
+					return userRepository.findByOwnerAndAccountStatusNot(ownerFilter, hidden, pageable);
+				}
 				if (search != null && statusFilter != null) {
 					return userRepository.searchAllAndAccountStatus(search, statusFilter, pageable);
 				} else if (search != null) {

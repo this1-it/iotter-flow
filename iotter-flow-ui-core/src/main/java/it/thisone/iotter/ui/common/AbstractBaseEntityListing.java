@@ -1,13 +1,21 @@
 package it.thisone.iotter.ui.common;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.AbstractDataProvider;
 import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.data.value.ValueChangeMode;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
 import it.thisone.iotter.security.Permissions;
@@ -184,5 +192,106 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		AbstractDataProvider rawProvider = (AbstractDataProvider) dataProvider;
 		return rawProvider.size(new Query());
+	}
+
+	/**
+	 * Builds the two-state ThingsBoard-style toolbar without a filter button:
+	 *   normalBar: [spacer] [↻] [🔍] [addButton]
+	 *   searchBar: [🔍 icon] [text field] [✕] — revealed on search toggle
+	 */
+	protected HorizontalLayout buildSearchToolbar(Button addButton) {
+		return buildSearchToolbar(null, addButton);
+	}
+
+	/**
+	 * Builds the two-state ThingsBoard-style toolbar:
+	 *   normalBar: [filterButton?] [spacer] [↻] [🔍] [addButton]
+	 *   searchBar: [🔍 icon] [text field] [✕] — revealed on search toggle
+	 *
+	 * Subclasses must override {@link #onSearch(String)} to handle search text changes
+	 * and {@link #onRefresh()} to handle refresh clicks.
+	 *
+	 * @param filterButton already configured by the subclass (e.g. with a Popover); may be null
+	 * @param addButton    already configured by the subclass
+	 * @return the assembled toolbar layout (with TOOLBAR_STYLE class applied)
+	 */
+	protected HorizontalLayout buildSearchToolbar(Button filterButton, Button addButton) {
+		// --- Refresh button ---
+		Button refreshButton = new Button(VaadinIcon.REFRESH.create());
+		refreshButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+		refreshButton.addClickListener(e -> onRefresh());
+
+		// --- Search bar (hidden by default) ---
+		HorizontalLayout searchBar = new HorizontalLayout();
+		searchBar.setWidthFull();
+		searchBar.setAlignItems(Alignment.CENTER);
+		searchBar.setSpacing(false);
+		searchBar.getStyle().set("transition", "all 0.2s ease");
+		searchBar.setVisible(false);
+
+		Icon searchPrefixIcon = VaadinIcon.SEARCH.create();
+		searchPrefixIcon.getStyle().set("margin", "0 8px");
+
+		TextField searchField = new TextField();
+		searchField.setValueChangeMode(ValueChangeMode.EAGER);
+		searchField.getStyle().set("flex", "1");
+		searchField.addValueChangeListener(e -> onSearch(e.getValue()));
+
+		Button closeSearchButton = new Button(VaadinIcon.CLOSE.create());
+		closeSearchButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+
+		searchBar.add(searchPrefixIcon, searchField, closeSearchButton);
+		searchBar.setFlexGrow(1, searchField);
+
+		// --- Normal toolbar ---
+		HorizontalLayout normalBar = new HorizontalLayout();
+		normalBar.setWidthFull();
+		normalBar.setAlignItems(Alignment.CENTER);
+		normalBar.setSpacing(true);
+
+		Div spacer = new Div();
+		Button searchToggleButton = new Button(VaadinIcon.SEARCH.create());
+		searchToggleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+
+		if (filterButton != null) {
+			normalBar.add(filterButton);
+		}
+		normalBar.add(spacer, refreshButton, searchToggleButton, addButton);
+		normalBar.setFlexGrow(1, spacer);
+
+		// --- Toggle handlers ---
+		searchToggleButton.addClickListener(e -> {
+			normalBar.setVisible(false);
+			searchBar.setVisible(true);
+			searchField.focus();
+		});
+		closeSearchButton.addClickListener(e -> {
+			searchField.clear();
+			onSearch(null);
+			searchBar.setVisible(false);
+			normalBar.setVisible(true);
+		});
+
+		// --- Assemble ---
+		HorizontalLayout toolbar = new HorizontalLayout(normalBar, searchBar);
+		toolbar.setWidthFull();
+		toolbar.setPadding(true);
+		toolbar.addClassName(TOOLBAR_STYLE);
+		toolbar.setAlignItems(Alignment.CENTER);
+		return toolbar;
+	}
+
+	/**
+	 * Called when the search text changes (including {@code null} when search is cleared).
+	 * Override in subclasses to apply the search to the current filter and refresh.
+	 */
+	protected void onSearch(String searchText) {
+	}
+
+	/**
+	 * Called when the refresh button is clicked.
+	 * Override in subclasses to refresh the data provider.
+	 */
+	protected void onRefresh() {
 	}
 }

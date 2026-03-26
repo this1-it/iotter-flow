@@ -185,7 +185,8 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
         }
 
         private SideNavItem createNavItem(String label, Class<? extends Component> viewClass, VaadinIcon icon) {
-                return new SideNavItem(label, viewClass, icon.create());
+                //return new SideNavItem(label, viewClass, icon.create());
+                return new SideNavItem(label, viewClass);
         }
 
         private Button createDarkModeToggle() {
