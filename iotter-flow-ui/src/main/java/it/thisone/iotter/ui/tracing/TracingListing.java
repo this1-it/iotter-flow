@@ -1,8 +1,12 @@
 package it.thisone.iotter.ui.tracing;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -14,20 +18,27 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
-import com.vaadin.flow.data.value.ValueChangeMode;
 
+import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.enums.TracingAction;
 import it.thisone.iotter.lazyquerydataprovider.FilterableQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDataProvider;
@@ -36,11 +47,12 @@ import it.thisone.iotter.lazyquerydataprovider.QueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.QueryFactory;
 import it.thisone.iotter.persistence.model.Tracing;
 import it.thisone.iotter.persistence.repository.TracingRepository;
+import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.common.UIUtils;
+import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -52,9 +64,12 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 	private static final String TRACING_VIEW = "tracing.view";
 
 	private final Permissions permissions;
+	private final TimeIntervalHelper timeIntervalHelper = new TimeIntervalHelper(TimeZone.getDefault());
 
 	@Autowired
 	private TracingRepository tracingRepository;
+	@Autowired
+	private UserService userService;
 
 	private Grid<Tracing> grid;
 	private LazyQueryDataProvider<Tracing, TracingFilter> dataProvider;
@@ -84,12 +99,6 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 	}
 
 	private void buildLayout() {
-		HorizontalLayout toolbar = new HorizontalLayout();
-		toolbar.setWidthFull();
-		toolbar.setSpacing(true);
-		toolbar.setPadding(true);
-		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
-
 		queryDefinition = new TracingQueryDefinition(Tracing.class, DEFAULT_LIMIT, permissions);
 		queryDefinition.setQueryFilter(currentFilter);
 		dataProvider = new LazyQueryDataProvider<>(queryDefinition, new TracingQueryFactory(tracingRepository));
@@ -101,12 +110,15 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
+		Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
+		filterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		filterButton.addThemeName("subtle");
+		buildFilterPopover(filterButton);
+
+		HorizontalLayout toolbar = buildSearchToolbar(filterButton, createPlaceholderAddButton());
+
 		getMainLayout().add(toolbar, content);
 		getMainLayout().setFlexGrow(1f, content);
-
-		getButtonsLayout().add(createViewButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setVerticalComponentAlignment(Alignment.CENTER, getButtonsLayout());
 		enableButtons(null);
 	}
 
@@ -158,7 +170,17 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		}
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
-		initFilters(grid);
+		grid.addComponentColumn(item -> {
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+			MenuItem menuItem = menuBar.addItem("•••");
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			if (permissions.isViewMode()) {
+				subMenu.addItem(getI18nLabel("view_action"), event -> openDetails(item));
+			}
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0).setKey("actions");
 		return grid;
 	}
 
@@ -202,34 +224,103 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		return grid;
 	}
 
-	private void initFilters(Grid<Tracing> grid) {
-		HeaderRow filterRow = grid.appendHeaderRow();
+	private void buildFilterPopover(Button filterButton) {
+		Popover popover = new Popover();
+		popover.setTarget(filterButton);
+		popover.setPosition(PopoverPosition.BOTTOM_START);
 
-		TextField owner = new TextField();
-		owner.setPlaceholder("Filter...");
-		owner.setWidthFull();
-		owner.addClassName("small");
-		owner.setValueChangeMode(ValueChangeMode.LAZY);
-		filterRow.getCell(grid.getColumnByKey(OWNER)).setComponent(owner);
-		owner.addValueChangeListener(event -> {
-			currentFilter.setOwner(event.getValue());
+		ComboBox<TracingAction> actionBox = new ComboBox<>(getI18nLabel("action"));
+		actionBox.setItems(TracingAction.values());
+		actionBox.setClearButtonVisible(true);
+		actionBox.setPlaceholder(getI18nLabel("any"));
+		actionBox.setWidthFull();
+		actionBox.setValue(currentFilter.getAction());
+
+		ComboBox<String> administratorBox = createAdministratorComboBox(currentFilter.getAdministrator());
+		DatePicker fromDateField = timeIntervalHelper.createDateField();
+		fromDateField.setLabel(getI18nLabel("from_date"));
+		fromDateField.setWidthFull();
+		fromDateField.setValue(timeIntervalHelper.toLocalDate(currentFilter.getFromDate()));
+
+		DatePicker toDateField = timeIntervalHelper.createDateField();
+		toDateField.setLabel(getI18nLabel("to_date"));
+		toDateField.setWidthFull();
+		toDateField.setValue(timeIntervalHelper.toLocalDate(currentFilter.getToDate()));
+
+		Button resetBtn = new Button(getTranslation("basic.editor.reset"), e -> {
+			actionBox.clear();
+			administratorBox.clear();
+			fromDateField.clear();
+			toDateField.clear();
+		});
+		resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		Button cancelBtn = new Button(getTranslation("basic.editor.cancel"), e -> popover.close());
+		cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		Button updateBtn = new Button(getTranslation("basic.editor.filter"), e -> {
+			currentFilter.setAction(actionBox.getValue());
+			currentFilter.setAdministrator(administratorBox.getValue());
+			currentFilter.setFromDate(toStartOfDay(fromDateField.getValue()));
+			currentFilter.setToDate(toEndOfDay(toDateField.getValue()));
 			queryDefinition.setQueryFilter(currentFilter);
 			setFilter(currentFilter);
 			refreshData();
+			popover.close();
+			filterButton.setClassName(currentFilter.hasActiveFilter() ? "filter-active" : "");
 		});
+		updateBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		TextField device = new TextField();
-		device.setPlaceholder("Filter...");
-		device.setWidthFull();
-		device.addClassName("small");
-		device.setValueChangeMode(ValueChangeMode.LAZY);
-		filterRow.getCell(grid.getColumnByKey(DEVICE)).setComponent(device);
-		device.addValueChangeListener(event -> {
-			currentFilter.setDevice(event.getValue());
-			queryDefinition.setQueryFilter(currentFilter);
-			setFilter(currentFilter);
-			refreshData();
-		});
+		HorizontalLayout buttons = new HorizontalLayout(resetBtn, cancelBtn, updateBtn);
+		buttons.setJustifyContentMode(JustifyContentMode.END);
+		buttons.setWidthFull();
+
+		VerticalLayout content = new VerticalLayout(actionBox, administratorBox, fromDateField, toDateField, buttons);
+		content.setSpacing(true);
+		content.setPadding(true);
+		content.setWidth("300px");
+		popover.add(content);
+	}
+
+	private Date toStartOfDay(LocalDate localDate) {
+		if (localDate == null) {
+			return null;
+		}
+		return timeIntervalHelper.toDate(localDate);
+	}
+
+	private Date toEndOfDay(LocalDate localDate) {
+		if (localDate == null) {
+			return null;
+		}
+		Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+		calendar.setTime(timeIntervalHelper.toDate(localDate));
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return calendar.getTime();
+	}
+
+	private ComboBox<String> createAdministratorComboBox(String value) {
+		ComboBox<String> administratorBox = new ComboBox<>(getI18nLabel("administrator"));
+		administratorBox.setWidthFull();
+		administratorBox.setClearButtonVisible(true);
+		administratorBox.setPlaceholder(getI18nLabel("any"));
+		List<String> administrators = userService.findByRole(Constants.ROLE_ADMINISTRATOR).stream()
+				.map(user -> user.getUsername())
+				.sorted(String.CASE_INSENSITIVE_ORDER)
+				.toList();
+		administratorBox.setItems((item, filter) -> item.toLowerCase().startsWith(filter.toLowerCase()),
+				administrators);
+		administratorBox.setValue(value);
+		return administratorBox;
+	}
+
+	private Button createPlaceholderAddButton() {
+		Button button = new Button();
+		button.setVisible(false);
+		return button;
 	}
 
 	private VerticalLayout createContent(Grid<Tracing> grid) {
@@ -278,15 +369,6 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		return iconType.create();
 	}
 
-	private Button createViewButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EYE.create());
-		button.getElement().setProperty("title", getI18nLabel("view_action"));
-		button.addClickListener(event -> openDetails(getCurrentValue(), getI18nLabel("view_dialog")));
-		button.setVisible(permissions.isViewMode());
-		return button;
-	}
-
 	private void openDetails(Tracing item, String label) {
 		if (item == null) {
 			return;
@@ -306,37 +388,122 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		// no remove action for tracing entries
 	}
 
+	@Override
+	protected void onSearch(String searchText) {
+		currentFilter.setSearchText(searchText);
+		queryDefinition.setQueryFilter(currentFilter);
+		setFilter(currentFilter);
+		refreshData();
+	}
+
+	@Override
+	protected void onRefresh() {
+		refreshData();
+	}
+
 	private static final class TracingFilter {
-		private String owner;
-		private String device;
+		private String searchText;
+		private TracingAction action;
+		private String administrator;
+		private Date fromDate;
+		private Date toDate;
+
+		public String getSearchText() {
+			return searchText;
+		}
+
+		public void setSearchText(String searchText) {
+			this.searchText = normalize(searchText);
+		}
+
+		public boolean hasSearchText() {
+			return searchText != null && !searchText.trim().isEmpty();
+		}
+
+		public TracingAction getAction() {
+			return action;
+		}
+
+		public void setAction(TracingAction action) {
+			this.action = action;
+		}
+
+		public boolean hasAction() {
+			return action != null;
+		}
+
+		public String getAdministrator() {
+			return administrator;
+		}
+
+		public void setAdministrator(String administrator) {
+			this.administrator = normalize(administrator);
+		}
+
+		public boolean hasAdministrator() {
+			return administrator != null && !administrator.trim().isEmpty();
+		}
+
+		public Date getFromDate() {
+			return fromDate;
+		}
+
+		public void setFromDate(Date fromDate) {
+			this.fromDate = fromDate;
+		}
+
+		public boolean hasFromDate() {
+			return fromDate != null;
+		}
+
+		public Date getToDate() {
+			return toDate;
+		}
+
+		public void setToDate(Date toDate) {
+			this.toDate = toDate;
+		}
+
+		public boolean hasToDate() {
+			return toDate != null;
+		}
 
 		public String getOwner() {
-			return owner;
+			return searchText;
 		}
 
 		public void setOwner(String owner) {
-			this.owner = owner;
+			setSearchText(owner);
 		}
 
 		public boolean hasOwner() {
-			return owner != null && !owner.trim().isEmpty();
+			return hasSearchText();
 		}
 
 		public String getDevice() {
-			return device;
+			return searchText;
 		}
 
 		public void setDevice(String device) {
-			this.device = device;
+			setSearchText(device);
 		}
 
 		public boolean hasDevice() {
-			return device != null && !device.trim().isEmpty();
+			return hasSearchText();
+		}
+
+		public boolean hasActiveFilter() {
+			return hasAction() || hasAdministrator() || hasFromDate() || hasToDate();
+		}
+
+		private String normalize(String value) {
+			return value != null && value.trim().isEmpty() ? null : value;
 		}
 
 		@Override
 		public String toString() {
-			return "TracingFilter{owner=" + owner + ", device=" + device + "}";
+			return "TracingFilter{searchText=" + searchText + ", action=" + action + ", administrator="
+					+ administrator + ", fromDate=" + fromDate + ", toDate=" + toDate + "}";
 		}
 	}
 
@@ -408,19 +575,15 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 			Sort sort = buildSort();
 			Pageable pageable = PageRequest.of(page, size, sort);
 			TracingFilter filter = queryDefinition.getQueryFilter();
-			String owner = filter != null && filter.hasOwner() ? filter.getOwner().trim() : null;
-			String device = filter != null && filter.hasDevice() ? filter.getDevice().trim() : null;
+			String search = filter != null && filter.hasSearchText() ? filter.getSearchText().trim() : null;
+			TracingAction action = filter != null && filter.hasAction() ? filter.getAction() : null;
+			String administrator = filter != null && filter.hasAdministrator()
+					? filter.getAdministrator().trim()
+					: null;
+			Date fromDate = filter != null && filter.hasFromDate() ? filter.getFromDate() : null;
+			Date toDate = filter != null && filter.hasToDate() ? filter.getToDate() : null;
 
-			if (owner != null && device != null) {
-				return tracingRepository.findByOwnerStartingWithIgnoreCaseAndDeviceStartingWithIgnoreCase(owner, device, pageable);
-			}
-			if (owner != null) {
-				return tracingRepository.findByOwnerStartingWithIgnoreCase(owner, pageable);
-			}
-			if (device != null) {
-				return tracingRepository.findByDeviceStartingWithIgnoreCase(device, pageable);
-			}
-			return tracingRepository.findAll(pageable);
+			return tracingRepository.findAllByFilters(search, action, administrator, fromDate, toDate, pageable);
 		}
 
 		private Sort buildSort() {

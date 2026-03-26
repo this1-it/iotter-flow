@@ -12,13 +12,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
+import it.thisone.iotter.lazyquerydataprovider.FilterableQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDataProvider;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.QueryDefinition;
@@ -33,7 +38,6 @@ import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.SideDrawer;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.util.PopupNotification;
 
 @Component
@@ -52,8 +56,9 @@ public class MeasureUnitTypesListing extends AbstractBaseEntityListing<MeasureUn
 	private MeasureUnitTypeService measureUnitTypeService;
 
 	private Grid<MeasureUnitType> grid;
-	private LazyQueryDataProvider<MeasureUnitType, Void> dataProvider;
-	private LazyQueryDefinition<MeasureUnitType, Void> queryDefinition;
+	private LazyQueryDataProvider<MeasureUnitType, MeasureUnitTypeFilter> dataProvider;
+	private MeasureUnitTypeQueryDefinition queryDefinition;
+	private MeasureUnitTypeFilter currentFilter = new MeasureUnitTypeFilter();
 
 	public MeasureUnitTypesListing() {
 		this(new Permissions(true));
@@ -73,27 +78,21 @@ public class MeasureUnitTypesListing extends AbstractBaseEntityListing<MeasureUn
 	}
 
 	private void buildLayout() {
-		HorizontalLayout toolbar = new HorizontalLayout();
-		toolbar.setWidthFull();
-		toolbar.setSpacing(true);
-		toolbar.setPadding(true);
-		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
-
-		queryDefinition = new LazyQueryDefinition<>(MeasureUnitType.class, DEFAULT_LIMIT);
+		queryDefinition = new MeasureUnitTypeQueryDefinition(MeasureUnitType.class, DEFAULT_LIMIT);
+		queryDefinition.setQueryFilter(currentFilter);
 		dataProvider = new LazyQueryDataProvider<>(queryDefinition, new MeasureUnitTypeQueryFactory(measureUnitTypeRepository));
 		dataProvider.setCacheQueries(false);
+		dataProvider.setFilter(currentFilter);
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
+		HorizontalLayout toolbar = buildSearchToolbar(createAddButton());
+
 		getMainLayout().add(toolbar, content);
 		getMainLayout().setFlexGrow(1f, content);
-
-		getButtonsLayout().add(createRemoveButton(), createModifyButton(), createAddButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setVerticalComponentAlignment(Alignment.CENTER, getButtonsLayout());
 		enableButtons(null);
 	}
 
@@ -126,6 +125,21 @@ public class MeasureUnitTypesListing extends AbstractBaseEntityListing<MeasureUn
 		}
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
+		grid.addComponentColumn(item -> {
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+			MenuItem menuItem = menuBar.addItem("•••");
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			if (permissions.isModifyMode()) {
+				subMenu.addItem(getI18nLabel("modify_action"),
+						event -> openEditor(item, getI18nLabel("modify_dialog")));
+			}
+			if (permissions.isRemoveMode()) {
+				subMenu.addItem(getI18nLabel("remove_action"), event -> openRemove(item));
+			}
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0).setKey("actions");
 		return grid;
 	}
 
@@ -146,31 +160,25 @@ public class MeasureUnitTypesListing extends AbstractBaseEntityListing<MeasureUn
 	}
 
 	private Button createAddButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.PLUS.create());
-		button.getElement().setProperty("title", getI18nLabel("add"));
+		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
+		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openEditor(new MeasureUnitType(), getI18nLabel("add_dialog")));
 		button.setVisible(permissions.isCreateMode());
 		return button;
 	}
 
-	private Button createModifyButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EDIT.create());
-		button.getElement().setProperty("title", getI18nLabel("modify_action"));
-		button.addClickListener(event -> openEditor(getCurrentValue(), getI18nLabel("modify_dialog")));
-		button.setVisible(permissions.isModifyMode());
-		return button;
+	@Override
+	protected void onSearch(String searchText) {
+		currentFilter.setSearchText(searchText);
+		queryDefinition.setQueryFilter(currentFilter);
+		setFilter(currentFilter);
+		refreshCurrentPage();
 	}
 
-	private Button createRemoveButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.TRASH.create());
-		button.getElement().setProperty("title", getI18nLabel("remove_action"));
-		button.addClickListener(event -> openRemove(getCurrentValue()));
-		button.setVisible(permissions.isRemoveMode());
-		return button;
+	@Override
+	protected void onRefresh() {
+		refreshData();
 	}
 
 	@Override
@@ -228,7 +236,44 @@ public class MeasureUnitTypesListing extends AbstractBaseEntityListing<MeasureUn
 		refreshData();
 	}
 
-	private static final class MeasureUnitTypeQueryFactory implements QueryFactory<MeasureUnitType, Void> {
+	private static final class MeasureUnitTypeFilter {
+		private String searchText;
+
+		public String getSearchText() {
+			return searchText;
+		}
+
+		public void setSearchText(String searchText) {
+			this.searchText = searchText != null && searchText.trim().isEmpty() ? null : searchText;
+		}
+
+		public boolean hasSearchText() {
+			return searchText != null && !searchText.trim().isEmpty();
+		}
+	}
+
+	private static final class MeasureUnitTypeQueryDefinition extends LazyQueryDefinition<MeasureUnitType, MeasureUnitTypeFilter>
+			implements FilterableQueryDefinition<MeasureUnitTypeFilter> {
+
+		private static final long serialVersionUID = 1L;
+		private MeasureUnitTypeFilter queryFilter;
+
+		private MeasureUnitTypeQueryDefinition(Class<MeasureUnitType> beanClass, int batchSize) {
+			super(beanClass, batchSize);
+		}
+
+		@Override
+		public void setQueryFilter(MeasureUnitTypeFilter filter) {
+			this.queryFilter = filter;
+		}
+
+		@Override
+		public MeasureUnitTypeFilter getQueryFilter() {
+			return queryFilter;
+		}
+	}
+
+	private static final class MeasureUnitTypeQueryFactory implements QueryFactory<MeasureUnitType, MeasureUnitTypeFilter> {
 		private final MeasureUnitTypeRepository measureUnitTypeRepository;
 
 		private MeasureUnitTypeQueryFactory(MeasureUnitTypeRepository measureUnitTypeRepository) {
@@ -236,34 +281,44 @@ public class MeasureUnitTypesListing extends AbstractBaseEntityListing<MeasureUn
 		}
 
 		@Override
-		public it.thisone.iotter.lazyquerydataprovider.Query<MeasureUnitType, Void> constructQuery(
-				QueryDefinition<MeasureUnitType, Void> queryDefinition) {
-			return new MeasureUnitTypeQuery(measureUnitTypeRepository);
+		public it.thisone.iotter.lazyquerydataprovider.Query<MeasureUnitType, MeasureUnitTypeFilter> constructQuery(
+				QueryDefinition<MeasureUnitType, MeasureUnitTypeFilter> queryDefinition) {
+			return new MeasureUnitTypeQuery(measureUnitTypeRepository,
+					(MeasureUnitTypeQueryDefinition) queryDefinition);
 		}
 	}
 
-	private static final class MeasureUnitTypeQuery implements it.thisone.iotter.lazyquerydataprovider.Query<MeasureUnitType, Void> {
+	private static final class MeasureUnitTypeQuery
+			implements it.thisone.iotter.lazyquerydataprovider.Query<MeasureUnitType, MeasureUnitTypeFilter> {
 		private final MeasureUnitTypeRepository measureUnitTypeRepository;
+		private final MeasureUnitTypeQueryDefinition queryDefinition;
 
-		private MeasureUnitTypeQuery(MeasureUnitTypeRepository measureUnitTypeRepository) {
+		private MeasureUnitTypeQuery(MeasureUnitTypeRepository measureUnitTypeRepository,
+				MeasureUnitTypeQueryDefinition queryDefinition) {
 			this.measureUnitTypeRepository = measureUnitTypeRepository;
+			this.queryDefinition = queryDefinition;
 		}
 
 		@Override
-		public int size(QueryDefinition<MeasureUnitType, Void> queryDefinition) {
+		public int size(QueryDefinition<MeasureUnitType, MeasureUnitTypeFilter> queryDefinition) {
 			Page<MeasureUnitType> page = findPage(0, 1);
 			return (int) page.getTotalElements();
 		}
 
 		@Override
-		public java.util.stream.Stream<MeasureUnitType> loadItems(QueryDefinition<MeasureUnitType, Void> queryDefinition,
-				int offset, int limit) {
+		public java.util.stream.Stream<MeasureUnitType> loadItems(
+				QueryDefinition<MeasureUnitType, MeasureUnitTypeFilter> queryDefinition, int offset, int limit) {
 			Page<MeasureUnitType> page = findPage(offset / limit, limit);
 			return page.getContent().stream();
 		}
 
 		private Page<MeasureUnitType> findPage(int page, int size) {
 			Pageable pageable = PageRequest.of(page, size);
+			MeasureUnitTypeFilter filter = queryDefinition.getQueryFilter();
+			String searchText = filter != null && filter.hasSearchText() ? filter.getSearchText().trim() : null;
+			if (searchText != null) {
+				return measureUnitTypeRepository.findByNameStartingWithIgnoreCase(searchText, pageable);
+			}
 			return measureUnitTypeRepository.findAll(pageable);
 		}
 	}

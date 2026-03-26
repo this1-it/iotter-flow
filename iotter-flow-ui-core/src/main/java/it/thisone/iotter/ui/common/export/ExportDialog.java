@@ -24,6 +24,7 @@ import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.validator.AbstractValidator;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -45,7 +46,6 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.server.StreamResource;
 
 import it.thisone.iotter.cassandra.model.CassandraExportFeed;
 import it.thisone.iotter.cassandra.model.Interpolation;

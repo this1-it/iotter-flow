@@ -24,21 +24,26 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
-import com.vaadin.flow.data.value.ValueChangeMode;
 
 import it.thisone.iotter.cassandra.model.FeedAlarmEvent;
 import it.thisone.iotter.cassandra.model.Interpolation;
@@ -204,12 +209,6 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	private void buildLayout() {
-		HorizontalLayout toolbar = new HorizontalLayout();
-		toolbar.setWidthFull();
-		toolbar.setSpacing(true);
-		toolbar.setPadding(true);
-		toolbar.addClassName(TOOLBAR_STYLE);
-
 		queryDefinition = new DevicesQueryDefinition(Device.class, currentLimit, permissions);
 		queryDefinition.setNetwork(network);
 		queryDefinition.setOwner(authenticatedUser.getTenant().orElse(null));
@@ -222,24 +221,21 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
-		VerticalLayout listingLayout = createListingLayout(toolbar, grid);
+		VerticalLayout listingLayout = createListingLayout(grid);
 		setSelectable(grid);
 		setupDeviceWidgetBox(grid, listingLayout);
 
-		getMainLayout().add(listingLayout);
+		Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
+		filterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		filterButton.addThemeName("subtle");
+		buildFilterPopover(filterButton);
+
+		HorizontalLayout toolbar = buildSearchToolbar(filterButton, createAddButton());
+
+		getMainLayout().add(toolbar, listingLayout);
 		getMainLayout().setFlexGrow(1f, listingLayout);
 
 		updateTotalCount();
-
-		getButtonsLayout().add(createExportDataButton(), createAlarmsButton(), createResetButton(),
-				createRemoveButton(),
-				createModifyButton(), createActivateButton(), createViewButton(), createAddButton(),
-				createImportButton());
-		if (hasParameters && UIUtils.isMobile()) {
-			getButtonsLayout().add(createDeviceWidgetButton());
-		}
-		toolbar.add(getButtonsLayout());
-		toolbar.setAlignItems(Alignment.CENTER);
 		enableButtons(null);
 	}
 
@@ -338,70 +334,90 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 
 		table.setColumnOrder(columns.toArray(new Grid.Column[0]));
-		initFilters(table);
+		table.addComponentColumn(device -> {
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+			MenuItem menuItem = menuBar.addItem("•••");
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			if (currentUser.hasPermission(EntityPermission.DEVICE.EXPORT_DATA)) {
+				subMenu.addItem(getI18nLabel("export_button"), event -> openDownload(device));
+			}
+			subMenu.addItem(getI18nLabel("alarms_button"), event -> openAlarms(device));
+			if (currentUser.hasPermission(EntityPermission.DEVICE.RESET)) {
+				subMenu.addItem(supervisor ? getI18nLabel("reset_button") : getI18nLabel("remove_button"),
+						event -> openReset(device));
+			}
+			if (permissions.isRemoveMode()) {
+				subMenu.addItem(getI18nLabel("remove_action"), event -> openRemove(device));
+			}
+			if (permissions.isModifyMode()) {
+				subMenu.addItem(getI18nLabel("modify_action"),
+						event -> openEditor(device, getI18nLabel("modify_dialog")));
+			}
+			if (permissions.isViewMode()) {
+				subMenu.addItem(getI18nLabel("view_action"), event -> openDetails(device));
+			}
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0).setKey("actions");
 		return table;
 	}
 
-	private void initFilters(Grid<Device> table) {
-		HeaderRow filterRow = table.appendHeaderRow();
+	private void buildFilterPopover(Button filterButton) {
+		Popover popover = new Popover();
+		popover.setTarget(filterButton);
+		popover.setPosition(PopoverPosition.BOTTOM_START);
 
-		TextField labelField = new TextField();
-		labelField.setPlaceholder("Filter...");
-		labelField.setWidthFull();
-		labelField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-		labelField.setValueChangeMode(ValueChangeMode.LAZY);
-		filterRow.getCell(table.getColumnByKey(LABEL)).setComponent(labelField);
-		labelField.addValueChangeListener(event -> {
-			currentFilter.setLabel(event.getValue());
+		ComboBox<DeviceStatus> deviceStatusBox = new ComboBox<>(getI18nLabel(DEVICE_STATUS));
+		deviceStatusBox.setItems(DeviceStatus.values());
+		deviceStatusBox.setItemLabelGenerator(status -> getTranslation(status.getI18nKey()));
+		deviceStatusBox.setClearButtonVisible(true);
+		deviceStatusBox.setPlaceholder(getI18nLabel("any"));
+		deviceStatusBox.setWidthFull();
+		deviceStatusBox.setValue(currentFilter.getDeviceStatus());
+
+		ComboBox<AlarmStatus> alarmStatusBox = new ComboBox<>(getI18nLabel(ALARM_STATUS));
+		alarmStatusBox.setItems(AlarmStatus.values());
+		alarmStatusBox.setItemLabelGenerator(status -> getTranslation(status.getI18nKey()));
+		alarmStatusBox.setClearButtonVisible(true);
+		alarmStatusBox.setPlaceholder(getI18nLabel("any"));
+		alarmStatusBox.setWidthFull();
+		alarmStatusBox.setValue(currentFilter.getAlarmStatus());
+
+		ComboBox<String> ownerBox = createOwnerComboBox(userService, permissions.isViewAllMode(),
+				currentFilter.getOwner());
+
+		Button resetBtn = new Button(getTranslation("basic.editor.reset"), event -> {
+			deviceStatusBox.clear();
+			alarmStatusBox.clear();
+			ownerBox.clear();
+		});
+		resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		Button cancelBtn = new Button(getTranslation("basic.editor.cancel"), event -> popover.close());
+		cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		Button updateBtn = new Button(getTranslation("basic.editor.filter"), event -> {
+			currentFilter.setDeviceStatus(deviceStatusBox.getValue());
+			currentFilter.setAlarmStatus(alarmStatusBox.getValue());
+			currentFilter.setOwner(ownerBox.getValue());
 			queryDefinition.setQueryFilter(currentFilter);
 			setFilter(currentFilter);
 			refreshCurrentPage();
+			popover.close();
+			filterButton.setClassName(currentFilter.hasActiveFilter() ? "filter-active" : "");
 		});
+		updateBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		ComboBox<AlarmStatus> alarmStatusCombo = new ComboBox<>();
-		alarmStatusCombo.setPlaceholder("Filter...");
-		alarmStatusCombo.setWidthFull();
-		alarmStatusCombo.setClearButtonVisible(true);
-		alarmStatusCombo.setItems(AlarmStatus.values());
-		alarmStatusCombo
-				.setItemLabelGenerator(status -> status.toString());
-		filterRow.getCell(table.getColumnByKey(ALARM_STATUS)).setComponent(alarmStatusCombo);
-		alarmStatusCombo.addValueChangeListener(event -> {
-			currentFilter.setAlarmStatus(event.getValue());
-			queryDefinition.setQueryFilter(currentFilter);
-			setFilter(currentFilter);
-			refreshCurrentPage();
-		});
+		HorizontalLayout buttons = new HorizontalLayout(resetBtn, cancelBtn, updateBtn);
+		buttons.setJustifyContentMode(JustifyContentMode.END);
+		buttons.setWidthFull();
 
-		ComboBox<DeviceStatus> deviceStatusCombo = new ComboBox<>();
-		deviceStatusCombo.setPlaceholder("Filter...");
-		deviceStatusCombo.setWidthFull();
-		deviceStatusCombo.setClearButtonVisible(true);
-		deviceStatusCombo.setItems(DeviceStatus.values());
-		deviceStatusCombo
-				.setItemLabelGenerator(status ->getTranslation(status.getI18nKey()));
-		filterRow.getCell(table.getColumnByKey(DEVICE_STATUS)).setComponent(deviceStatusCombo);
-		deviceStatusCombo.addValueChangeListener(event -> {
-			currentFilter.setDeviceStatus(event.getValue());
-			queryDefinition.setQueryFilter(currentFilter);
-			setFilter(currentFilter);
-			refreshCurrentPage();
-		});
-
-		if (permissions.isViewAllMode()) {
-			TextField ownerField = new TextField();
-			ownerField.setPlaceholder("Filter...");
-			ownerField.setWidthFull();
-			ownerField.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-			ownerField.setValueChangeMode(ValueChangeMode.LAZY);
-			filterRow.getCell(table.getColumnByKey(OWNER)).setComponent(ownerField);
-			ownerField.addValueChangeListener(event -> {
-				currentFilter.setOwner(event.getValue());
-				queryDefinition.setQueryFilter(currentFilter);
-				setFilter(currentFilter);
-				refreshCurrentPage();
-			});
-		}
+		VerticalLayout content = new VerticalLayout(deviceStatusBox, alarmStatusBox, ownerBox, buttons);
+		content.setSpacing(true);
+		content.setPadding(true);
+		content.setWidth("300px");
+		popover.add(content);
 	}
 
 	private String formatProfile(Device device) {
@@ -437,51 +453,21 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		return device.getNetwork() != null ? device.getNetwork().getName() : "";
 	}
 
-	private VerticalLayout createListingLayout(HorizontalLayout toolbar, Grid<Device> table) {
+	private VerticalLayout createListingLayout(Grid<Device> table) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setSpacing(true);
-		layout.add(toolbar, table);
+		layout.add(table);
 		layout.setFlexGrow(1f, table);
 		return layout;
 	}
 
 	private Button createAddButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.PLUS.create());
-		button.getElement().setProperty("title", getI18nLabel("add"));
+		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
+		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openEditor(new Device(), getI18nLabel("add_dialog")));
 		button.setVisible(permissions.isCreateMode());
-		return button;
-	}
-
-	private Button createViewButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.INFO_CIRCLE.create());
-		button.getElement().setProperty("title", getI18nLabel("view_action"));
-		button.addClickListener(event -> openDetails(getCurrentValue()));
-		button.setVisible(permissions.isViewMode());
-		return button;
-	}
-
-	private Button createModifyButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EDIT.create());
-		button.getElement().setProperty("title", getI18nLabel("modify_action"));
-		button.setId(MODIFY_BUTTON);
-		button.addClickListener(event -> openEditor(getCurrentValue(), getI18nLabel("modify_dialog")));
-		button.setVisible(permissions.isModifyMode());
-		return button;
-	}
-
-	private Button createRemoveButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.TRASH.create());
-		button.getElement().setProperty("title", getI18nLabel("remove_action"));
-		button.setId(REMOVE_BUTTON);
-		button.addClickListener(event -> openRemove(getCurrentValue()));
-		button.setVisible(permissions.isRemoveMode());
 		return button;
 	}
 
@@ -492,36 +478,6 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		button.setId("activate_button" + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openActivation());
 		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.ACTIVATE));
-		return button;
-	}
-
-	private Button createResetButton() {
-		Button button = new Button();
-		button.setIcon(supervisor ? VaadinIcon.REFRESH.create() : VaadinIcon.TRASH.create());
-		button.getElement().setProperty("title",
-				supervisor ? getI18nLabel("reset_button") : getI18nLabel("remove_button"));
-		button.setId(RESET_BUTTON);
-		button.addClickListener(event -> openReset(getCurrentValue()));
-		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.RESET));
-		return button;
-	}
-
-	private Button createAlarmsButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.BELL.create());
-		button.getElement().setProperty("title", getI18nLabel("alarms_button"));
-		button.setId(ALARM_BUTTON);
-		button.addClickListener(event -> openAlarms(getCurrentValue()));
-		return button;
-	}
-
-	private Button createExportDataButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.DOWNLOAD.create());
-		button.getElement().setProperty("title", getI18nLabel("export_button"));
-		button.setId(DOWNLOAD_BUTTON);
-		button.addClickListener(event -> openDownload(getCurrentValue()));
-		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.EXPORT_DATA));
 		return button;
 	}
 
@@ -834,6 +790,19 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		// }
 	}
 
+	@Override
+	protected void onSearch(String searchText) {
+		currentFilter.setSearchText(searchText);
+		queryDefinition.setQueryFilter(currentFilter);
+		setFilter(currentFilter);
+		refreshCurrentPage();
+	}
+
+	@Override
+	protected void onRefresh() {
+		refreshData();
+	}
+
 	private void setupDeviceWidgetBox(Grid<Device> table, VerticalLayout listingLayout) {
 		if (!hasParameters) {
 			return;
@@ -874,21 +843,21 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	}
 
 	private static final class DevicesFilter {
-		private String label;
+		private String searchText;
 		private AlarmStatus alarmStatus;
 		private DeviceStatus deviceStatus;
 		private String owner;
 
-		public String getLabel() {
-			return label;
+		public String getSearchText() {
+			return searchText;
 		}
 
-		public void setLabel(String label) {
-			this.label = label;
+		public void setSearchText(String searchText) {
+			this.searchText = normalize(searchText);
 		}
 
-		public boolean hasLabel() {
-			return label != null && !label.trim().isEmpty();
+		public boolean hasSearchText() {
+			return searchText != null && !searchText.trim().isEmpty();
 		}
 
 		public AlarmStatus getAlarmStatus() {
@@ -920,11 +889,19 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 
 		public void setOwner(String owner) {
-			this.owner = owner;
+			this.owner = normalize(owner);
 		}
 
 		public boolean hasOwner() {
 			return owner != null && !owner.trim().isEmpty();
+		}
+
+		public boolean hasActiveFilter() {
+			return hasDeviceStatus() || hasAlarmStatus() || hasOwner();
+		}
+
+		private String normalize(String value) {
+			return value == null || value.trim().isEmpty() ? null : value.trim();
 		}
 	}
 
@@ -1039,19 +1016,19 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page,
 					size, sort);
 			DevicesFilter filter = queryDefinition.getQueryFilter();
-			String label = filter != null && filter.hasLabel() ? filter.getLabel().trim() : null;
+			String search = filter != null && filter.hasSearchText() ? filter.getSearchText().trim() : null;
 			DeviceStatus deviceStatus = filter != null && filter.hasDeviceStatus() ? filter.getDeviceStatus() : null;
 			String ownerFilter = filter != null && filter.hasOwner() ? filter.getOwner().trim() : null;
 
 			if (queryDefinition.getNetwork() != null) {
 				String owner = queryDefinition.getNetwork().getOwner();
 				String networkId = queryDefinition.getNetwork().getId();
-				if (label != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCaseAndStatus(owner,
-							networkId, label, deviceStatus, pageable);
-				} else if (label != null) {
-					return deviceRepository.findByOwnerAndNetworkIdAndLabelStartingWithIgnoreCase(owner, networkId,
-							label, pageable);
+				if (search != null && deviceStatus != null) {
+					return deviceRepository.searchByOwnerAndNetworkIdAndLabelOrSerialAndStatus(owner, networkId,
+							search, deviceStatus, pageable);
+				} else if (search != null) {
+					return deviceRepository.searchByOwnerAndNetworkIdAndLabelOrSerial(owner, networkId, search,
+							pageable);
 				} else if (deviceStatus != null) {
 					return deviceRepository.findByOwnerAndNetworkIdAndStatus(owner, networkId, deviceStatus, pageable);
 				}
@@ -1059,21 +1036,21 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			}
 
 			if (queryDefinition.getPermissions().isViewAllMode()) {
-				if (ownerFilter != null && label != null && deviceStatus != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCaseAndStatus(
-							ownerFilter, label, deviceStatus, pageable);
-				} else if (ownerFilter != null && label != null) {
-					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndLabelStartingWithIgnoreCase(ownerFilter,
-							label, pageable);
+				if (ownerFilter != null && search != null && deviceStatus != null) {
+					return deviceRepository.searchByOwnerStartingWithIgnoreCaseAndLabelOrSerialAndStatus(ownerFilter,
+							search, deviceStatus, pageable);
+				} else if (ownerFilter != null && search != null) {
+					return deviceRepository.searchByOwnerStartingWithIgnoreCaseAndLabelOrSerial(ownerFilter, search,
+							pageable);
 				} else if (ownerFilter != null && deviceStatus != null) {
 					return deviceRepository.findByOwnerStartingWithIgnoreCaseAndStatus(ownerFilter, deviceStatus,
 							pageable);
 				} else if (ownerFilter != null) {
 					return deviceRepository.findByOwnerStartingWithIgnoreCase(ownerFilter, pageable);
-				} else if (label != null && deviceStatus != null) {
-					return deviceRepository.findByLabelStartingWithIgnoreCaseAndStatus(label, deviceStatus, pageable);
-				} else if (label != null) {
-					return deviceRepository.findByLabelStartingWithIgnoreCase(label, pageable);
+				} else if (search != null && deviceStatus != null) {
+					return deviceRepository.searchByLabelOrSerialAndStatus(search, deviceStatus, pageable);
+				} else if (search != null) {
+					return deviceRepository.searchByLabelOrSerial(search, pageable);
 				} else if (deviceStatus != null) {
 					return deviceRepository.findByStatus(deviceStatus, pageable);
 				}
@@ -1081,11 +1058,10 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			}
 
 			String owner = queryDefinition.getOwner();
-			if (label != null && deviceStatus != null) {
-				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCaseAndStatus(owner, label, deviceStatus,
-						pageable);
-			} else if (label != null) {
-				return deviceRepository.findByOwnerAndLabelStartingWithIgnoreCase(owner, label, pageable);
+			if (search != null && deviceStatus != null) {
+				return deviceRepository.searchByOwnerAndLabelOrSerialAndStatus(owner, search, deviceStatus, pageable);
+			} else if (search != null) {
+				return deviceRepository.searchByOwnerAndLabelOrSerial(owner, search, pageable);
 			} else if (deviceStatus != null) {
 				return deviceRepository.findByOwnerAndStatus(owner, deviceStatus, pageable);
 			}

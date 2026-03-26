@@ -1,8 +1,12 @@
 package it.thisone.iotter.ui.common;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
@@ -17,7 +21,10 @@ import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.persistence.model.BaseEntity;
+import it.thisone.iotter.persistence.model.User;
+import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.security.Permissions;
 
 public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends BaseComponent {
@@ -279,6 +286,26 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		toolbar.addClassName(TOOLBAR_STYLE);
 		toolbar.setAlignItems(Alignment.CENTER);
 		return toolbar;
+	}
+
+	protected ComboBox<String> createOwnerComboBox(UserService userService, boolean visible, String value) {
+		ComboBox<String> ownerBox = new ComboBox<>(getI18nLabel("owner"));
+		ownerBox.setWidthFull();
+		ownerBox.setClearButtonVisible(true);
+		ownerBox.setPlaceholder(getI18nLabel("any"));
+		ownerBox.setVisible(visible);
+		if (visible) {
+			List<String> owners = new ArrayList<>();
+			owners.add(Constants.ROLE_PRODUCTION.toLowerCase());
+			List<User> admins = userService.findByRole(Constants.ROLE_ADMINISTRATOR);
+			for (User admin : admins) {
+				owners.add(admin.getUsername());
+			}
+			owners.sort(String.CASE_INSENSITIVE_ORDER);
+			ownerBox.setItems((item, filter) -> item.toLowerCase().startsWith(filter.toLowerCase()), owners);
+		}
+		ownerBox.setValue(value);
+		return ownerBox;
 	}
 
 	/**

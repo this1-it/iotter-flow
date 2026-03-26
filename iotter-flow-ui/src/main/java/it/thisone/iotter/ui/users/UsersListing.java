@@ -152,21 +152,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		statusBox.setPlaceholder(getI18nLabel("any"));
 		statusBox.setWidthFull();
 
-		ComboBox<String> ownerBox = new ComboBox<>(getI18nLabel(OWNER));
-		ownerBox.setWidthFull();
-		ownerBox.setClearButtonVisible(true);
-		ownerBox.setPlaceholder(getI18nLabel("any"));
-		ownerBox.setVisible(permissions.isViewAllMode());
-		if (permissions.isViewAllMode()) {
-			List<String> owners = new ArrayList<>();
-			owners.add(Constants.ROLE_PRODUCTION.toLowerCase());
-			List<User> admins = userService.findByRole(Constants.ROLE_ADMINISTRATOR);
-			for (User admin : admins) {
-				owners.add(admin.getUsername());
-			}
-			owners.sort(String.CASE_INSENSITIVE_ORDER);
-			ownerBox.setItems((item, filter) -> item.toLowerCase().startsWith(filter.toLowerCase()), owners);
-		}
+		ComboBox<String> ownerBox = createOwnerComboBox(userService, permissions.isViewAllMode(),
+				currentFilter.getOwner());
 
 		Button resetBtn = new Button(getTranslation("basic.editor.reset"), e -> {
 			statusBox.clear();

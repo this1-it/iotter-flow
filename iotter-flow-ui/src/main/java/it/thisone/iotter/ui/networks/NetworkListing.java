@@ -15,18 +15,22 @@ import org.vaadin.flow.components.TabSheet;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
-import com.vaadin.flow.data.value.ValueChangeMode;
 
 import it.thisone.iotter.enums.NetworkType;
 import it.thisone.iotter.lazyquerydataprovider.FilterableQueryDefinition;
@@ -36,6 +40,7 @@ import it.thisone.iotter.lazyquerydataprovider.QueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.QueryFactory;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.repository.NetworkRepository;
+import it.thisone.iotter.persistence.service.UserService;
 
 import it.thisone.iotter.security.EntityPermission;
 import it.thisone.iotter.security.Permissions;
@@ -45,7 +50,6 @@ import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.maps.DevicesGoogleMap;
 import it.thisone.iotter.ui.maps.DevicesImageOverlayMap;
 import it.thisone.iotter.ui.maps.GroupWidgetsCustomMap;
@@ -69,6 +73,8 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 
 	@Autowired
 	private AuthenticatedUser authenticatedUser;
+	@Autowired
+	private UserService userService;
 	@Autowired
 	private UIEventBus uiEventBus;
 	@Autowired
@@ -108,12 +114,6 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	}
 
 	private void buildLayout() {
-		HorizontalLayout toolbar = new HorizontalLayout();
-		toolbar.setWidthFull();
-		toolbar.setSpacing(true);
-		toolbar.setPadding(true);
-		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
-
 		queryDefinition = new NetworkQueryDefinition(Network.class, DEFAULT_LIMIT, getPermissions());
 		queryDefinition.setOwner(currentUser.getTenant());
 		queryDefinition.setPage(0, DEFAULT_LIMIT);
@@ -125,13 +125,15 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
+		Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
+		filterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		filterButton.addThemeName("subtle");
+		buildFilterPopover(filterButton);
+
+		HorizontalLayout toolbar = buildSearchToolbar(filterButton, createAddButton());
 		VerticalLayout contentLayout = createContentLayout(toolbar, grid);
 		setSelectable(grid);
 
-		getButtonsLayout().add(createMapViewButton(), createMapEditButton(), createConfigurationsButton(),
-				createMigrationButton(), createRemoveButton(), createModifyButton(), createAddButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setAlignItems(Alignment.CENTER);
 		enableButtons(null);
 
 		tabsheet = new TabSheet();
@@ -173,7 +175,33 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		}
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
-		initFilters(grid);
+		grid.addComponentColumn(item -> {
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+			MenuItem menuItem = menuBar.addItem("•••");
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			if (getPermissions().isViewMode()) {
+				subMenu.addItem(getI18nLabel("mapview_action"), event -> openNetworkMap(item));
+			}
+			if (getPermissions().isModifyMode()) {
+				subMenu.addItem(getI18nLabel("map_action"), event -> openEditableNetworkMap(item));
+			}
+			if (getPermissions().isViewMode()) {
+				subMenu.addItem(getI18nLabel("relations_action"), event -> openNetworkConfigurations(item));
+			}
+			if (currentUser.hasPermission(EntityPermission.DEVICE.MIGRATE)) {
+				subMenu.addItem(getI18nLabel("migration_button"), event -> openMigration(item));
+			}
+			if (getPermissions().isRemoveMode()) {
+				subMenu.addItem(getI18nLabel("remove_action"), event -> openRemove(item));
+			}
+			if (getPermissions().isModifyMode()) {
+				subMenu.addItem(getI18nLabel("modify_action"),
+						event -> openEditor(item, getI18nLabel("modify_dialog")));
+			}
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0).setKey("actions");
 		return grid;
 	}
 
@@ -185,36 +213,66 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		return anonymous ? getTranslation("basic.editor.yes") : getTranslation("basic.editor.no");
 	}
 
-	private void initFilters(Grid<Network> grid) {
-		HeaderRow filterRow = grid.appendHeaderRow();
+	private String formatAnonymousOption(Boolean anonymous) {
+		return Boolean.TRUE.equals(anonymous) ? getTranslation("basic.editor.yes")
+				: getTranslation("basic.editor.no");
+	}
 
-		TextField name = new TextField();
-		name.setPlaceholder("Filter...");
-		name.setWidthFull();
-		name.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-		name.setValueChangeMode(ValueChangeMode.LAZY);
-		filterRow.getCell(grid.getColumnByKey("name")).setComponent(name);
-		name.addValueChangeListener(event -> {
-			currentFilter.setName(event.getValue());
+	private void buildFilterPopover(Button filterButton) {
+		Popover popover = new Popover();
+		popover.setTarget(filterButton);
+		popover.setPosition(PopoverPosition.BOTTOM_START);
+
+		ComboBox<NetworkType> networkTypeBox = new ComboBox<>(getI18nLabel("networkType"));
+		networkTypeBox.setItems(NetworkType.values());
+		networkTypeBox.setItemLabelGenerator(this::formatNetworkType);
+		networkTypeBox.setClearButtonVisible(true);
+		networkTypeBox.setPlaceholder(getI18nLabel("any"));
+		networkTypeBox.setWidthFull();
+		networkTypeBox.setValue(currentFilter.getNetworkType());
+
+		ComboBox<String> ownerBox = createOwnerComboBox(userService, getPermissions().isViewAllMode(),
+				currentFilter.getOwner());
+
+		ComboBox<Boolean> anonymousBox = new ComboBox<>(getI18nLabel("anonymous"));
+		anonymousBox.setItems(Boolean.TRUE, Boolean.FALSE);
+		anonymousBox.setItemLabelGenerator(this::formatAnonymousOption);
+		anonymousBox.setClearButtonVisible(true);
+		anonymousBox.setPlaceholder(getI18nLabel("any"));
+		anonymousBox.setWidthFull();
+		anonymousBox.setValue(currentFilter.getAnonymous());
+
+		Button resetBtn = new Button(getTranslation("basic.editor.reset"), e -> {
+			networkTypeBox.clear();
+			ownerBox.clear();
+			anonymousBox.clear();
+		});
+		resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		Button cancelBtn = new Button(getTranslation("basic.editor.cancel"), e -> popover.close());
+		cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		Button updateBtn = new Button(getTranslation("basic.editor.filter"), e -> {
+			currentFilter.setNetworkType(networkTypeBox.getValue());
+			currentFilter.setOwner(ownerBox.getValue());
+			currentFilter.setAnonymous(anonymousBox.getValue());
 			queryDefinition.setQueryFilter(currentFilter);
 			setFilter(currentFilter);
 			refreshCurrentPage();
+			popover.close();
+			filterButton.setClassName(currentFilter.hasActiveFilter() ? "filter-active" : "");
 		});
+		updateBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		if (getPermissions().isViewAllMode()) {
-			TextField owner = new TextField();
-			owner.setPlaceholder("Filter...");
-			owner.setWidthFull();
-			owner.addThemeVariants(TextFieldVariant.LUMO_SMALL);
-			owner.setValueChangeMode(ValueChangeMode.LAZY);
-			filterRow.getCell(grid.getColumnByKey("owner")).setComponent(owner);
-			owner.addValueChangeListener(event -> {
-				currentFilter.setOwner(event.getValue());
-				queryDefinition.setQueryFilter(currentFilter);
-				setFilter(currentFilter);
-				refreshCurrentPage();
-			});
-		}
+		HorizontalLayout buttons = new HorizontalLayout(resetBtn, cancelBtn, updateBtn);
+		buttons.setJustifyContentMode(JustifyContentMode.END);
+		buttons.setWidthFull();
+
+		VerticalLayout content = new VerticalLayout(networkTypeBox, ownerBox, anonymousBox, buttons);
+		content.setSpacing(true);
+		content.setPadding(true);
+		content.setWidth("300px");
+		popover.add(content);
 	}
 
 	private VerticalLayout createContentLayout(HorizontalLayout toolbar, Grid<Network> grid) {
@@ -243,70 +301,26 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		setTotalSize(total);
 	}
 
-	private Button createMapViewButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.MAP_MARKER.create());
-		button.getElement().setAttribute("title", getI18nLabel("mapview_action"));
-		button.addClickListener(event -> openNetworkMap(getCurrentValue()));
-		button.setVisible(getPermissions().isViewMode());
-		return button;
-	}
-
-	private Button createMapEditButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EDIT.create());
-		button.getElement().setAttribute("title", getI18nLabel("map_action"));
-		button.addClickListener(event -> openEditableNetworkMap(getCurrentValue()));
-		button.setVisible(getPermissions().isModifyMode());
-		return button;
-	}
-
-	private Button createConfigurationsButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.COG.create());
-		button.getElement().setAttribute("title", getI18nLabel("relations_action"));
-		button.addClickListener(event -> openNetworkConfigurations(getCurrentValue()));
-		button.setVisible(getPermissions().isViewMode());
-		return button;
-	}
-
-	private Button createMigrationButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EXCHANGE.create());
-		button.getElement().setAttribute("title", getI18nLabel("migration_button"));
-		button.setId(MIGRATION_BUTTON);
-		button.addClickListener(event -> openMigration(getCurrentValue()));
-		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.MIGRATE)
-				);
-		return button;
-	}
-
-	private Button createModifyButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EDIT.create());
-		button.getElement().setAttribute("title", getI18nLabel("modify_action"));
-		button.addClickListener(event -> openEditor(getCurrentValue(), getI18nLabel("modify_dialog")));
-		button.setVisible(getPermissions().isModifyMode());
-		return button;
-	}
-
-	private Button createRemoveButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.TRASH.create());
-		button.getElement().setAttribute("title", getI18nLabel("remove_action"));
-		button.addClickListener(event -> openRemove(getCurrentValue()));
-		button.setVisible(getPermissions().isRemoveMode());
-		return button;
-	}
-
 	private Button createAddButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.PLUS.create());
-		button.getElement().setAttribute("title", getI18nLabel("add"));
+		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
+		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openEditor(new Network(), getI18nLabel("add_dialog")));
 		button.setVisible(getPermissions().isCreateMode());
 		return button;
+	}
+
+	@Override
+	protected void onSearch(String searchText) {
+		currentFilter.setSearchText(searchText);
+		queryDefinition.setQueryFilter(currentFilter);
+		setFilter(currentFilter);
+		refreshCurrentPage();
+	}
+
+	@Override
+	protected void onRefresh() {
+		refreshCurrentPage();
 	}
 
 	private void openNetworkMap(Network item) {
@@ -434,19 +448,33 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	}
 
 	private static final class NetworkFilter {
-		private String name;
+		private String searchText;
+		private NetworkType networkType;
 		private String owner;
+		private Boolean anonymous;
 
-		public String getName() {
-			return name;
+		public String getSearchText() {
+			return searchText;
 		}
 
-		public void setName(String name) {
-			this.name = name;
+		public void setSearchText(String searchText) {
+			this.searchText = normalize(searchText);
 		}
 
-		public boolean hasName() {
-			return name != null && !name.trim().isEmpty();
+		public boolean hasSearchText() {
+			return searchText != null && !searchText.trim().isEmpty();
+		}
+
+		public NetworkType getNetworkType() {
+			return networkType;
+		}
+
+		public void setNetworkType(NetworkType networkType) {
+			this.networkType = networkType;
+		}
+
+		public boolean hasNetworkType() {
+			return networkType != null;
 		}
 
 		public String getOwner() {
@@ -454,16 +482,37 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		}
 
 		public void setOwner(String owner) {
-			this.owner = owner;
+			this.owner = normalize(owner);
 		}
 
 		public boolean hasOwner() {
 			return owner != null && !owner.trim().isEmpty();
 		}
 
+		public Boolean getAnonymous() {
+			return anonymous;
+		}
+
+		public void setAnonymous(Boolean anonymous) {
+			this.anonymous = anonymous;
+		}
+
+		public boolean hasAnonymous() {
+			return anonymous != null;
+		}
+
+		public boolean hasActiveFilter() {
+			return hasNetworkType() || hasOwner() || hasAnonymous();
+		}
+
+		private String normalize(String value) {
+			return value != null && value.trim().isEmpty() ? null : value;
+		}
+
 		@Override
 		public String toString() {
-			return "NetworkFilter{name=" + name + ", owner=" + owner + "}";
+			return "NetworkFilter{searchText=" + searchText + ", networkType=" + networkType + ", owner=" + owner
+					+ ", anonymous=" + anonymous + "}";
 		}
 	}
 
@@ -567,26 +616,17 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 			Sort sort = buildSort();
 			Pageable pageable = PageRequest.of(page, size, sort);
 			NetworkFilter filter = queryDefinition.getQueryFilter();
-			String name = filter != null && filter.hasName() ? filter.getName().trim() : null;
+			String search = filter != null && filter.hasSearchText() ? filter.getSearchText().trim() : null;
 			String ownerFilter = filter != null && filter.hasOwner() ? filter.getOwner().trim() : null;
+			NetworkType networkType = filter != null && filter.hasNetworkType() ? filter.getNetworkType() : null;
+			Boolean anonymous = filter != null && filter.hasAnonymous() ? filter.getAnonymous() : null;
 
 			if (queryDefinition.getPermissions().isViewAllMode()) {
-				if (name != null && ownerFilter != null) {
-					return networkRepository.findByNameStartingWithIgnoreCaseAndOwnerStartingWithIgnoreCase(
-							name, ownerFilter, pageable);
-				} else if (name != null) {
-					return networkRepository.findByNameStartingWithIgnoreCase(name, pageable);
-				} else if (ownerFilter != null) {
-					return networkRepository.findByOwnerStartingWithIgnoreCase(ownerFilter, pageable);
-				}
-				return networkRepository.findAll(pageable);
+				return networkRepository.findAllByFilters(search, ownerFilter, networkType, anonymous, pageable);
 			}
 
-			String owner = queryDefinition.getOwner();
-			if (name != null) {
-				return networkRepository.findByOwnerAndNameStartingWithIgnoreCase(owner, name, pageable);
-			}
-			return networkRepository.findByOwner(owner, pageable);
+			return networkRepository.findByOwnerAndFilters(queryDefinition.getOwner(), search, networkType, anonymous,
+					pageable);
 		}
 
 		private Sort buildSort() {

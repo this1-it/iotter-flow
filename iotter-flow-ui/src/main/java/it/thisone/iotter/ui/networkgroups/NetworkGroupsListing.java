@@ -14,9 +14,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -117,7 +121,7 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		VerticalLayout contentLayout = createContentLayout(toolbar, grid);
 		setSelectable(grid);
 
-		getButtonsLayout().add(createRemoveButton(), createModifyButton(), createBindingsButton(), createAddButton());
+		getButtonsLayout().add(createAddButton());
 		toolbar.add(getButtonsLayout());
 		toolbar.setAlignItems(Alignment.CENTER);
 		enableButtons(null);
@@ -163,6 +167,22 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		}
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
+		grid.addComponentColumn(item -> {
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+			MenuItem menuItem = menuBar.addItem("•••");
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			if (getPermissions().isModifyMode()) {
+				subMenu.addItem(getI18nLabel("modify_action"),
+						event -> openEditor(item, getI18nLabel("modify_dialog")));
+			}
+			if (getPermissions().isRemoveMode()) {
+				subMenu.addItem(getI18nLabel("remove_action"), event -> openRemove(item));
+			}
+			subMenu.addItem(getI18nLabel("bindings_button"), event -> openBindings(item));
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0).setKey("actions");
 		initFilters(grid);
 		return grid;
 	}
@@ -249,33 +269,6 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openEditor(new NetworkGroup(), getI18nLabel("add_dialog")));
 		button.setVisible(getPermissions().isCreateMode());
-		return button;
-	}
-
-	private Button createModifyButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EDIT.create());
-		button.getElement().setAttribute("title", getI18nLabel("modify_action"));
-		button.addClickListener(event -> openEditor(getCurrentValue(), getI18nLabel("modify_dialog")));
-		button.setVisible(getPermissions().isModifyMode());
-		return button;
-	}
-
-	private Button createRemoveButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.TRASH.create());
-		button.getElement().setAttribute("title", getI18nLabel("remove_action"));
-		button.addClickListener(event -> openRemove(getCurrentValue()));
-		button.setVisible(getPermissions().isRemoveMode());
-		return button;
-	}
-
-	private Button createBindingsButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.RANDOM.create());
-		button.setId("bindings_button");
-		button.getElement().setAttribute("title", getI18nLabel("bindings_button"));
-		button.addClickListener(event -> openBindings(getCurrentValue()));
 		return button;
 	}
 

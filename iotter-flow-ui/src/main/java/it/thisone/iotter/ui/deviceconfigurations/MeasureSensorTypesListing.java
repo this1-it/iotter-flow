@@ -12,13 +12,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
+import it.thisone.iotter.lazyquerydataprovider.FilterableQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDataProvider;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.QueryDefinition;
@@ -33,7 +38,6 @@ import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.ConfirmationDialog;
 import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.SideDrawer;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.util.PopupNotification;
 
 @Component
@@ -52,8 +56,9 @@ public class MeasureSensorTypesListing extends AbstractBaseEntityListing<Measure
 	private MeasureSensorTypeService measureSensorTypeService;
 
 	private Grid<MeasureSensorType> grid;
-	private LazyQueryDataProvider<MeasureSensorType, Void> dataProvider;
-	private LazyQueryDefinition<MeasureSensorType, Void> queryDefinition;
+	private LazyQueryDataProvider<MeasureSensorType, MeasureSensorTypeFilter> dataProvider;
+	private MeasureSensorTypeQueryDefinition queryDefinition;
+	private MeasureSensorTypeFilter currentFilter = new MeasureSensorTypeFilter();
 
 	public MeasureSensorTypesListing() {
 		this(new Permissions(true));
@@ -73,27 +78,21 @@ public class MeasureSensorTypesListing extends AbstractBaseEntityListing<Measure
 	}
 
 	private void buildLayout() {
-		HorizontalLayout toolbar = new HorizontalLayout();
-		toolbar.setWidthFull();
-		toolbar.setSpacing(true);
-		toolbar.setPadding(true);
-		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
-
-		queryDefinition = new LazyQueryDefinition<>(MeasureSensorType.class, DEFAULT_LIMIT);
+		queryDefinition = new MeasureSensorTypeQueryDefinition(MeasureSensorType.class, DEFAULT_LIMIT);
+		queryDefinition.setQueryFilter(currentFilter);
 		dataProvider = new LazyQueryDataProvider<>(queryDefinition, new MeasureSensorTypeQueryFactory(measureSensorTypeRepository));
 		dataProvider.setCacheQueries(false);
+		dataProvider.setFilter(currentFilter);
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
+		HorizontalLayout toolbar = buildSearchToolbar(createAddButton());
+
 		getMainLayout().add(toolbar, content);
 		getMainLayout().setFlexGrow(1f, content);
-
-		getButtonsLayout().add(createRemoveButton(), createModifyButton(), createAddButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setVerticalComponentAlignment(Alignment.CENTER, getButtonsLayout());
 		enableButtons(null);
 	}
 
@@ -126,6 +125,21 @@ public class MeasureSensorTypesListing extends AbstractBaseEntityListing<Measure
 		}
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
+		grid.addComponentColumn(item -> {
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+			MenuItem menuItem = menuBar.addItem("•••");
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			if (permissions.isModifyMode()) {
+				subMenu.addItem(getI18nLabel("modify_action"),
+						event -> openEditor(item, getI18nLabel("modify_dialog")));
+			}
+			if (permissions.isRemoveMode()) {
+				subMenu.addItem(getI18nLabel("remove_action"), event -> openRemove(item));
+			}
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0).setKey("actions");
 		return grid;
 	}
 
@@ -146,31 +160,25 @@ public class MeasureSensorTypesListing extends AbstractBaseEntityListing<Measure
 	}
 
 	private Button createAddButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.PLUS.create());
-		button.getElement().setProperty("title", getI18nLabel("add"));
+		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
+		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
 		button.addClickListener(event -> openEditor(new MeasureSensorType(), getI18nLabel("add_dialog")));
 		button.setVisible(permissions.isCreateMode());
 		return button;
 	}
 
-	private Button createModifyButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EDIT.create());
-		button.getElement().setProperty("title", getI18nLabel("modify_action"));
-		button.addClickListener(event -> openEditor(getCurrentValue(), getI18nLabel("modify_dialog")));
-		button.setVisible(permissions.isModifyMode());
-		return button;
+	@Override
+	protected void onSearch(String searchText) {
+		currentFilter.setSearchText(searchText);
+		queryDefinition.setQueryFilter(currentFilter);
+		setFilter(currentFilter);
+		refreshCurrentPage();
 	}
 
-	private Button createRemoveButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.TRASH.create());
-		button.getElement().setProperty("title", getI18nLabel("remove_action"));
-		button.addClickListener(event -> openRemove(getCurrentValue()));
-		button.setVisible(permissions.isRemoveMode());
-		return button;
+	@Override
+	protected void onRefresh() {
+		refreshData();
 	}
 
 	@Override
@@ -227,7 +235,44 @@ public class MeasureSensorTypesListing extends AbstractBaseEntityListing<Measure
 		refreshData();
 	}
 
-	private static final class MeasureSensorTypeQueryFactory implements QueryFactory<MeasureSensorType, Void> {
+	private static final class MeasureSensorTypeFilter {
+		private String searchText;
+
+		public String getSearchText() {
+			return searchText;
+		}
+
+		public void setSearchText(String searchText) {
+			this.searchText = searchText != null && searchText.trim().isEmpty() ? null : searchText;
+		}
+
+		public boolean hasSearchText() {
+			return searchText != null && !searchText.trim().isEmpty();
+		}
+	}
+
+	private static final class MeasureSensorTypeQueryDefinition extends LazyQueryDefinition<MeasureSensorType, MeasureSensorTypeFilter>
+			implements FilterableQueryDefinition<MeasureSensorTypeFilter> {
+
+		private static final long serialVersionUID = 1L;
+		private MeasureSensorTypeFilter queryFilter;
+
+		private MeasureSensorTypeQueryDefinition(Class<MeasureSensorType> beanClass, int batchSize) {
+			super(beanClass, batchSize);
+		}
+
+		@Override
+		public void setQueryFilter(MeasureSensorTypeFilter filter) {
+			this.queryFilter = filter;
+		}
+
+		@Override
+		public MeasureSensorTypeFilter getQueryFilter() {
+			return queryFilter;
+		}
+	}
+
+	private static final class MeasureSensorTypeQueryFactory implements QueryFactory<MeasureSensorType, MeasureSensorTypeFilter> {
 		private final MeasureSensorTypeRepository measureSensorTypeRepository;
 
 		private MeasureSensorTypeQueryFactory(MeasureSensorTypeRepository measureSensorTypeRepository) {
@@ -235,35 +280,44 @@ public class MeasureSensorTypesListing extends AbstractBaseEntityListing<Measure
 		}
 
 		@Override
-		public it.thisone.iotter.lazyquerydataprovider.Query<MeasureSensorType, Void> constructQuery(
-				QueryDefinition<MeasureSensorType, Void> queryDefinition) {
-			return new MeasureSensorTypeQuery(measureSensorTypeRepository);
+		public it.thisone.iotter.lazyquerydataprovider.Query<MeasureSensorType, MeasureSensorTypeFilter> constructQuery(
+				QueryDefinition<MeasureSensorType, MeasureSensorTypeFilter> queryDefinition) {
+			return new MeasureSensorTypeQuery(measureSensorTypeRepository,
+					(MeasureSensorTypeQueryDefinition) queryDefinition);
 		}
 	}
 
 	private static final class MeasureSensorTypeQuery
-			implements it.thisone.iotter.lazyquerydataprovider.Query<MeasureSensorType, Void> {
+			implements it.thisone.iotter.lazyquerydataprovider.Query<MeasureSensorType, MeasureSensorTypeFilter> {
 		private final MeasureSensorTypeRepository measureSensorTypeRepository;
+		private final MeasureSensorTypeQueryDefinition queryDefinition;
 
-		private MeasureSensorTypeQuery(MeasureSensorTypeRepository measureSensorTypeRepository) {
+		private MeasureSensorTypeQuery(MeasureSensorTypeRepository measureSensorTypeRepository,
+				MeasureSensorTypeQueryDefinition queryDefinition) {
 			this.measureSensorTypeRepository = measureSensorTypeRepository;
+			this.queryDefinition = queryDefinition;
 		}
 
 		@Override
-		public int size(QueryDefinition<MeasureSensorType, Void> queryDefinition) {
+		public int size(QueryDefinition<MeasureSensorType, MeasureSensorTypeFilter> queryDefinition) {
 			Page<MeasureSensorType> page = findPage(0, 1);
 			return (int) page.getTotalElements();
 		}
 
 		@Override
-		public java.util.stream.Stream<MeasureSensorType> loadItems(QueryDefinition<MeasureSensorType, Void> queryDefinition,
-				int offset, int limit) {
+		public java.util.stream.Stream<MeasureSensorType> loadItems(
+				QueryDefinition<MeasureSensorType, MeasureSensorTypeFilter> queryDefinition, int offset, int limit) {
 			Page<MeasureSensorType> page = findPage(offset / limit, limit);
 			return page.getContent().stream();
 		}
 
 		private Page<MeasureSensorType> findPage(int page, int size) {
 			Pageable pageable = PageRequest.of(page, size);
+			MeasureSensorTypeFilter filter = queryDefinition.getQueryFilter();
+			String searchText = filter != null && filter.hasSearchText() ? filter.getSearchText().trim() : null;
+			if (searchText != null) {
+				return measureSensorTypeRepository.findByNameStartingWithIgnoreCase(searchText, pageable);
+			}
 			return measureSensorTypeRepository.findAll(pageable);
 		}
 	}

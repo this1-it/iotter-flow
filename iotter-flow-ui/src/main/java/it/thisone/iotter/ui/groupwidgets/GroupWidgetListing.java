@@ -13,32 +13,30 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
-import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
-import com.vaadin.flow.data.value.ValueChangeMode;
-
-import it.thisone.iotter.config.Constants;
 import it.thisone.iotter.lazyquerydataprovider.FilterableQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDataProvider;
 import it.thisone.iotter.lazyquerydataprovider.LazyQueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.QueryDefinition;
 import it.thisone.iotter.lazyquerydataprovider.QueryFactory;
-import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.repository.GroupWidgetRepository;
-import it.thisone.iotter.persistence.service.DeviceService;
-import it.thisone.iotter.persistence.service.GroupWidgetService;
-import it.thisone.iotter.persistence.service.NetworkGroupService;
-import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
@@ -58,8 +56,6 @@ import it.thisone.iotter.util.PopupNotification;
 public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
     private static final long serialVersionUID = 1L;
-    private static final String ASSOCIATIONS_BUTTON = "bindings_button";
-    private static final String DESIGNER = "designer";
     private static final String GROUPWIDGET_VIEW = "groupwidgets.view";
 
     private final Permissions permissions;
@@ -104,11 +100,6 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     }
 
     private void buildLayout() {
-        HorizontalLayout toolbar = new HorizontalLayout();
-        toolbar.setWidthFull();
-        toolbar.setSpacing(true);
-        toolbar.setPadding(true);
-
         queryDefinition = new GroupWidgetQueryDefinition(GroupWidget.class, DEFAULT_LIMIT, permissions);
         queryDefinition.setNetwork(network);
         queryDefinition.setOwner(currentUser.getTenant());
@@ -121,23 +112,21 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         setBackendDataProvider(dataProvider);
 
         grid = createGrid();
-        VerticalLayout tableLayout = createTableLayout(toolbar, grid);
+        VerticalLayout tableLayout = createTableLayout(grid);
         setSelectable(grid);
 
-        getButtonsLayout().add(createLinkButton());
-        getButtonsLayout().add(createViewButton());
-        getButtonsLayout().add(createDesignerButton());
-        getButtonsLayout().add(createRemoveButton());
-        getButtonsLayout().add(createAssociationsButton());
-        getButtonsLayout().add(createAddButton());
+        Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
+        filterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        filterButton.addThemeName("subtle");
+        buildFilterPopover(filterButton);
 
-        toolbar.add(getButtonsLayout());
-        toolbar.setAlignSelf(Alignment.END, getButtonsLayout());
+        HorizontalLayout toolbar = buildSearchToolbar(filterButton, createAddButton());
 
-        getMainLayout().add(tableLayout);
+        getMainLayout().add(toolbar, tableLayout);
         getMainLayout().setFlexGrow(1f, tableLayout);
 
         updateTotalCount();
+        enableButtons(null);
     }
 
     @Override
@@ -192,7 +181,29 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         }
 
         table.setColumnOrder(columns.toArray(new Grid.Column[0]));
-        initFilters(table);
+        table.addComponentColumn(widget -> {
+            MenuBar menuBar = new MenuBar();
+            menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+            MenuItem menuItem = menuBar.addItem("•••");
+            menuItem.getElement().setAttribute("aria-label", "More options");
+            SubMenu subMenu = menuItem.getSubMenu();
+            if (permissions.isModifyMode()) {
+                subMenu.addItem(getI18nLabel("map_action"), event -> openGroupWidgetMap(widget));
+            }
+            if (permissions.isViewMode()) {
+                subMenu.addItem(getI18nLabel("view_action"), event -> openVisualizer(widget));
+            }
+            if (permissions.isModifyMode()) {
+                subMenu.addItem(getI18nLabel("designer_action"), event -> openDesigner(widget));
+            }
+            if (permissions.isRemoveMode()) {
+                subMenu.addItem(getI18nLabel("remove_action"), event -> openRemove(widget));
+            }
+            if (permissions.isModifyMode()) {
+                subMenu.addItem(getI18nLabel("bindings_button"), event -> openAssociations(widget));
+            }
+            return menuBar;
+        }).setWidth("70px").setFlexGrow(0).setKey("actions");
         return table;
     }
 
@@ -203,41 +214,46 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         return widget.getNetwork().getName();
     }
 
-    private void initFilters(Grid<GroupWidget> table) {
-        HeaderRow filterRow = table.appendHeaderRow();
+    private void buildFilterPopover(Button filterButton) {
+        Popover popover = new Popover();
+        popover.setTarget(filterButton);
+        popover.setPosition(PopoverPosition.BOTTOM_START);
 
-        TextField name = new TextField();
-        name.setPlaceholder("Filter...");
-        name.setWidthFull();
-        name.setValueChangeMode(ValueChangeMode.LAZY);
-        filterRow.getCell(table.getColumnByKey("name")).setComponent(name);
-        name.addValueChangeListener(event -> {
-            currentFilter.setName(event.getValue());
+        ComboBox<String> ownerBox = createOwnerComboBox(backendServices.getUserService(),
+                permissions.isViewAllMode(), currentFilter.getOwner());
+
+        Button resetBtn = new Button(getTranslation("basic.editor.reset"), event -> ownerBox.clear());
+        resetBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        Button cancelBtn = new Button(getTranslation("basic.editor.cancel"), event -> popover.close());
+        cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        Button updateBtn = new Button(getTranslation("basic.editor.filter"), event -> {
+            currentFilter.setOwner(ownerBox.getValue());
             queryDefinition.setQueryFilter(currentFilter);
             setFilter(currentFilter);
             refreshCurrentPage();
+            popover.close();
+            filterButton.setClassName(currentFilter.hasActiveFilter() ? "filter-active" : "");
         });
+        updateBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        if (permissions.isViewAllMode()) {
-            TextField owner = new TextField();
-            owner.setPlaceholder("Filter...");
-            owner.setWidthFull();
-            owner.setValueChangeMode(ValueChangeMode.LAZY);
-            filterRow.getCell(table.getColumnByKey("owner")).setComponent(owner);
-            owner.addValueChangeListener(event -> {
-                currentFilter.setOwner(event.getValue());
-                queryDefinition.setQueryFilter(currentFilter);
-                setFilter(currentFilter);
-                refreshCurrentPage();
-            });
-        }
+        HorizontalLayout buttons = new HorizontalLayout(resetBtn, cancelBtn, updateBtn);
+        buttons.setJustifyContentMode(JustifyContentMode.END);
+        buttons.setWidthFull();
+
+        VerticalLayout content = new VerticalLayout(ownerBox, buttons);
+        content.setSpacing(true);
+        content.setPadding(true);
+        content.setWidth("300px");
+        popover.add(content);
     }
 
-    private VerticalLayout createTableLayout(HorizontalLayout toolbar, Grid<GroupWidget> table) {
+    private VerticalLayout createTableLayout(Grid<GroupWidget> table) {
         VerticalLayout tableLayout = new VerticalLayout();
         tableLayout.setSizeFull();
         tableLayout.setSpacing(true);
-        tableLayout.add(toolbar, table);
+        tableLayout.add(table);
         tableLayout.setFlexGrow(1f, table);
         return tableLayout;
     }
@@ -259,54 +275,11 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     }
 
     private Button createAddButton() {
-        Button button = new Button(VaadinIcon.PLUS.create());
-        button.getElement().setProperty("title", getI18nLabel("add"));
+        Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
+        button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
         button.addClickListener(event -> openEditor(new GroupWidget(), getI18nLabel("add_dialog")));
         button.setVisible(permissions.isCreateMode());
-        return button;
-    }
-
-    private Button createRemoveButton() {
-        Button button = new Button(VaadinIcon.TRASH.create());
-        button.getElement().setProperty("title", getI18nLabel("remove_action"));
-        button.setId("remove" + getId());
-        button.addClickListener(event -> openRemove(getCurrentValue()));
-        button.setVisible(permissions.isRemoveMode());
-        return button;
-    }
-
-    private Button createViewButton() {
-        Button button = new Button(VaadinIcon.BAR_CHART.create());
-        button.getElement().setProperty("title", getI18nLabel("view_action"));
-        button.addClickListener(event -> openVisualizer(getCurrentValue()));
-        button.setVisible(permissions.isViewMode());
-        return button;
-    }
-
-    private Button createDesignerButton() {
-        Button button = new Button(VaadinIcon.EDIT.create());
-        button.setId(DESIGNER);
-        button.getElement().setProperty("title", getI18nLabel("designer_action"));
-        button.addClickListener(event -> openDesigner(getCurrentValue()));
-        button.setVisible(permissions.isModifyMode());
-        return button;
-    }
-
-    private Button createLinkButton() {
-        Button button = new Button(VaadinIcon.LINK.create());
-        button.getElement().setProperty("title", getI18nLabel("map_action"));
-        button.addClickListener(event -> openGroupWidgetMap(getCurrentValue()));
-        button.setVisible(permissions.isModifyMode());
-        return button;
-    }
-
-    private Button createAssociationsButton() {
-        Button button = new Button(VaadinIcon.RANDOM.create());
-        button.setId(ASSOCIATIONS_BUTTON);
-        button.getElement().setProperty("title", getI18nLabel(ASSOCIATIONS_BUTTON));
-        button.addClickListener(event -> openAssociations(getCurrentValue()));
-        button.setVisible(permissions.isModifyMode());
         return button;
     }
 
@@ -438,21 +411,34 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         // });
     }
 
+    @Override
+    protected void onSearch(String searchText) {
+        currentFilter.setSearchText(searchText);
+        queryDefinition.setQueryFilter(currentFilter);
+        setFilter(currentFilter);
+        refreshCurrentPage();
+    }
+
+    @Override
+    protected void onRefresh() {
+        refreshCurrentPage();
+    }
+
 
     private static final class GroupWidgetFilter {
-        private String name;
+        private String searchText;
         private String owner;
 
-        public String getName() {
-            return name;
+        public String getSearchText() {
+            return searchText;
         }
 
-        public void setName(String name) {
-            this.name = name;
+        public void setSearchText(String searchText) {
+            this.searchText = normalize(searchText);
         }
 
-        public boolean hasName() {
-            return name != null && !name.trim().isEmpty();
+        public boolean hasSearchText() {
+            return searchText != null && !searchText.trim().isEmpty();
         }
 
         public String getOwner() {
@@ -460,11 +446,19 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         }
 
         public void setOwner(String owner) {
-            this.owner = owner;
+            this.owner = normalize(owner);
         }
 
         public boolean hasOwner() {
             return owner != null && !owner.trim().isEmpty();
+        }
+
+        public boolean hasActiveFilter() {
+            return hasOwner();
+        }
+
+        private String normalize(String value) {
+            return value == null || value.trim().isEmpty() ? null : value.trim();
         }
     }
 
@@ -576,26 +570,26 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             Sort sort = buildSort();
             Pageable pageable = PageRequest.of(page, size, sort);
             GroupWidgetFilter filter = queryDefinition.getQueryFilter();
-            String name = filter != null && filter.hasName() ? filter.getName().trim() : null;
+            String search = filter != null && filter.hasSearchText() ? filter.getSearchText().trim() : null;
             String ownerFilter = filter != null && filter.hasOwner() ? filter.getOwner().trim() : null;
 
             if (queryDefinition.getNetwork() != null) {
                 String owner = queryDefinition.getNetwork().getOwner();
                 String networkId = queryDefinition.getNetwork().getId();
-                if (name != null) {
+                if (search != null) {
                     return groupWidgetRepository.findByOwnerAndNetworkIdAndNameStartingWithIgnoreCase(owner, networkId,
-                            name, pageable);
+                            search, pageable);
                 }
                 return groupWidgetRepository.findByOwnerAndNetworkId(owner, networkId, pageable);
             }
 
             if (queryDefinition.getPermissions().isViewAllMode()) {
-                if (name != null && ownerFilter != null) {
-                    return groupWidgetRepository.findByNameStartingWithIgnoreCaseAndOwnerStartingWithIgnoreCase(name,
+                if (search != null && ownerFilter != null) {
+                    return groupWidgetRepository.findByNameStartingWithIgnoreCaseAndOwnerStartingWithIgnoreCase(search,
                             ownerFilter, pageable);
                 }
-                if (name != null) {
-                    return groupWidgetRepository.findByNameStartingWithIgnoreCase(name, pageable);
+                if (search != null) {
+                    return groupWidgetRepository.findByNameStartingWithIgnoreCase(search, pageable);
                 }
                 if (ownerFilter != null) {
                     return groupWidgetRepository.findByOwnerStartingWithIgnoreCase(ownerFilter, pageable);
@@ -604,8 +598,8 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             }
 
             String owner = queryDefinition.getOwner();
-            if (name != null) {
-                return groupWidgetRepository.findByOwnerAndNameStartingWithIgnoreCase(owner, name, pageable);
+            if (search != null) {
+                return groupWidgetRepository.findByOwnerAndNameStartingWithIgnoreCase(owner, search, pageable);
             }
             return groupWidgetRepository.findByOwner(owner, pageable);
         }
