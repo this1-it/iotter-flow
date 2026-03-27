@@ -23,8 +23,7 @@ import it.thisone.iotter.persistence.model.Channel;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.channels.ChannelGrid;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.providers.BackendServices;
@@ -123,18 +122,14 @@ public class GraphicWidgetPlaceHolder extends AbstractWidgetPlaceHolder {
     }
 
     public void openRemove() {
-        Callback callback = result -> {
-            if (result) {
-                if (uiEventBus != null) {
-                    uiEventBus.post(new PendingChangesEvent());
-                }
-                fireEvent(new PlaceHolderRemovedEvent(GraphicWidgetPlaceHolder.this));
-            }
-        };
         String caption = getTranslation("basic.editor.are_you_sure");
         String message = getI18nLabel("remove_action");
-        ConfirmationDialog dialog = new ConfirmationDialog(caption, message, callback);
-        dialog.open();
+        ConfirmationDialogs.open(this, caption, message, () -> {
+            if (uiEventBus != null) {
+                uiEventBus.post(new PendingChangesEvent());
+            }
+            fireEvent(new PlaceHolderRemovedEvent(GraphicWidgetPlaceHolder.this));
+        });
     }
 
     public void openPositionEditor(final com.vaadin.flow.component.Component source) {

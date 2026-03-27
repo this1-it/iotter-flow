@@ -19,8 +19,7 @@ import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.util.PopupNotification;
 
 public class NetworkGroupDevices extends BaseComponent {
@@ -169,10 +168,7 @@ public class NetworkGroupDevices extends BaseComponent {
         }
 
         String caption = getI18nLabel("remove_device_warning");
-        Callback callback = result -> {
-            if (!result) {
-                return;
-            }
+        ConfirmationDialogs.open(this, caption, caption, () -> {
             boolean removed = deviceService.removeDeviceFromGroup(device, entity);
             if (removed) {
                 removeItem(device);
@@ -180,9 +176,7 @@ public class NetworkGroupDevices extends BaseComponent {
             } else {
                 PopupNotification.show("Error", PopupNotification.Type.ERROR);
             }
-        };
-        ConfirmationDialog dialog = new ConfirmationDialog(caption, caption, callback);
-        dialog.open();
+        });
     }
 
     public void addItem(Device device) {

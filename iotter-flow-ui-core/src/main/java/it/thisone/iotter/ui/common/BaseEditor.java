@@ -5,12 +5,10 @@ import java.util.function.Consumer;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 
 
@@ -129,17 +127,10 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 				if (pendingChanges) {
 					String caption = getTranslation("basic.editor.forget_changes");
 					String message = getTranslation("basic.editor.pending_changes");
-					Callback callback = new Callback() {
-						@Override
-						public void onDialogResult(boolean result) {
-							if (result) {
-								onCancel();
-								fireEvent(evt);
-							}
-						}
-					};
-					Dialog dialog = new ConfirmationDialog(caption, message, callback);
-					dialog.open();
+					ConfirmationDialogs.open(BaseEditor.this, caption, message, () -> {
+						onCancel();
+						fireEvent(evt);
+					});
 				}
 				else {
 					onCancel();

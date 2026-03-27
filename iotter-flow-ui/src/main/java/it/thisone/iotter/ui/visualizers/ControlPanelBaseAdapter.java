@@ -56,7 +56,6 @@ import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
 
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.WidgetRefreshUIRunnable;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
@@ -489,15 +488,12 @@ public class ControlPanelBaseAdapter extends AbstractWidgetVisualizer
         }
 
         resetAlarms = buildQuickCommand(feed6);
-        Callback callback = result -> {
-            if (result) {
-                resetAlarms.setIcon(IconSetResolver.LOADER.create());
-                resetAlarms.setEnabled(false);
-                QuickCommandClickCallback cb = QuickCommandButton.createClickCallback(resetAlarms);
-                cb.clicked();
-            }
-        };
-        resetAlarms.addClickListener(resetAlarms.buildResetAlarmsClickListener(device, callback));
+        resetAlarms.addClickListener(resetAlarms.buildResetAlarmsClickListener(device, () -> {
+            resetAlarms.setIcon(IconSetResolver.LOADER.create());
+            resetAlarms.setEnabled(false);
+            QuickCommandClickCallback cb = QuickCommandButton.createClickCallback(resetAlarms);
+            cb.clicked();
+        }));
 
         // TODO(flow-migration): GridLayout removed; replaced with FormLayout 2-column structure.
         FormLayout grid = new FormLayout();

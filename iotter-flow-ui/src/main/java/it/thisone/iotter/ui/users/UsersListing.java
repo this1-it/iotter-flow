@@ -55,6 +55,7 @@ import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
@@ -393,22 +394,19 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 			return;
 		}
 
-		AbstractBaseEntityForm<User> details = getEditor(item, true);
-		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("remove_dialog"), details);
-
-
-			details.setDeleteHandler(entity -> {
-				try {
-					userService.deleteById(entity.getId());
-					dialog.close();
-					refreshCurrentPage();
-				} catch (Exception e) {
-					PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
-				}
-			});
-		
-
-		dialog.open();
+		String name = item.getDisplayName();
+		if (name == null || name.isBlank()) {
+			name = item.getUsername();
+		}
+		String header = String.format("%s: %s", getI18nLabel("remove_action"), name);
+		ConfirmationDialogs.openDanger(this, header, getI18nLabel("remove_dialog"), () -> {
+			try {
+				userService.deleteById(item.getId());
+				refreshCurrentPage();
+			} catch (Exception e) {
+				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+			}
+		});
 	}
 
 	

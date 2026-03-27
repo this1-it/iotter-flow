@@ -48,6 +48,7 @@ import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.ui.maps.DevicesGoogleMap;
@@ -433,18 +434,15 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		if (item == null) {
 			return;
 		}
-		AbstractBaseEntityForm<Network> details = getEditor(item, true);
-		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("remove_dialog"), details);
-		details.setDeleteHandler(entity -> {
+		String header = String.format("%s: %s", getI18nLabel("remove_action"), item.getName());
+		ConfirmationDialogs.openDanger(this, header, getI18nLabel("remove_dialog"), () -> {
 			try {
-				backendServices.getNetworkService().disconnect(entity);
-				dialog.close();
+				backendServices.getNetworkService().disconnect(item);
 				refreshCurrentPage();
 			} catch (Exception e) {
 				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
 			}
 		});
-		dialog.open();
 	}
 
 	private static final class NetworkFilter {

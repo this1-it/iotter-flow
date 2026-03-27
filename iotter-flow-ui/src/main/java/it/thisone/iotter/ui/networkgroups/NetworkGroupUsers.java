@@ -32,8 +32,7 @@ import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.persistence.service.UserService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.ifc.INetworkGroupUsers;
 import it.thisone.iotter.ui.validators.AntiReDoSEmailValidator;
@@ -348,63 +347,47 @@ public class NetworkGroupUsers extends BaseComponent implements INetworkGroupUse
 	}
 
 	private void removeAllFromGroup() {
-		Callback callback = new Callback() {
-			@Override
-			public void onDialogResult(boolean result) {
-				if (!result) {
-					return;
-				}
-				List<User> enabled = new ArrayList<>(rightDataProvider.getItems());
-				for (User user : enabled) {
-					if (user.getAccountStatus().equals(AccountStatus.HIDDEN)) {
-						userService.deleteById(user.getId());
-						rightDataProvider.getItems().remove(user);
-					} else {
-						boolean done = userService.removeUserFromGroup(user, group);
-						if (done) {
-							rightDataProvider.getItems().remove(user);
-							leftDataProvider.getItems().add(user);
-						}
-					}
-				}
-				rightDataProvider.refreshAll();
-				leftDataProvider.refreshAll();
-			}
-		};
 		String caption = getTranslation("basic.editor.are_you_sure");
 		String message = getI18nLabel("remove_all_members");
-		Dialog dialog = new ConfirmationDialog(caption, message, callback);
-		dialog.open();
+		ConfirmationDialogs.open(this, caption, message, () -> {
+			List<User> enabled = new ArrayList<>(rightDataProvider.getItems());
+			for (User user : enabled) {
+				if (user.getAccountStatus().equals(AccountStatus.HIDDEN)) {
+					userService.deleteById(user.getId());
+					rightDataProvider.getItems().remove(user);
+				} else {
+					boolean done = userService.removeUserFromGroup(user, group);
+					if (done) {
+						rightDataProvider.getItems().remove(user);
+						leftDataProvider.getItems().add(user);
+					}
+				}
+			}
+			rightDataProvider.refreshAll();
+			leftDataProvider.refreshAll();
+		});
 	}
 
 	private void addAllToGroup() {
-		Callback callback = new Callback() {
-			@Override
-			public void onDialogResult(boolean result) {
-				if (!result) {
-					return;
-				}
-				List<User> users = new ArrayList<>(leftDataProvider.getItems());
-				List<User> enabled = new ArrayList<>(rightDataProvider.getItems());
-				List<User> admins = new ArrayList<>(adminDataProvider.getItems());
-
-				for (User user : users) {
-					if (!enabled.contains(user) && !admins.contains(user)) {
-						boolean done = userService.addUserToGroup(user, group);
-						if (done) {
-							leftDataProvider.getItems().remove(user);
-							rightDataProvider.getItems().add(user);
-						}
-					}
-				}
-				rightDataProvider.refreshAll();
-				leftDataProvider.refreshAll();
-			}
-		};
 		String caption = getTranslation("basic.editor.are_you_sure");
 		String message = getI18nLabel("add_all_users");
-		Dialog dialog = new ConfirmationDialog(caption, message, callback);
-		dialog.open();
+		ConfirmationDialogs.open(this, caption, message, () -> {
+			List<User> users = new ArrayList<>(leftDataProvider.getItems());
+			List<User> enabled = new ArrayList<>(rightDataProvider.getItems());
+			List<User> admins = new ArrayList<>(adminDataProvider.getItems());
+
+			for (User user : users) {
+				if (!enabled.contains(user) && !admins.contains(user)) {
+					boolean done = userService.addUserToGroup(user, group);
+					if (done) {
+						leftDataProvider.getItems().remove(user);
+						rightDataProvider.getItems().add(user);
+					}
+				}
+			}
+			rightDataProvider.refreshAll();
+			leftDataProvider.refreshAll();
+		});
 	}
 
 	private void addUserToGroup() {
@@ -455,32 +438,25 @@ public class NetworkGroupUsers extends BaseComponent implements INetworkGroupUse
 
 		String caption = getI18nLabel("remove_user_warning");
 		Span message = new Span(String.format("%s (%s)", user.getUsername(), user.getEmail()));
-		Dialog dialog = new ConfirmationDialog(caption, message, new Callback() {
-			@Override
-			public void onDialogResult(boolean result) {
-				if (!result) {
-					return;
-				}
-				if (user.getAccountStatus().equals(AccountStatus.HIDDEN)) {
+		ConfirmationDialogs.open(this, caption, message, () -> {
+			if (user.getAccountStatus().equals(AccountStatus.HIDDEN)) {
+				rightDataProvider.getItems().remove(user);
+				userService.deleteById(user.getId());
+				PopupNotification.show(getI18nLabel("user_has_been_deleted"));
+			} else {
+				boolean resultRemove = userService.removeUserFromGroup(user, group);
+				if (resultRemove) {
 					rightDataProvider.getItems().remove(user);
-					userService.deleteById(user.getId());
-					PopupNotification.show(getI18nLabel("user_has_been_deleted"));
+					leftDataProvider.getItems().add(user);
+					rightDataProvider.refreshAll();
+					leftDataProvider.refreshAll();
+					PopupNotification.show(getI18nLabel("user_has_been_removed_from_group"));
 				} else {
-					boolean resultRemove = userService.removeUserFromGroup(user, group);
-					if (resultRemove) {
-						rightDataProvider.getItems().remove(user);
-						leftDataProvider.getItems().add(user);
-						rightDataProvider.refreshAll();
-						leftDataProvider.refreshAll();
-						PopupNotification.show(getI18nLabel("user_has_been_removed_from_group"));
-					} else {
-						PopupNotification.show("Cannot remove user, see logs.",
-								PopupNotification.Type.ERROR);
-					}
+					PopupNotification.show("Cannot remove user, see logs.",
+							PopupNotification.Type.ERROR);
 				}
 			}
 		});
-		dialog.open();
 	}
 
 	private UserDetailsAdapter details(User user) {

@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -310,7 +311,7 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		List<String> administrators = userService.findByRole(Constants.ROLE_ADMINISTRATOR).stream()
 				.map(user -> user.getUsername())
 				.sorted(String.CASE_INSENSITIVE_ORDER)
-				.toList();
+				.collect(Collectors.toList());
 		administratorBox.setItems((item, filter) -> item.toLowerCase().startsWith(filter.toLowerCase()),
 				administrators);
 		administratorBox.setValue(value);

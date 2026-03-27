@@ -22,8 +22,7 @@ import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.ui.common.BaseEditor;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.util.PopupNotification;
 
 /**
@@ -177,20 +176,14 @@ public class NetworkDevices extends BaseEditor<Network> {
 
         String caption = getI18nLabel("device_disconnect");
         String message = getI18nLabel("disconnect_warning");
-        Callback callback = result -> {
-            if (!result) {
-                return;
-            }
+        ConfirmationDialogs.open(this, caption, message, () -> {
             deviceService.disconnect(device, false);
             rightDataProvider.getItems().remove(device);
             leftDataProvider.getItems().add(device);
             rightDataProvider.refreshAll();
             leftDataProvider.refreshAll();
             PopupNotification.show(getI18nLabel("device_has_been_disconnected_from_network"));
-        };
-
-        Dialog dialog = new ConfirmationDialog(caption, message, callback);
-        dialog.open();
+        });
     }
 
     private Grid<Device> createGrid(ListDataProvider<Device> dataProvider) {

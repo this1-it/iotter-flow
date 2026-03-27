@@ -1,22 +1,26 @@
 package it.thisone.iotter.ui.common;
 
-
-
-import com.vaadin.flow.component.button.Button;
+import org.vaadin.flow.components.PanelFlow;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Unit;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.html.Span;
-import org.vaadin.flow.components.PanelFlow;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
+/**
+ * @deprecated Use {@link com.vaadin.flow.component.confirmdialog.ConfirmDialog}
+ *             or {@link ConfirmationDialogs} for new code.
+ */
+@Deprecated
 public class ConfirmationDialog extends Dialog {
 
 	 /**
      * Callback class for a {@link ConfirmationDialog}.
      */
+    @Deprecated
     public static interface Callback {
         /**
          * Called upon pressing a button.

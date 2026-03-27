@@ -13,12 +13,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import it.thisone.iotter.cassandra.model.FeedAlarm;
 import it.thisone.iotter.cassandra.model.IFeedAlarm;
@@ -26,11 +28,11 @@ import it.thisone.iotter.integration.CassandraService;
 import it.thisone.iotter.mqtt.MqttOutboundService;
 import it.thisone.iotter.persistence.model.Channel;
 import it.thisone.iotter.persistence.model.Device;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.MarkupsUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.visualizers.controlpanel.IconSetResolver.IconSet;
+import org.vaadin.flow.components.HtmlSpan;
 
 public class QuickCommandButton extends Button {
 
@@ -174,37 +176,49 @@ public class QuickCommandButton extends Button {
     }
 
     public ComponentEventListener<ClickEvent<Button>> buildResetAlarmsClickListener(final Device device,
-            final Callback callback) {
-        return createResetAlarmsClickListener(device, callback,
+            final Runnable onConfirm) {
+        return createResetAlarmsClickListener(device, onConfirm,
                 key -> getI18nLabel(key),
                 () -> listActiveAlarmEntries(device, cassandraService));
     }
 
     public static ComponentEventListener<ClickEvent<Button>> createResetAlarmsClickListener(final Device device,
-            final Callback callback) {
-        return createResetAlarmsClickListener(device, callback, key -> key, ArrayList::new);
+            final Runnable onConfirm) {
+        return createResetAlarmsClickListener(device, onConfirm, key -> key, ArrayList::new);
     }
 
     public static ComponentEventListener<ClickEvent<Button>> createResetAlarmsClickListener(final Device device,
-            final Callback callback,
+            final Runnable onConfirm,
             final Function<String, String> i18nProvider,
             final Supplier<List<String>> alarmsSupplier) {
         return event -> {
+            Button source = event.getSource();
             String caption = i18nProvider.apply("quick_command_dialog");
-            String warning = MarkupsUtils.color(i18nProvider.apply("quick_command_warning"), "#FF8000");
             String title = String.format("%s %s", VaadinIcon.BELL_SLASH.create().getElement().getOuterHTML(),
                     i18nProvider.apply("no_alarms"));
-            String content = "";
             List<String> alarms = alarmsSupplier.get();
             if (!alarms.isEmpty()) {
                 title = String.format("%s %s", VaadinIcon.BELL.create().getElement().getOuterHTML(),
                         i18nProvider.apply("fired_alarms"));
-                content = MarkupsUtils.simpleTable(alarms);
             }
-            String message = String.format("<b>%s</b><br/>%s<br/>%s", warning, title, content);
-            Dialog dialog = new ConfirmationDialog(caption, message, callback);
-            dialog.open();
+            Component message = buildResetAlarmsMessage(i18nProvider.apply("quick_command_warning"), title, alarms);
+            ConfirmationDialogs.open(source, caption, message, onConfirm);
         };
+    }
+
+    private static Component buildResetAlarmsMessage(String warning, String title, List<String> alarms) {
+        VerticalLayout layout = new VerticalLayout();
+        layout.setPadding(false);
+        layout.setSpacing(true);
+
+        layout.add(new HtmlSpan(String.format("<b>%s</b>", MarkupsUtils.color(warning, "#FF8000"))));
+        layout.add(new HtmlSpan(title));
+        if (!alarms.isEmpty()) {
+            layout.add(new HtmlSpan(MarkupsUtils.simpleTable(alarms)));
+        } else {
+            layout.add(new Span());
+        }
+        return layout;
     }
 
     public static List<String> listActiveAlarmEntries(Device device, CassandraService cassandraService) {

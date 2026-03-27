@@ -39,7 +39,7 @@ import it.thisone.iotter.persistence.service.NetworkService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseEditor;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.eventbus.DeviceGroupWidgetEvent;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
@@ -263,18 +263,13 @@ public class GroupWidgetsCustomMap extends BaseEditor<Network> {
             return;
         }
 
-        ConfirmationDialog.Callback callback = result -> {
-            if (result) {
-                network.getCustomMaps().remove(entity);
-                dataProvider.getItems().remove(entity);
-                dataProvider.refreshAll();
-                init();
-            }
-        };
-
         String caption = getTranslation("basic.editor.are_you_sure");
-        Dialog dialog = new ConfirmationDialog(caption, label, callback);
-        dialog.open();
+        ConfirmationDialogs.open(this, caption, label, () -> {
+            network.getCustomMaps().remove(entity);
+            dataProvider.getItems().remove(entity);
+            dataProvider.refreshAll();
+            init();
+        });
     }
 
     private void openEditor(DeviceCustomMap entity, String label) {

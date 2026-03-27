@@ -35,8 +35,7 @@ import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.SideDrawer;
 import it.thisone.iotter.util.PopupNotification;
 
@@ -186,17 +185,11 @@ public class MeasureSensorTypesListing extends AbstractBaseEntityListing<Measure
 		if (item == null) {
 			return;
 		}
-		Callback callback = result -> {
-			if (!result) {
-				return;
-			}
-
+		String header = String.format("%s: %s", getI18nLabel("remove_action"), item.getName());
+		ConfirmationDialogs.openDanger(this, header, getI18nLabel("remove_dialog"), () -> {
 			measureSensorTypeService.deleteById(item.getId());
 			refreshCurrentPage();
-		};
-
-		Dialog dialog = new ConfirmationDialog(getI18nLabel("remove_dialog"), getI18nLabel("remove_action"), callback);
-		dialog.open();
+		});
 	}
 
 	private void openEditor(MeasureSensorType item, String label) {

@@ -28,8 +28,7 @@ import it.thisone.iotter.persistence.model.ModbusProfile;
 import it.thisone.iotter.persistence.service.ModbusProfileService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
 import it.thisone.iotter.ui.main.UiConstants;
@@ -361,19 +360,12 @@ public class ModbusTemplatesStep extends Composite<HorizontalLayout> implements 
 			rightProvider.getItems().remove(profile);
 			rightProvider.refreshAll();
 		} else {
-			Callback callback = new Callback() {
-				@Override
-				public void onDialogResult(boolean result) {
-					if (result) {
-						rightProvider.getItems().remove(profile);
-						rightProvider.refreshAll();
-					}
-				}
-			};
 			String caption = getI18nLabel("profile_removal");
 			String message = getI18nLabel("confirm_profile_removal");
-			Dialog dialog = new ConfirmationDialog(caption, message, callback);
-			dialog.open();
+			ConfirmationDialogs.open(this, caption, message, () -> {
+				rightProvider.getItems().remove(profile);
+				rightProvider.refreshAll();
+			});
 		}
 
 	}

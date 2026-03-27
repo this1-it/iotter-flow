@@ -33,7 +33,7 @@ import it.thisone.iotter.persistence.model.MeasureRange;
 import it.thisone.iotter.persistence.model.MeasureUnit;
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.EditorSelectedListener;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
@@ -328,15 +328,10 @@ public class GraphicFeedListing extends BaseComponent {
         if (feed == null) {
             return;
         }
-        ConfirmationDialog.Callback callback = result -> {
-            if (result) {
-                feeds.remove(feed);
-                dataProvider.refreshAll();
-            }
-        };
-        Dialog dialog = new ConfirmationDialog(getI18nLabel("remove_dialog"), getI18nLabel("remove_action"), callback);
-        UI.getCurrent().add(dialog);
-        dialog.open();
+        ConfirmationDialogs.open(this, getI18nLabel("remove_dialog"), getI18nLabel("remove_action"), () -> {
+            feeds.remove(feed);
+            dataProvider.refreshAll();
+        });
     }
 
     private void enableButtons(GraphicFeed feed) {

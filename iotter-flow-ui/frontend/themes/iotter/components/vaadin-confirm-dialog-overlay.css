@@ -1,0 +1,7 @@
+:host(.iotter-confirm-dialog) [part="backdrop"] {
+    background: rgba(0, 0, 0, 0.32);
+}
+
+html[theme~="dark"] :host(.iotter-confirm-dialog) [part="backdrop"] {
+    background: rgba(0, 0, 0, 0.4);
+}

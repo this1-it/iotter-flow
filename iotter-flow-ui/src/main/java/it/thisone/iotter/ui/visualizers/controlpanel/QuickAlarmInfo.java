@@ -20,7 +20,6 @@ import it.thisone.iotter.mqtt.MqttOutboundService;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.eventbus.DeviceChangedEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.ifc.ITabContent;
@@ -124,14 +123,10 @@ public class QuickAlarmInfo extends VerticalLayout implements ITabContent {
                 }
             });
 
-            Callback callback = result -> {
-                if (result) {
-                    QuickCommandClickCallback clickCallback = QuickCommandButton.createClickCallback(reset);
-                    clickCallback.clicked();
-                }
-            };
-
-            reset.addClickListener(reset.buildResetAlarmsClickListener(device, callback));
+            reset.addClickListener(reset.buildResetAlarmsClickListener(device, () -> {
+                QuickCommandClickCallback clickCallback = QuickCommandButton.createClickCallback(reset);
+                clickCallback.clicked();
+            }));
             reset.setWidthFull();
             add(reset);
         }

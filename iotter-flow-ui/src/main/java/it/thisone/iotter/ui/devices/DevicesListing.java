@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
+
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -33,7 +33,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.notification.Notification;
+
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -41,7 +41,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.textfield.TextField;
+
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
 
@@ -68,7 +68,7 @@ import it.thisone.iotter.persistence.model.ChannelComparator;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.Network;
-import it.thisone.iotter.persistence.model.User;
+
 import it.thisone.iotter.persistence.repository.DeviceRepository;
 import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
@@ -85,8 +85,7 @@ import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
 import it.thisone.iotter.ui.common.EditorSavedListener;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
@@ -94,7 +93,7 @@ import it.thisone.iotter.ui.common.EditorSelectedListener;
 
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
-import it.thisone.iotter.ui.common.UIUtils;
+
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.common.export.ExportDialog;
 import it.thisone.iotter.ui.eventbus.DeviceChangedEvent;
@@ -264,19 +263,19 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 			return;
 		}
 
-		AbstractBaseEntityForm<Device> details = getEditor(item, true);
-		SideDrawer dialog = (SideDrawer) createDialog(getI18nLabel("remove_dialog"), details);
-
-		details.setDeleteHandler(entity -> {
+		String name = item.getLabel();
+		if (name == null || name.isBlank()) {
+			name = item.getSerial();
+		}
+		String header = String.format("%s: %s", getI18nLabel("remove_action"), name);
+		ConfirmationDialogs.openDanger(this, header, getI18nLabel("remove_dialog"), () -> {
 			try {
-				deviceService.delete(entity);
-				dialog.close();
+				deviceService.delete(item);
 				refreshCurrentPage();
 			} catch (Exception e) {
 				PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
 			}
 		});
-
 	}
 
 	private void refreshData() {
@@ -307,34 +306,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		// table.addClassName(UIUtils.TABLE_STYLE);
 
 		List<Grid.Column<Device>> columns = new ArrayList<>();
-		columns.add(table.addColumn(this::formatLabel).setKey(LABEL));
-		columns.add(table.addColumn(this::formatProfile).setKey("description"));
-		columns.add(table.addColumn(this::formatModel).setKey("model"));
-		columns.add(table.addColumn(this::formatAlarmStatus).setKey(ALARM_STATUS));
-
-		if (network == null) {
-			columns.add(table.addColumn(this::formatNetwork).setKey("network"));
-		}
-
-		columns.add(table.addColumn(this::formatDeviceStatus).setKey(DEVICE_STATUS));
-
-		if (permissions.isViewAllMode()) {
-			columns.add(table.addColumn(Device::getOwner).setKey(OWNER));
-			columns.add(table.addColumn(Device::getSerial).setKey("serial"));
-			columns.add(table.addColumn(Device::isPublishing).setKey("publishing"));
-			columns.add(table.addColumn(Device::isTracing).setKey("tracing"));
-		}
-
-		for (Grid.Column<Device> column : columns) {
-			String id = column.getKey();
-			if (!LABEL.equals(id) && !ALARM_STATUS.equals(id) && !DEVICE_STATUS.equals(id) && !OWNER.equals(id)) {
-				column.setSortable(false);
-			}
-			column.setHeader(getI18nLabel(id));
-		}
-
-		table.setColumnOrder(columns.toArray(new Grid.Column[0]));
-		table.addComponentColumn(device -> {
+		Grid.Column<Device> actionsColumn = table.addComponentColumn(device -> {
 			MenuBar menuBar = new MenuBar();
 			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
 			MenuItem menuItem = menuBar.addItem("•••");
@@ -359,7 +331,38 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 				subMenu.addItem(getI18nLabel("view_action"), event -> openDetails(device));
 			}
 			return menuBar;
-		}).setWidth("70px").setFlexGrow(0).setKey("actions");
+		}).setWidth("70px").setFlexGrow(0).setKey("actions").setHeader("");
+		columns.add(actionsColumn);
+		columns.add(table.addColumn(this::formatLabel).setKey(LABEL));
+		columns.add(table.addColumn(this::formatProfile).setKey("description"));
+		columns.add(table.addColumn(this::formatModel).setKey("model"));
+		columns.add(table.addColumn(this::formatAlarmStatus).setKey(ALARM_STATUS));
+
+		if (network == null) {
+			columns.add(table.addColumn(this::formatNetwork).setKey("network"));
+		}
+
+		columns.add(table.addColumn(this::formatDeviceStatus).setKey(DEVICE_STATUS));
+
+		if (permissions.isViewAllMode()) {
+			columns.add(table.addColumn(Device::getOwner).setKey(OWNER));
+			columns.add(table.addColumn(Device::getSerial).setKey("serial"));
+			columns.add(table.addColumn(Device::isPublishing).setKey("publishing"));
+			columns.add(table.addColumn(Device::isTracing).setKey("tracing"));
+		}
+
+		for (Grid.Column<Device> column : columns) {
+			String id = column.getKey();
+			if ("actions".equals(id)) {
+				continue;
+			}
+			if (!LABEL.equals(id) && !ALARM_STATUS.equals(id) && !DEVICE_STATUS.equals(id) && !OWNER.equals(id)) {
+				column.setSortable(false);
+			}
+			column.setHeader(getI18nLabel(id));
+		}
+
+		table.setColumnOrder(columns.toArray(new Grid.Column[0]));
 		return table;
 	}
 
@@ -652,10 +655,9 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 		layout.add(new com.vaadin.flow.component.html.Span(
 				supervisor ? getI18nLabel("reset_warning") : getI18nLabel("delete_warning")));
-		Callback callback = result -> {
-			if (!result) {
-				return;
-			}
+		ConfirmationDialogs.open(this,
+				supervisor ? getI18nLabel("device_reset") : getI18nLabel("remove_dialog"),
+				layout, () -> {
 			try {
 				subscriptionService.factoryReset(device.getSerial(), device.getActivationKey());
 				subscriptionService.provisioned(new ProvisionedEvent(device, ""));
@@ -666,11 +668,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 				boxes.refresh(null);
 			}
 			refreshCurrentPage();
-		};
-		Dialog dialog = new ConfirmationDialog(
-				supervisor ? getI18nLabel("device_reset") : getI18nLabel("remove_dialog"),
-				layout, callback);
-		dialog.open();
+		});
 	}
 
 	private void openGroupWidgetBox() {

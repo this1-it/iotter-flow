@@ -28,8 +28,7 @@ import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.util.BacNet;
@@ -263,16 +262,13 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 		if (item == null) {
 			return;
 		}
-		Callback callback = result -> {
-			if (result) {
-				dataProvider.getItems().remove(item);
-				dataProvider.refreshAll();
-				grid.asSingleSelect().clear();
-				enableButtons(null);
-			}
-		};
 		String caption = getTranslation("basic.editor.are_you_sure");
 		String message = getI18nLabel("remove_action");
-		new ConfirmationDialog(caption, message, callback).open();
+		ConfirmationDialogs.open(this, caption, message, () -> {
+			dataProvider.getItems().remove(item);
+			dataProvider.refreshAll();
+			grid.asSingleSelect().clear();
+			enableButtons(null);
+		});
 	}
 }

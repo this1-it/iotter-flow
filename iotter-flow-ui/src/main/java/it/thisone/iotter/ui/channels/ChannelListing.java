@@ -25,11 +25,8 @@ import it.thisone.iotter.security.Permissions;
 
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
-import it.thisone.iotter.ui.common.ConfirmationDialog;
-
+import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.MarkupsUtils;
-
-import it.thisone.iotter.ui.common.ConfirmationDialog.Callback;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.devices.DeviceForm;
 import it.thisone.iotter.ui.ifc.ITabContent;
@@ -202,22 +199,12 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 		label.setReadOnly(true);
 		layout.add(label);
 		
-		Callback callback = new Callback() {
-			@Override
-			public void onDialogResult(boolean result) {
-				if (!result) {
-					return;
-				}
-				removed.add(channel);
-				dataProvider.getItems().remove(channel);
-				dataProvider.refreshAll();
-				enableButtons(null);
-			}
-			
-		};
-		
-		Dialog dialog = new ConfirmationDialog(getI18nLabel("remove_channel"), layout, callback);
-		dialog.open();
+		ConfirmationDialogs.open(this, getI18nLabel("remove_channel"), layout, () -> {
+			removed.add(channel);
+			dataProvider.getItems().remove(channel);
+			dataProvider.refreshAll();
+			enableButtons(null);
+		});
 		
 	}
 
