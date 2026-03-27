@@ -1,160 +1,94 @@
 # Technology Stack
 
-**Analysis Date:** 2026-03-23
+**Analysis Date:** 2026-03-27
 
 ## Languages
 
 **Primary:**
-- Java 21 - All backend services, configuration, REST endpoints, business logic
-- TypeScript 5.9.3 - Frontend type safety layer
-- JavaScript (React, Lit) - Frontend components and logic
+- Java 21 - main application code across all Maven modules in `pom.xml`, including `iotter-flow-ui`, `iotter-flow-rest`, `iotter-backend`, `iotter-cassandra`, and `iotter-mqtt`
 
 **Secondary:**
-- HTML/CSS - Vaadin UI templates and theming
-- XML - Maven POM configuration files
+- JavaScript/TypeScript - Vaadin frontend bundle and custom frontend dependencies in `iotter-flow-ui/package.json`
+- HTML/CSS - email templates and frontend theme assets under `iotter-integration/src/main/resources/mailing` and `iotter-flow-ui/frontend`
+- Properties/XML - runtime configuration in files such as `iotter-flow-ui/src/main/resources/application.properties`, `iotter-backend/src/main/resources/persistence.default.properties`, and `iotter-flow-ui/src/main/bundles/README.md`
 
 ## Runtime
 
 **Environment:**
-- Java 21 (source/target)
-- Spring Boot 3.4.3
+- JVM application runtime on Spring Boot 3.4.3 from `pom.xml`, with startup entry points in `iotter-flow-ui/src/main/java/it/thisone/iotter/ui/Application.java` and `iotter-flow-rest/src/main/java/it/thisone/iotter/rest/JerseyApplication.java`
+- Embedded Tomcat is used for the UI and REST applications via `iotter-flow-ui/src/main/java/it/thisone/iotter/config/TomcatJndiConfig.java` and `iotter-flow-rest/src/main/java/it/thisone/iotter/config/TomcatJndiConfig.java`
+- Node.js-based frontend toolchain is required by Vaadin Vite builds in `iotter-flow-ui/pom.xml` and `iotter-flow-ui/package.json`
 
 **Package Manager:**
-- Maven 3.x
-- npm 14 - Frontend dependency management
+- Maven - multi-module build declared in `pom.xml`
+- npm - frontend dependency lockfile present at `iotter-flow-ui/package-lock.json`
+- Lockfile: present for npm in `iotter-flow-ui/package-lock.json`
 
 ## Frameworks
 
 **Core:**
-- Vaadin Flow 24.10.0 - Java-based web UI framework
-- Spring Framework 6.2.5 - Core dependency injection and configuration
-- Spring Boot 3.4.3 - Application bootstrap and auto-configuration
-- Spring Security 6.5.9 - Authentication and session management
-
-**Persistence:**
-- Spring Data JPA 3.4.3 - Relational database access layer
-- EclipseLink 4.0.4 - JPA implementation for MySQL
-- Spring Data Cassandra 4.4.3 - Time-series data access
-- DataStax Java Driver 4.17.0 - Cassandra client
-
-**Messaging & Integration:**
-- Spring Integration 6.4.3 - Message-driven architecture
-- Spring Integration MQTT 6.4.3 - MQTT protocol support
-- Eclipse Paho 1.2.5 - MQTT client library
-- Apache Velocity 1.7 - Email template rendering
-- Angus Mail 2.0.3 - Jakarta Mail implementation
+- Spring Boot 3.4.3 - application bootstrap and embedded server support in `pom.xml`, `iotter-flow-ui/pom.xml`, and `iotter-flow-rest/pom.xml`
+- Vaadin Flow 24.10.0 - server-driven UI framework from `pom.xml` and `iotter-flow-ui/pom.xml`
+- Jersey 3.1.9 / JAX-RS 3.1.0 - REST endpoint stack declared in `pom.xml` and `iotter-flow-rest/pom.xml`
+- Spring Data JPA 3.4.3 with EclipseLink 4.0.4 - relational persistence configured in `pom.xml` and `iotter-backend/src/main/java/it/thisone/iotter/config/PersistenceJPAConfig.java`
+- Spring Data Cassandra 4.4.3 with DataStax Java Driver - time-series persistence in `pom.xml` and `iotter-cassandra/src/main/java/it/thisone/iotter/config/CassandraConfig.java`
+- Spring Integration MQTT 6.4.3 with Eclipse Paho MQTT client - messaging integration in `iotter-mqtt/pom.xml` and `iotter-mqtt/src/main/java/it/thisone/iotter/config/MqttConfig.java`
 
 **Testing:**
-- JUnit 4.11 - Unit test framework
-- Vaadin TestBench - Integration testing framework
-- Jetty - Embedded server for integration tests
-- Maven Failsafe - Integration test runner
+- JUnit 4 with Vaadin TestBench - browser integration tests in `iotter-flow-it/pom.xml`
 
 **Build/Dev:**
-- Vaadin Maven Plugin 24.10.0 - Frontend build orchestration
-- Vite 7.3.1 - Frontend module bundler
-- Spring Boot Maven Plugin 3.4.3 - Application packaging and run
-- Maven Compiler Plugin 3.8.1 - Java compilation
-
-**Scheduling:**
-- Quartz Scheduler 2.2.1 - Job scheduling (via transitive dependencies)
+- `spring-boot-maven-plugin` - local app startup and packaging in `iotter-flow-ui/pom.xml` and `iotter-flow-rest/pom.xml`
+- `vaadin-maven-plugin` - frontend preparation and production build in `iotter-flow-ui/pom.xml`
+- Vite 7.3.1 - frontend build pipeline in `iotter-flow-ui/package.json`
 
 ## Key Dependencies
 
 **Critical:**
-- Jackson 2.17.2 - JSON serialization/deserialization
-- Commons Lang3 3.14.0 - String and collection utilities
-- Guava 33.0.0-jre - Collections and utility functions
-- Hibernate Validator 8.0.2.Final - Bean validation
-
-**Data Export:**
-- Apache POI 5.2.5 - Excel (.xlsx, .xls) export
-- iText 5.5.13.1 - PDF generation
-- Apache Commons CSV 1.0 - CSV file handling
-
-**Mapping & Geospatial:**
-- Leaflet 1.9.4 - Interactive maps (frontend)
-- Esri Leaflet 3.0.12 - Esri map service integration
-- Google Maps (@flowingcode/google-map 3.9.0) - Map embedding
-- proj4 2.15.0 - Coordinate system transformations
-
-**UI Components:**
-- GridStack 7.2.3 - Dashboard grid layout
-- React 18.3.1 - React component library
-- React Router 7.12.0 - Frontend routing
-- Lit 3.3.2 - Lightweight web components
+- `com.vaadin:vaadin-spring-boot-starter` - binds Vaadin UI into Spring Boot in `iotter-flow-ui/pom.xml`
+- `org.springframework.boot:spring-boot-starter-web` - servlet/web runtime for both app entry modules in `iotter-flow-ui/pom.xml` and `iotter-flow-rest/pom.xml`
+- `org.springframework.boot:spring-boot-starter-jersey` - REST container for endpoint modules in `iotter-flow-rest/pom.xml`
+- `org.springframework.data:spring-data-jpa` - JPA repository layer in `iotter-backend/pom.xml`
+- `org.springframework.data:spring-data-cassandra` - Cassandra integration in `iotter-cassandra/pom.xml`
+- `org.springframework.integration:spring-integration-mqtt` - MQTT inbound/outbound channels in `iotter-mqtt/pom.xml`
 
 **Infrastructure:**
-- Tomcat JDBC Connection Pool (embedded) - Connection pooling
-- MySQL Connector/J 8.3.0 - MySQL database driver
-- Netty 4.1.118.Final - Async networking (via Cassandra driver)
-- SLF4J 2.0.16 - Logging facade
-
-**Bundling & Packaging:**
-- Rollup plugins - Code bundling utilities
-- Workbox - Service worker generation
-- Brotli - Compression plugin
+- `com.mysql:mysql-connector-j` 8.3.0 - MySQL driver for JNDI-backed relational storage in `iotter-flow-ui/pom.xml` and `iotter-flow-rest/pom.xml`
+- `org.apache.tomcat:tomcat-jdbc` - Tomcat JDBC pool for JNDI `DataSource` resources in `iotter-flow-ui/pom.xml` and `iotter-flow-rest/pom.xml`
+- `org.hibernate.validator:hibernate-validator` 8.0.2.Final - bean validation in `iotter-flow-ui/pom.xml` and `iotter-backend/pom.xml`
+- `com.fasterxml.jackson.dataformat:jackson-dataformat-cbor` 2.17.2 - CBOR payload handling in `iotter-rest-model/pom.xml` and `iotter-cassandra/pom.xml`
+- `org.vaadin.addons.chartjs:...` - chart rendering support in `iotter-flow-ui-core/pom.xml`
+- `com.flowingcode.vaadin.addons:google-map` and Leaflet add-ons - map UI integration in `iotter-flow-ui-core/pom.xml` and `iotter-flow-ui/package.json`
 
 ## Configuration
 
 **Environment:**
-- Property files: `application.properties` in `iotter-flow-ui` and `iotter-flow-rest` modules
-- JNDI datasource lookup for database connections
-- External property files loaded via `PropertiesLoaderUtils` (e.g., `cassandra.properties`, `mqtt.properties`)
-- System properties for cluster role configuration: `cluster.role` (default: "master")
+- Configuration is driven primarily by classpath property files, not by `.env` files. The active property sets are loaded from files such as `iotter-backend/src/main/resources/persistence.default.properties`, `iotter-cassandra/src/main/resources/cassandra.default.properties`, `iotter-mqtt/src/main/resources/mqtt.default.properties`, `iotter-flow-ui/src/main/resources/app.properties`, `iotter-flow-ui/src/main/resources/bootstrap.properties`, and `iotter-integration/src/main/resources/smtp.default.properties`
+- JVM system property overrides are built in for selected configs:
+- `-Dpersistence.properties` and `-Djpa.datasource` in `iotter-backend/src/main/java/it/thisone/iotter/config/PersistenceJPAConfig.java`
+- `-Dcassandra.properties`, `-Dcassandra.cluster`, `-Dcassandra.native_transport_port`, and `-Dcassandra.keyspace` in `iotter-cassandra/src/main/java/it/thisone/iotter/config/CassandraConfig.java`
+- `-Dapp.properties` in `iotter-flow-ui/src/main/java/it/thisone/iotter/config/AppConfig.java` and `iotter-flow-rest/src/main/java/it/thisone/iotter/config/AppConfig.java`
+- `-Dbootstrap.properties` in `iotter-integration/src/main/java/it/thisone/iotter/config/IntegrationConfig.java`
 
-**Key Configuration Files:**
-- `iotter-flow-ui/src/main/resources/application.properties` - UI module settings
-  - Vaadin dev mode live reload enabled
-  - Circular reference allowed for Spring beans
-  - Session persistence disabled
-  - Management shutdown endpoint enabled
-- `iotter-flow-rest/src/main/resources/application.properties` - REST API settings
-  - Server port: 8081
-  - Same circular reference and session settings
-
-**Runtime Configuration:**
-- JNDI lookups for datasources at `java:comp/env/`
-- Property file loading from classpath resources
-- Spring Security session registry for single-session-per-user enforcement
-- Cassandra keyspace auto-creation (master node only)
-
-## Build Profiles
-
-**Production:**
-- Profile: `production`
-- Activation: `-Pproduction` flag
-- Effect: Triggers Vaadin frontend optimization via `vaadin-maven-plugin:build-frontend`
-  - Minification and bundling of JavaScript
-  - CSS optimization
-  - Asset compression (Brotli)
-
-**Development:**
-- Default profile (no flag needed)
-- Spring Boot DevTools enabled for hot reload
-- Vaadin dev mode with live reload
-- No frontend optimization
+**Build:**
+- Root multi-module build and version alignment: `pom.xml`
+- UI packaging and Vaadin frontend build: `iotter-flow-ui/pom.xml`
+- REST packaging: `iotter-flow-rest/pom.xml`
+- Frontend dependency graph and Vite toolchain: `iotter-flow-ui/package.json`
 
 ## Platform Requirements
 
 **Development:**
-- Java 21 JDK
-- Maven 3.6+
-- Node.js 14+ (for frontend builds)
-- Chrome/Chromium (for integration tests)
+- Java 21 JDK as declared in `pom.xml`
+- Maven installed locally for the multi-module build in `README.md`
+- Node.js/npm available for Vaadin frontend preparation implied by `iotter-flow-ui/pom.xml` and `iotter-flow-ui/package.json`
+- Local services are expected for MySQL, Cassandra, and MQTT based on default config targets in `iotter-flow-ui/src/main/java/it/thisone/iotter/config/TomcatJndiConfig.java`, `iotter-cassandra/src/main/resources/cassandra.default.properties`, and `iotter-mqtt/src/main/resources/mqtt.default.properties`
 
 **Production:**
-- Java 21 JRE
-- MySQL 5.7 or later (relational data)
-- Apache Cassandra 3.x or later (time-series data)
-- MQTT broker (for device communication)
-- Tomcat 10+ or equivalent servlet container (optional if using embedded)
-
-**Testing Requirements:**
-- ChromeDriver compatible with Chrome version
-- Maven Failsafe plugin
-- Jetty for embedded server
+- Jar deployment model for `iotter-flow-ui` and `iotter-flow-rest` from `iotter-flow-ui/pom.xml` and `iotter-flow-rest/pom.xml`
+- Production frontend bundle is built with `-Pproduction` via `iotter-flow-ui/pom.xml`
+- External MySQL, Cassandra, MQTT broker, and SMTP server access is required by `iotter-backend`, `iotter-cassandra`, `iotter-mqtt`, and `iotter-integration`
 
 ---
 
-*Stack analysis: 2026-03-23*
+*Stack analysis: 2026-03-27*

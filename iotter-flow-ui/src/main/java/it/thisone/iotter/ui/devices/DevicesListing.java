@@ -264,7 +264,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		}
 
 		String name = item.getLabel();
-		if (name == null || name.isBlank()) {
+		if (name == null || name.trim().isEmpty()) {
 			name = item.getSerial();
 		}
 		String header = String.format("%s: %s", getI18nLabel("remove_action"), name);

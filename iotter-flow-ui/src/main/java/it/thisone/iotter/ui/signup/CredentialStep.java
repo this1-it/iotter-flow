@@ -4,38 +4,40 @@ import it.thisone.iotter.ui.wizards.WizardStep;
 
 import com.vaadin.flow.component.Component;
 
-import it.thisone.iotter.config.Constants;
+import it.thisone.iotter.persistence.service.DeviceService;
+import it.thisone.iotter.persistence.service.UserService;
 
-public class CredentialStep implements WizardStep, Constants {
+public class CredentialStep implements WizardStep {
 
-	CredentialInputForm form;
-	
-	public CredentialStep(SignUpWizard signUpWizard) {
-		this.form = new CredentialInputForm();
-	}
+    private final ISignUpWizard signUpWizard;
+    private final CredentialInputForm form;
+
+    public CredentialStep(ISignUpWizard signUpWizard, UserService userService, DeviceService deviceService) {
+        this.signUpWizard = signUpWizard;
+        this.form = new CredentialInputForm(userService, deviceService);
+    }
 
 	@Override
 	public String getCaption() {
-		// TODO Auto-generated method stub
-		return null;
+		return signUpWizard.getI18nLabel("login_info");
 	}
 
 	@Override
 	public Component getContent() {
-		// TODO Auto-generated method stub
 		return this.form;
 	}
 
 	@Override
 	public boolean onAdvance() {
-		// TODO Auto-generated method stub
-		return false;
+		return form.validateForm();
 	}
 
 	@Override
 	public boolean onBack() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
+    public CredentialInput getValue() {
+        return form.getValue();
+    }
 }

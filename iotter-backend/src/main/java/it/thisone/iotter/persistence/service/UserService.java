@@ -21,6 +21,7 @@ import it.thisone.iotter.enums.TracingAction;
 import it.thisone.iotter.exceptions.BackendServiceException;
 import it.thisone.iotter.persistence.ifc.IDeviceDao;
 import it.thisone.iotter.persistence.ifc.IGroupWidgetDao;
+import it.thisone.iotter.persistence.ifc.IIdentityProfileDao;
 import it.thisone.iotter.persistence.ifc.INetworkDao;
 import it.thisone.iotter.persistence.ifc.INetworkGroupDao;
 import it.thisone.iotter.persistence.ifc.IRoleDao;
@@ -29,6 +30,7 @@ import it.thisone.iotter.persistence.ifc.IUserDao;
 import it.thisone.iotter.persistence.ifc.IUserTokenDao;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
+import it.thisone.iotter.persistence.model.IdentityProfile;
 import it.thisone.iotter.persistence.model.Network;
 import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.persistence.model.Role;
@@ -62,6 +64,9 @@ public class UserService {
 
 	@Autowired
 	private IGroupWidgetDao groupWidgetDao;
+
+	@Autowired
+	private IIdentityProfileDao identityProfileDao;
 
 	public UserService() {
 		super();
@@ -468,6 +473,11 @@ public class UserService {
 
 	@Transactional
 	public void userRegistration(User entity, String serial) throws BackendServiceException {
+		userRegistration(entity, serial, null);
+	}
+
+	@Transactional
+	public void userRegistration(User entity, String serial, IdentityProfile identityProfile) throws BackendServiceException {
 		Device device = deviceDao.findBySerial(serial);
 		if (device == null) {
 			throw new BackendServiceException(Constants.Error.USER_WITH_INVALID_SERIAL_NUM, "invalid serial number");
@@ -502,6 +512,35 @@ public class UserService {
 		entity.addGroup(group);
 		entity.addGroup(defaultGroup);
 		userDao.create(entity);
+		if (identityProfile != null) {
+			persistIdentityProfile(entity, identityProfile);
+		}
+	}
+
+	private void persistIdentityProfile(User user, IdentityProfile identityProfile) {
+		IdentityProfile persisted = identityProfileDao.findByUser(user);
+		if (persisted == null) {
+			persisted = identityProfile;
+		}
+
+		Date now = new Date();
+		persisted.setUser(user);
+		persisted.setOwner(user.getOwner());
+		persisted.setUpdatedAt(now);
+		if (persisted.getCreatedAt() == null) {
+			persisted.setCreatedAt(now);
+		}
+		if (persisted.getFullName() == null || persisted.getFullName().trim().isEmpty()) {
+			String firstName = persisted.getFirstName() == null ? "" : persisted.getFirstName().trim();
+			String lastName = persisted.getLastName() == null ? "" : persisted.getLastName().trim();
+			persisted.setFullName((firstName + " " + lastName).trim());
+		}
+
+		if (persisted.isNew()) {
+			identityProfileDao.create(persisted);
+		} else {
+			identityProfileDao.update(persisted);
+		}
 	}
 	
 	

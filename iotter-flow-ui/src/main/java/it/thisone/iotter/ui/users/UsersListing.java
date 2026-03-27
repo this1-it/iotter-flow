@@ -395,7 +395,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		}
 
 		String name = item.getDisplayName();
-		if (name == null || name.isBlank()) {
+		if (name == null || name.trim().isEmpty()) {
 			name = item.getUsername();
 		}
 		String header = String.format("%s: %s", getI18nLabel("remove_action"), name);

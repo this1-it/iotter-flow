@@ -4,36 +4,37 @@ import it.thisone.iotter.ui.wizards.WizardStep;
 
 import com.vaadin.flow.component.Component;
 
-import it.thisone.iotter.config.Constants;
+public class LegalInfoStep implements WizardStep {
 
-public class LegalInfoStep implements WizardStep, Constants{
+    private final ISignUpWizard signUpWizard;
+    private final LegalInfoForm form;
 
-	public LegalInfoStep(SignUpWizard signUpWizard) {
-        //TODO Auto-generated constructor stub
+	public LegalInfoStep(ISignUpWizard signUpWizard) {
+        this.signUpWizard = signUpWizard;
+        this.form = new LegalInfoForm();
     }
 
     @Override
 	public String getCaption() {
-		// TODO Auto-generated method stub
-		return null;
+		return signUpWizard.getI18nLabel("additional_info");
 	}
 
 	@Override
 	public Component getContent() {
-		// TODO Auto-generated method stub
-		return null;
+		return form;
 	}
 
 	@Override
 	public boolean onAdvance() {
-		// TODO Auto-generated method stub
-		return false;
+		return form.validateForm();
 	}
 
 	@Override
 	public boolean onBack() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
+    public LegalInfoInput getValue() {
+        return form.getValue();
+    }
 }
