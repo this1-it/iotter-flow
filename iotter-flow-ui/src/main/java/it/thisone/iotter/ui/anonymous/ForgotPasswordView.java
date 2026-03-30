@@ -144,7 +144,7 @@ public class ForgotPasswordView extends BaseView {
 	}
 
 	private String getPortalName() {
-		return appProperties.getProperty("portal_name", "Iotter");
+		return appProperties.getProperty("portal_name", "Iotter Flow");
 	}
 
 	public static class ForgotPasswordData {

@@ -144,7 +144,7 @@ public class LegalInfoForm extends AbstractForm<LegalInfoInput> {
 
         FormLayout formLayout = new FormLayout();
         formLayout.setWidthFull();
-        formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("42em", 2));
+        formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
         formLayout.add(profileType, taxCodeCountry);
         formLayout.add(firstName, lastName);
         formLayout.add(taxCode, vatNumber);

@@ -9,18 +9,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.cookieconsent.CookieConsent;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -30,6 +27,7 @@ import com.vaadin.flow.server.VaadinSession;
 
 import it.thisone.iotter.integration.AuthManager;
 import it.thisone.iotter.security.MaximumNumberSimultaneousLoginsException;
+import it.thisone.iotter.ui.anonymous.AnonymousAuthLayout;
 import it.thisone.iotter.ui.anonymous.ForgotPasswordView;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.main.MainView;
@@ -61,95 +59,41 @@ public class LoginScreen extends FlexLayout implements HasDynamicTitle {
 
         LoginForm loginForm = new LoginForm();
         loginForm.addLoginListener(this::login);
-        loginForm.addForgotPasswordListener(
-                event -> UI.getCurrent().navigate(ForgotPasswordView.class));
+        loginForm.setForgotPasswordButtonVisible(false);
         loginForm.addClassName("auth-login-form");
 
-        Button signUpButton = new Button(getTranslation("login.register"),
+        Span accountText = new Span(getTranslation("login.no_account"));
+        accountText.addClassName("auth-bottom-text");
+
+        Button signUpLink = new Button(getTranslation("login.register"),
                 event -> UI.getCurrent().navigate(SignUpView.class));
-        signUpButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        signUpButton.addClassName("auth-secondary-action");
+        signUpLink.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        signUpLink.addClassName("auth-bottom-link");
 
-        Button forgotPasswordButton = new Button(getTranslation("landing.forgotpassword"),
+        HorizontalLayout leftLinks = new HorizontalLayout(accountText, signUpLink);
+        leftLinks.setAlignItems(Alignment.CENTER);
+        leftLinks.setSpacing(true);
+
+        Button forgotPasswordLink = new Button(getTranslation("landing.forgotpassword"),
                 event -> UI.getCurrent().navigate(ForgotPasswordView.class));
-        forgotPasswordButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-        forgotPasswordButton.addClassName("auth-inline-link");
+        forgotPasswordLink.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        forgotPasswordLink.addClassName("auth-bottom-link");
 
-        HorizontalLayout recoveryLinks = new HorizontalLayout(forgotPasswordButton);
-        recoveryLinks.addClassName("auth-link-row");
-        recoveryLinks.setSpacing(true);
+        HorizontalLayout bottomRow = new HorizontalLayout(leftLinks, forgotPasswordLink);
+        bottomRow.setWidthFull();
+        bottomRow.setJustifyContentMode(JustifyContentMode.BETWEEN);
+        bottomRow.setAlignItems(Alignment.CENTER);
+        bottomRow.addClassName("auth-bottom-row");
 
-        VerticalLayout authActions = new VerticalLayout();
-        authActions.addClassName("login-panel");
-        authActions.setSpacing(false);
-        authActions.setPadding(false);
+        VerticalLayout formContent = new VerticalLayout();
+        formContent.setSpacing(false);
+        formContent.setPadding(false);
+        formContent.setHorizontalComponentAlignment(Alignment.STRETCH, loginForm);
+        formContent.add(loginForm, bottomRow);
 
-        Span eyebrow = new Span("Iotter");
-        eyebrow.addClassName("auth-card-eyebrow");
-
-        H1 title = new H1(getTranslation("view.login"));
-        title.addClassName("auth-card-title");
-
-        Span subtitle = new Span("Monitor devices, manage assets, and access your workspace.");
-        subtitle.addClassName("auth-card-subtitle");
-
-        HorizontalLayout divider = new HorizontalLayout();
-        divider.addClassName("auth-card-divider");
-
-        authActions.add(eyebrow, title, subtitle, divider, loginForm, recoveryLinks, signUpButton);
-        authActions.setHorizontalComponentAlignment(Alignment.STRETCH, loginForm);
-        authActions.setHorizontalComponentAlignment(Alignment.CENTER, recoveryLinks);
-        authActions.setHorizontalComponentAlignment(Alignment.CENTER, signUpButton);
-
-        Div authStage = new Div(authActions);
-        authStage.addClassName("auth-stage");
-
-        Component loginInformation = buildLoginInformation();
-
-        Div authShell = new Div(loginInformation, authStage);
-        authShell.addClassName("auth-shell");
-
-        add(authShell);
+        add(AnonymousAuthLayout.singleColumn("Iotter", getTranslation("view.login"),
+                "Monitor devices, manage assets, and access your workspace.", formContent));
         add(new CookieConsent());
-    }
-
-    private Component buildLoginInformation() {
-        VerticalLayout loginInformation = new VerticalLayout();
-        loginInformation.setClassName("login-information");
-        loginInformation.setSpacing(false);
-        loginInformation.setPadding(false);
-
-        Image logo = new Image("icons/icon.png", "Iotter");
-        logo.setWidth("72px");
-        logo.setHeight("72px");
-        logo.addClassName("auth-brand-logo");
-
-        Span badge = new Span("Cloud Platform");
-        badge.addClassName("auth-brand-badge");
-
-        H1 loginInfoHeader = new H1("Manage your IoT operations from one control center.");
-        loginInfoHeader.addClassName("auth-brand-title");
-
-        Span loginInfoText = new Span(
-                "Track devices, visualize telemetry, and keep users aligned with a single operational view.");
-        loginInfoText.addClassName("auth-brand-copy");
-
-        VerticalLayout highlights = new VerticalLayout();
-        highlights.addClassName("auth-brand-highlights");
-        highlights.setSpacing(false);
-        highlights.setPadding(false);
-        highlights.add(feature("Real-time telemetry and device status"));
-        highlights.add(feature("Operational dashboards and provisioning tools"));
-        highlights.add(feature("Secure tenant and user access management"));
-
-        loginInformation.add(logo, badge, loginInfoHeader, loginInfoText, highlights);
-        return loginInformation;
-    }
-
-    private Span feature(String text) {
-        Span feature = new Span(text);
-        feature.addClassName("auth-brand-feature");
-        return feature;
     }
 
     private void login(LoginForm.LoginEvent event) {

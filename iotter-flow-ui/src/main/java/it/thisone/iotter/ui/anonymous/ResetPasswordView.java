@@ -79,7 +79,7 @@ public class ResetPasswordView extends BaseView implements BeforeEnterObserver {
 		form.setSubmitHandler(this::handleConfirm);
 		form.setCancelHandler(event -> getUI().ifPresent(ui -> ui.navigate(LoginScreen.class)));
 		form.setUsername(user);
-		add(AnonymousAuthLayout.singleColumn(appProperties.getProperty("portal_name", "Iotter"), getI18nLabel("title"),
+		add(AnonymousAuthLayout.singleColumn(appProperties.getProperty("portal_name", "Iotter Flow"), getI18nLabel("title"),
 				"Set a new password for your account.", form));
 
 		// TODO(flow-migration): Responsive.makeResponsive(this) has no direct Flow equivalent here.

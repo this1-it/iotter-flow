@@ -1,0 +1,8 @@
+[part="input-field"]::after {
+    display: none;
+}
+
+[part="error-message"] {
+    font-size: 13px;
+    color: #ff6b6b;
+}

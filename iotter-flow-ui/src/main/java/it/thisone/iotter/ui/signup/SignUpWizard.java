@@ -50,7 +50,7 @@ WizardProgressListener, ISignUpWizard {
 
 		VerticalLayout content = getContent();
 		content.setSizeFull();
-		content.setPadding(true);
+		content.setPadding(false);
 
 		content.add(wizard);
 	}

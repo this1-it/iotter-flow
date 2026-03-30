@@ -184,9 +184,10 @@ public class CredentialInputForm extends AbstractForm<CredentialInput> {
         FormLayout formLayout = new FormLayout();
         formLayout.setResponsiveSteps(
             new ResponsiveStep("0", 1),
-            new ResponsiveStep("40em", 2)
+            new ResponsiveStep("500px", 2)
         );
-        formLayout.setWidth("600px");
+        formLayout.setWidthFull();
+        formLayout.getStyle().set("box-sizing", "border-box");
         formLayout.getStyle().set("padding", "var(--lumo-space-m)");
         
         formLayout.add(username, email);
