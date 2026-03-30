@@ -11,3 +11,4 @@
 **/node_modules
 **/frontend/generated
 iotter-flow-ui/webpack.generated.js
+.env
