@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+import org.vaadin.flow.components.TabSheet;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -59,11 +60,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
 
     private final Permissions permissions;
     private final GroupWidgetRepository groupWidgetRepository;
-    // private final GroupWidgetService groupWidgetService;
-    // private final NetworkService networkService;
-    // private final NetworkGroupService networkGroupService;
-    // private final DeviceService deviceService;
-    // private final AuthenticatedUser authenticatedUser;
+    private TabSheet tabsheet;
     private final BackendServices backendServices;
     private UserDetailsAdapter currentUser;
 
@@ -90,10 +87,11 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         this.backendServices = backendServices;
     }
 
-    public void init(Network network) {
+    public void init(Network network,TabSheet tabsheet) {
         if (grid != null) {
             return;
         }
+        this.tabsheet = tabsheet;
         this.network = network;
         buildLayout();
     }

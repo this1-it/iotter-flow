@@ -1,12 +1,15 @@
 docker compose -f ~/docker/docker-iotter/docker-compose.yml up -d
 
 
-nvm alias default 14
+nvm alias default 22
 
 npm install --save-dev @babel/plugin-proposal-object-rest-spread
 
 mvn -pl iotter-flow-ui -Pproduction package
 
+readlink -f "$(which java)"
+
+update-java-alternatives -l
 
 
 Use Maven from the repo root.

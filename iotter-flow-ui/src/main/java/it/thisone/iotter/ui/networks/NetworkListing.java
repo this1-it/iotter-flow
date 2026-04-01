@@ -100,7 +100,8 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		super(Network.class, NETWORKS_VIEW, NETWORKS_VIEW, false);
 	}
 
-	public void init() {
+	public void init(TabSheet tabsheet) {
+		this.tabsheet = tabsheet;
 		if (grid != null) {
 			return;
 		}
@@ -131,16 +132,11 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		buildFilterPopover(filterButton);
 
 		HorizontalLayout toolbar = buildSearchToolbar(filterButton, createAddButton());
-		VerticalLayout contentLayout = createListingLayout(toolbar, grid);
+		VerticalLayout tableLayout = createListingLayout(grid);
 		setSelectable(grid);
 
-		tabsheet = new TabSheet();
-		tabsheet.addClassName("tabsheet-framed");
-		tabsheet.setSizeFull();
-		tabsheet.addTab(getI18nLabel("title"), contentLayout);
-		
-		getMainLayout().add(tabsheet);
-		getMainLayout().setFlexGrow(1f, tabsheet);
+		getMainLayout().add(toolbar, tableLayout);
+        getMainLayout().setFlexGrow(1f, tableLayout);
 
 		updateTotalCount();
 	}
@@ -274,11 +270,11 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		popover.add(content);
 	}
 
-	private VerticalLayout createListingLayout(HorizontalLayout toolbar, Grid<Network> grid) {
+	private VerticalLayout createListingLayout( Grid<Network> grid) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setSpacing(true);
-		layout.add(toolbar, grid);
+		layout.add(grid);
 		layout.setFlexGrow(1f, grid);
 		layout.setMargin(false);
 		layout.setPadding(false);
@@ -343,8 +339,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		}
 
 		if (content != null) {
-			Tab tab = tabsheet.addTab("",content);
-			//tab.se(true);
+			Tab tab = tabsheet.addCloseableTab(network.getName(),content);
 			tabsheet.setSelectedTab(tab);
 		}
 

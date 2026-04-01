@@ -1,9 +1,10 @@
 package it.thisone.iotter.ui.groupwidgets;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.vaadin.flow.components.TabSheet;
 
 import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.router.Route;
 
 import it.thisone.iotter.config.Constants;
@@ -13,6 +14,7 @@ import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.MainLayout;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseView;
+import it.thisone.iotter.ui.networks.NetworkListing;
 
 @Route(value = "groupwidgets", layout = MainLayout.class)
 public class GroupWidgetsView extends BaseView {
@@ -48,10 +50,25 @@ public class GroupWidgetsView extends BaseView {
             network = networkService.findOne(details.getNetworkId());
         }
 
-        GroupWidgetListing listing = listingProvider.getObject();
-        listing.init(network);
-        add(listing.getMainLayout());
-        setFlexGrow(1, listing.getMainLayout());
+        // GroupWidgetListing listing = listingProvider.getObject();
+        // listing.init(network);
+        // add(listing.getMainLayout());
+        // setFlexGrow(1, listing.getMainLayout());
+
+
+		TabSheet tabsheet = new TabSheet();
+		tabsheet.setSizeFull();
+		GroupWidgetListing listing = listingProvider.getObject();
+		listing.init(network, tabsheet);
+		Tab listingTab = tabsheet.addTab(listing.getI18nLabel("listingTab"), listing.getMainLayout());
+		tabsheet.setSelectedTab(listingTab);
+
+
+		add(tabsheet);
+		setFlexGrow(1, tabsheet);
+		initialized = true;
+
+
     }
 
     @Override
