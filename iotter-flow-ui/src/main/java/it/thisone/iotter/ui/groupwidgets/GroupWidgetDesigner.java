@@ -135,7 +135,6 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         toolbar.setHeight(TOOLBAR_HEIGHT + "px");
         toolbar.setPadding(true);
         toolbar.setSpacing(true);
-        toolbar.addClassName(TOOLBAR_STYLE);
 
         HorizontalLayout buttonbar = new HorizontalLayout();
         buttonbar.setSpacing(true);

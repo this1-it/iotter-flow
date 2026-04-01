@@ -63,7 +63,6 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
-		//toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
@@ -74,7 +73,6 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 		getButtonsLayout().add(createModifyButton());
 		toolbar.add(getButtonsLayout());
 		toolbar.setAlignSelf(Alignment.END, getButtonsLayout());
-		enableButtons(null);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);
@@ -175,7 +173,7 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 	private Button createUsersButton() {
 		Button button = new Button();
 		button.setIcon(VaadinIcon.USERS.create());
-		button.setId("users_button" + ALWAYS_ENABLED_BUTTON);
+		button.setId("users_button");
 		button.getElement().setProperty("title", getI18nLabel("alarm.notify_users"));
 		button.addClickListener(event -> {
 			ChannelAlarmsUsers content = new ChannelAlarmsUsers(entity);

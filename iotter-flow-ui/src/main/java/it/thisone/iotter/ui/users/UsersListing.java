@@ -124,7 +124,8 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
-		VerticalLayout content = createContent(grid);
+		VerticalLayout content = createListingLayout(grid);
+		
 		setSelectable(grid);
 
 		Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
@@ -134,10 +135,11 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 
 		HorizontalLayout toolbar = buildSearchToolbar(filterButton, createAddButton());
 
+
+
 		getMainLayout().add(toolbar, content);
 		getMainLayout().setFlexGrow(1f, content);
 		updateTotalCount();
-		enableButtons(null);
 	}
 
 	private void buildFilterPopover(Button filterButton) {
@@ -200,7 +202,6 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		updateTotalCount();
 		grid.scrollToStart();
 		grid.deselectAll();
-		enableButtons(null);
 	}
 
 	private void refreshCurrentPage() {
@@ -301,12 +302,14 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 		return grid;
 	}
 
-	private VerticalLayout createContent(Grid<User> grid) {
+	private VerticalLayout createListingLayout(Grid<User> grid) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
-		layout.setSpacing(true);
+		layout.setSpacing(false);
 		layout.add(grid);
 		layout.setFlexGrow(1f, grid);
+		layout.setMargin(false);
+		layout.setPadding(false);
 		return layout;
 	}
 
@@ -348,7 +351,7 @@ public class UsersListing extends AbstractBaseEntityListing<User> {
 	private Button createAddButton() {
 		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
 		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
+		button.setId("add" + getId());
 		button.addClickListener(event -> openEditor(new User(), getI18nLabel("add_dialog")));
 		button.setVisible(permissions.isCreateMode());
 		return button;

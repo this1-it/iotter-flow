@@ -7,12 +7,9 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerA
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.theme.Theme;
-
-import it.thisone.iotter.config.SecurityConfig;
 
 @SpringBootApplication(exclude = {
 	    DataSourceAutoConfiguration.class,
@@ -20,13 +17,7 @@ import it.thisone.iotter.config.SecurityConfig;
 	    HibernateJpaAutoConfiguration.class,
 	    SecurityAutoConfiguration.class
 	})
-	@ComponentScan(
-	    basePackages = "it.thisone.iotter",
-	    excludeFilters = @ComponentScan.Filter(
-	        type = FilterType.ASSIGNABLE_TYPE,
-	        classes = SecurityConfig.class
-	    )
-	)
+	@ComponentScan(basePackages = "it.thisone.iotter")
 @Theme("iotter")
 public class Application implements AppShellConfigurator {
 

@@ -82,7 +82,6 @@ public interface UiConstants {
 	public static final String BUTTONS_STYLE = "buttons";
 	public static final String NATIVE_BUTTONS_STYLE = "native-buttons";
 	public static final String PROPERTY_EDITOR_STYLE = "property-editor";
-	public static final String TOOLBAR_STYLE = "toolbar";
 	public static final String MODAL_DIALOG_STYLE = "modal-dialog";
 	public static final String S_WINDOW_STYLE = "common-details";
 	public static final String ANONYMOUS_STYLE = "anonymous";

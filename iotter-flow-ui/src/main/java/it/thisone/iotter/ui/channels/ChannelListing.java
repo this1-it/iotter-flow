@@ -66,7 +66,6 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
-		//toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
@@ -76,7 +75,6 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 		getButtonsLayout().add(createRemoveButton());
 		toolbar.add(getButtonsLayout());
 		toolbar.setAlignSelf(Alignment.END, getButtonsLayout());
-		enableButtons(null);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);
@@ -203,7 +201,6 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 			removed.add(channel);
 			dataProvider.getItems().remove(channel);
 			dataProvider.refreshAll();
-			enableButtons(null);
 		});
 		
 	}
@@ -226,7 +223,6 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 //					removed.add(item);
 //					dataProvider.getItems().remove(item);
 //					dataProvider.refreshAll();
-//					enableButtons(null);
 //				}
 //			}
 //		});
@@ -237,22 +233,6 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 //			}
 //		});
 //		dialog.open();
-	}
-
-	@Override
-	public void enableButtons(Channel item) {
-		super.enableButtons(item);
-		if (item == null) {
-			return;
-		}
-//		getButtonsLayout().iterator().forEachRemaining(component -> {
-//			if (component instanceof Button) {
-//				Button button = (Button) component;
-//				if (button.getId() != null && button.getId().contains("remove")) {
-//					button.setEnabled(!item.getConfiguration().isActive());
-//				}
-//			}
-//		});
 	}
 
 	public List<Channel> getRemoved() {

@@ -108,7 +108,7 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
-		VerticalLayout content = createContent(grid);
+		VerticalLayout content = createListingLayout(grid);
 		setSelectable(grid);
 
 		Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
@@ -120,12 +120,11 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 
 		getMainLayout().add(toolbar, content);
 		getMainLayout().setFlexGrow(1f, content);
-		enableButtons(null);
 	}
 
 	private void buildListLayout(List<Tracing> listing, String[] visibleColumns) {
 		grid = createGrid(listing, visibleColumns);
-		VerticalLayout content = createContent(grid);
+		VerticalLayout content = createListingLayout(grid);
 		setSelectable(grid);
 		getMainLayout().add(content);
 		getMainLayout().setFlexGrow(1f, content);
@@ -140,7 +139,6 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		dataProvider.refreshAll();
 		grid.scrollToStart();
 		grid.deselectAll();
-		enableButtons(null);
 	}
 
 	private Grid<Tracing> createGrid() {
@@ -324,12 +322,14 @@ public class TracingListing extends AbstractBaseEntityListing<Tracing> {
 		return button;
 	}
 
-	private VerticalLayout createContent(Grid<Tracing> grid) {
+	private VerticalLayout createListingLayout(Grid<Tracing> grid) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setSpacing(true);
 		layout.add(grid);
 		layout.setFlexGrow(1f, grid);
+		layout.setMargin(false);
+		layout.setPadding(false);
 		return layout;
 	}
 

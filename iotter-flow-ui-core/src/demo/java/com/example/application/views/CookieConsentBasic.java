@@ -1,6 +1,6 @@
 package com.example.application.views;
 
-import com.vaadin.flow.component.cookieconsent.CookieConsent;
+import org.vaadin.flow.components.cookieconsent.CookieConsent;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;

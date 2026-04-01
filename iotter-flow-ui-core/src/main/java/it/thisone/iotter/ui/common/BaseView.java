@@ -7,6 +7,12 @@ public abstract class BaseView extends VerticalLayout implements HasDynamicTitle
 
 	private static final long serialVersionUID = 5876788432112136543L;
 
+	public BaseView() {
+		//addClassName("base-view");
+		setMargin(false);
+		setPadding(false);
+	}
+
 	public abstract String getI18nKey();
 
 	@Override

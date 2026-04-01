@@ -111,7 +111,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         setBackendDataProvider(dataProvider);
 
         grid = createGrid();
-        VerticalLayout tableLayout = createTableLayout(grid);
+        VerticalLayout tableLayout = createListingLayout(grid);
         setSelectable(grid);
 
         Button filterButton = new Button(getI18nLabel("filter"), VaadinIcon.FILTER.create());
@@ -125,7 +125,6 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         getMainLayout().setFlexGrow(1f, tableLayout);
 
         updateTotalCount();
-        enableButtons(null);
     }
 
     @Override
@@ -243,13 +242,15 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         popover.add(content);
     }
 
-    private VerticalLayout createTableLayout(Grid<GroupWidget> table) {
-        VerticalLayout tableLayout = new VerticalLayout();
-        tableLayout.setSizeFull();
-        tableLayout.setSpacing(true);
-        tableLayout.add(table);
-        tableLayout.setFlexGrow(1f, table);
-        return tableLayout;
+    private VerticalLayout createListingLayout(Grid<GroupWidget> table) {
+        VerticalLayout layout = new VerticalLayout();
+        layout.setSizeFull();
+        layout.setSpacing(true);
+        layout.add(table);
+        layout.setFlexGrow(1f, table);
+        layout.setMargin(false);
+		layout.setPadding(false);
+        return layout;
     }
 
     private void refreshCurrentPage() {
@@ -257,7 +258,6 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
         updateTotalCount();
         grid.getDataProvider().refreshAll();
         grid.asSingleSelect().clear();
-        enableButtons(null);
     }
 
     private long getTotalCount() {
@@ -271,7 +271,7 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
     private Button createAddButton() {
         Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
         button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
+        button.setId("add" + getId());
         button.addClickListener(event -> openEditor(new GroupWidget(), getI18nLabel("add_dialog")));
         button.setVisible(permissions.isCreateMode());
         return button;
@@ -353,56 +353,6 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             }
         });
         dialog.open();
-    }
-
-    @Override
-    public void enableButtons(GroupWidget item) {
-        super.enableButtons(item);
-        if (item == null) {
-            return;
-        }
-
-        // UserDetailsAdapter user = authenticatedUser.get().orElse(null);
-        // if (user == null) {
-        //     return;
-        // }
-
-        // boolean author = item.isAuthor(user.getUsername());
-        // boolean supervisor = user.hasRole(Constants.ROLE_SUPERVISOR);
-        // boolean administrator = user.hasRole(Constants.ROLE_ADMINISTRATOR);
-        // if (supervisor || administrator) {
-        //     author = true;
-        // }
-
-        // boolean automatic = item.isExclusive();
-        // Device device = deviceService.findBySerial(item.getDevice());
-        // if (device == null) {
-        //     automatic = false;
-        // }
-
-        // getButtonsLayout().getChildren().forEach(component -> {
-        //     if (component instanceof Button) {
-        //         Button button = (Button) component;
-        //         String id = button.getId().orElse("");
-        //         if (id.isEmpty()) {
-        //             return;
-        //         }
-
-        //         button.setEnabled(author);
-        //         if (supervisor && id.contains(DESIGNER)) {
-        //             button.setEnabled(true);
-        //         }
-        //         if (automatic && id.contains(ASSOCIATIONS_BUTTON)) {
-        //             button.setEnabled(author);
-        //         }
-        //         if (id.contains("add")) {
-        //             button.setEnabled(true);
-        //         }
-        //         if (id.contains("remove")) {
-        //             button.setEnabled(supervisor || !automatic);
-        //         }
-        //     }
-        // });
     }
 
     @Override

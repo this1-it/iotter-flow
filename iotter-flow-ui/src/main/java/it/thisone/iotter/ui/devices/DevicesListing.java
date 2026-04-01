@@ -173,7 +173,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private Permissions permissions;
 	private boolean supervisor;
 	private boolean production;
-	private int counter = ALARMED_LABEL_COUNT;
+
 
 	private Grid<Device> grid;
 	private LazyQueryDataProvider<Device, DevicesFilter> dataProvider;
@@ -235,7 +235,6 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		getMainLayout().setFlexGrow(1f, listingLayout);
 
 		updateTotalCount();
-		enableButtons(null);
 	}
 
 	@Override
@@ -283,7 +282,6 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		updateTotalCount();
 		grid.scrollToStart();
 		grid.deselectAll();
-		enableButtons(null);
 	}
 
 	private void refreshCurrentPage() {
@@ -459,16 +457,18 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private VerticalLayout createListingLayout(Grid<Device> table) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
-		layout.setSpacing(true);
+		layout.setSpacing(false);
 		layout.add(table);
 		layout.setFlexGrow(1f, table);
+		layout.setMargin(false);
+		layout.setPadding(false);
 		return layout;
 	}
 
 	private Button createAddButton() {
 		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
 		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
+		button.setId("add" + getId());
 		button.addClickListener(event -> openEditor(new Device(), getI18nLabel("add_dialog")));
 		button.setVisible(permissions.isCreateMode());
 		return button;
@@ -478,7 +478,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		Button button = new Button();
 		button.setIcon(VaadinIcon.CHECK_CIRCLE.create());
 		button.getElement().setProperty("title", getI18nLabel("activate_button"));
-		button.setId("activate_button" + ALWAYS_ENABLED_BUTTON);
+		button.setId("activate_button");
 		button.addClickListener(event -> openActivation());
 		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.ACTIVATE));
 		return button;
@@ -488,7 +488,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		Button button = new Button();
 		button.setIcon(VaadinIcon.UPLOAD.create());
 		button.getElement().setProperty("title", getI18nLabel("import_production"));
-		button.setId("import_button" + ALWAYS_ENABLED_BUTTON);
+		button.setId("import_button");
 		button.addClickListener(event -> openImporter());
 		button.setVisible(currentUser.hasPermission(EntityPermission.DEVICE.IMPORT));
 		return button;
@@ -756,36 +756,6 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	protected void onDetach(DetachEvent detachEvent) {
 		uiEventBus.unregister(this);
 		super.onDetach(detachEvent);
-	}
-
-	@Override
-	public void enableButtons(Device item) {
-		super.enableButtons(item);
-		if (item == null) {
-			return;
-		}
-		// for (Component component : getButtonsLayout()) {
-		// if (!(component instanceof Button)) {
-		// continue;
-		// }
-		// Button button = (Button) component;
-		// String id = button.getId().orElse("");
-		// boolean activated = !item.isDeActivated();
-		// if (id.contains(MODIFY_BUTTON)) {
-		// button.setEnabled(activated);
-		// } else if (id.contains(ALARM_BUTTON)) {
-		// button.setEnabled(!DeviceStatus.PRODUCED.equals(item.getStatus()) &&
-		// activated);
-		// } else if (id.contains(DOWNLOAD_BUTTON)) {
-		// button.setEnabled(item.isAvailableForVisualization() && activated);
-		// } else if (id.contains(RESET_BUTTON) || id.contains(REMOVE_BUTTON)) {
-		// boolean enabled = item.getNetwork() == null && item.getMaster() == null;
-		// if (enabled && id.contains(REMOVE_BUTTON) && item.isSticky()) {
-		// enabled = !supervisor || production;
-		// }
-		// button.setEnabled(enabled);
-		// }
-		// }
 	}
 
 	@Override

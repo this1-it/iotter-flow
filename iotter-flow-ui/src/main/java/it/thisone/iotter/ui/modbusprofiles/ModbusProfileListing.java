@@ -88,14 +88,13 @@ public class ModbusProfileListing extends AbstractBaseEntityListing<ModbusProfil
 		setBackendDataProvider(dataProvider);
 
 		grid = createGrid();
-		VerticalLayout content = createContent(grid);
+		VerticalLayout content = createListingLayout(grid);
 		setSelectable(grid);
 
 		HorizontalLayout toolbar = buildSearchToolbar(createAddButton());
 
 		getMainLayout().add(toolbar, content);
 		getMainLayout().setFlexGrow(1f, content);
-		enableButtons(null);
 	}
 
 	@Override
@@ -143,12 +142,14 @@ public class ModbusProfileListing extends AbstractBaseEntityListing<ModbusProfil
 		return grid;
 	}
 
-	private VerticalLayout createContent(Grid<ModbusProfile> grid) {
+	private VerticalLayout createListingLayout(Grid<ModbusProfile> grid) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setSpacing(true);
 		layout.add(grid);
 		layout.setFlexGrow(1f, grid);
+		layout.setMargin(false);
+		layout.setPadding(false);
 		return layout;
 	}
 
@@ -156,13 +157,12 @@ public class ModbusProfileListing extends AbstractBaseEntityListing<ModbusProfil
 		dataProvider.refreshAll();
 		grid.scrollToStart();
 		grid.deselectAll();
-		enableButtons(null);
 	}
 
 	private Button createAddButton() {
 		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
 		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
+		button.setId("add" + getId());
 		button.addClickListener(event -> openEditor(new ModbusProfile(), getI18nLabel("add_dialog")));
 		button.setVisible(permissions.isCreateMode());
 		return button;

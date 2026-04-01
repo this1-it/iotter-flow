@@ -64,7 +64,6 @@ import it.thisone.iotter.util.PopupNotification;
 public class NetworkListing extends AbstractBaseEntityListing<Network> {
 
 	private static final long serialVersionUID = 1L;
-	private static final String MIGRATION_BUTTON = "migration";
 	private static final String NETWORKS_VIEW = "networks.view";
 
 	private TabSheet tabsheet;
@@ -132,15 +131,14 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		buildFilterPopover(filterButton);
 
 		HorizontalLayout toolbar = buildSearchToolbar(filterButton, createAddButton());
-		VerticalLayout contentLayout = createContentLayout(toolbar, grid);
+		VerticalLayout contentLayout = createListingLayout(toolbar, grid);
 		setSelectable(grid);
-
-		enableButtons(null);
 
 		tabsheet = new TabSheet();
 		tabsheet.addClassName("tabsheet-framed");
 		tabsheet.setSizeFull();
 		tabsheet.addTab(getI18nLabel("title"), contentLayout);
+		
 		getMainLayout().add(tabsheet);
 		getMainLayout().setFlexGrow(1f, tabsheet);
 
@@ -276,12 +274,14 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		popover.add(content);
 	}
 
-	private VerticalLayout createContentLayout(HorizontalLayout toolbar, Grid<Network> grid) {
+	private VerticalLayout createListingLayout(HorizontalLayout toolbar, Grid<Network> grid) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setSpacing(true);
 		layout.add(toolbar, grid);
 		layout.setFlexGrow(1f, grid);
+		layout.setMargin(false);
+		layout.setPadding(false);
 		return layout;
 	}
 
@@ -290,7 +290,6 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 		updateTotalCount();
 		grid.scrollToStart();
 		grid.deselectAll();
-		enableButtons(null);
 	}
 
 	private long getTotalCount() {
@@ -305,7 +304,7 @@ public class NetworkListing extends AbstractBaseEntityListing<Network> {
 	private Button createAddButton() {
 		Button button = new Button(getI18nLabel("add"), VaadinIcon.PLUS.create());
 		button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
+		button.setId("add" + getId());
 		button.addClickListener(event -> openEditor(new Network(), getI18nLabel("add_dialog")));
 		button.setVisible(getPermissions().isCreateMode());
 		return button;

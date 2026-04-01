@@ -33,8 +33,6 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 
 	protected static final int DEFAULT_LIMIT = 100;
 
-	public static final String COUNTER_STYLE = "counter-label";
-	public static final String ALWAYS_ENABLED_BUTTON = "always_enabled_button";
 
 	private final VerticalLayout mainLayout;
 	private VerticalLayout editorLayout;
@@ -59,7 +57,9 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		super(name, id);
 		mainLayout = new VerticalLayout();
 		mainLayout.setSizeFull();
-		mainLayout.setSpacing(false);
+		mainLayout.setSpacing(true);		
+		mainLayout.setPadding(true);
+		mainLayout.setMargin(false);
 		
 		editorLayout = new VerticalLayout();
 		editorLayout.setSizeFull();
@@ -71,8 +71,7 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		buttonsLayout.setSpacing(true);
 		//buttonsLayout.setDefaultComponentAlignment(Alignment.MIDDLE_RIGHT);
 		Span counter = new Span();
-		//counter.setStyleName(COUNTER_STYLE);
-		counter.setId(COUNTER_STYLE);
+
 		buttonsLayout.add(counter);
 		setRootComposition(mainLayout);
 	}
@@ -109,8 +108,6 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		if (component instanceof Grid) {
 			Grid<T> grid = (Grid<T>) component;
 			grid.addSelectionListener(event -> {
-				T item = getCurrentValue();
-				enableButtons(item);
 			});
 		} else {
 			throw new UnsupportedOperationException("unsupported component");
@@ -164,42 +161,8 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 
 
 
-	public void enableButtons(T item) {
-		boolean enabled = item != null;
-		int size = getSize();
-//		Iterator<Component> iterator = buttonsLayout.iterator();
-//		while (iterator.hasNext()) {
-//			Component c = iterator.next();
-//			if (c instanceof Button) {
-//				Button button = (Button) c;
-//				if (button.getId() != null && button.getId().contains(ALWAYS_ENABLED_BUTTON)) {
-//					if (maxSize > 0) {
-//						button.setEnabled(size < maxSize);
-//					}
-//				} else {
-//					button.setEnabled(enabled);
-//				}
-//			} else if (c instanceof Span) {
-//				Span label = (Span) c;
-//				if (COUNTER_STYLE.equals(label.getId())) {
-//					//label.setValue(Integer.toString(size));
-//					label.setText(Long.toString(size));
-//				}
-//			}
-//		}
-	}
 
-	private int getSize() {
-		if (totalSize >= 0) {
-			return (int) totalSize;
-		}
-		if (dataProvider == null) {
-			return 0;
-		}
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		AbstractDataProvider rawProvider = (AbstractDataProvider) dataProvider;
-		return rawProvider.size(new Query());
-	}
+
 
 	/**
 	 * Builds the two-state ThingsBoard-style toolbar without a filter button:
@@ -220,7 +183,7 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 	 *
 	 * @param filterButton already configured by the subclass (e.g. with a Popover); may be null
 	 * @param addButton    already configured by the subclass
-	 * @return the assembled toolbar layout (with TOOLBAR_STYLE class applied)
+	 * @return the assembled toolbar layout
 	 */
 	protected HorizontalLayout buildSearchToolbar(Button filterButton, Button addButton) {
 		// --- Refresh button ---
@@ -282,8 +245,14 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		// --- Assemble ---
 		HorizontalLayout toolbar = new HorizontalLayout(normalBar, searchBar);
 		toolbar.setWidthFull();
-		toolbar.setPadding(true);
-		toolbar.addClassName(TOOLBAR_STYLE);
+		toolbar.setPadding(false);
+		toolbar.setMargin(false);
+
+		   
+
+                                                                                                   
+
+
 		toolbar.setAlignItems(Alignment.CENTER);
 		return toolbar;
 	}

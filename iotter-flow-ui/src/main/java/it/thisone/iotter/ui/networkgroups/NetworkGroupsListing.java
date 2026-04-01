@@ -104,7 +104,6 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
-		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 
 		queryDefinition = new NetworkGroupQueryDefinition(NetworkGroup.class, DEFAULT_LIMIT, getPermissions());
 		queryDefinition.setNetwork(network);
@@ -124,7 +123,6 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		getButtonsLayout().add(createAddButton());
 		toolbar.add(getButtonsLayout());
 		toolbar.setAlignItems(Alignment.CENTER);
-		enableButtons(null);
 
 		getMainLayout().add(contentLayout);
 		getMainLayout().setFlexGrow(1f, contentLayout);
@@ -254,7 +252,6 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		updateTotalCount();
 		grid.scrollToStart();
 		grid.deselectAll();
-		enableButtons(null);
 	}
 
 	private void updateTotalCount() {
@@ -266,7 +263,7 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		Button button = new Button();
 		button.setIcon(VaadinIcon.PLUS.create());
 		button.getElement().setAttribute("title", getI18nLabel("add"));
-		button.setId("add" + getId() + ALWAYS_ENABLED_BUTTON);
+		button.setId("add" + getId());
 		button.addClickListener(event -> openEditor(new NetworkGroup(), getI18nLabel("add_dialog")));
 		button.setVisible(getPermissions().isCreateMode());
 		return button;

@@ -90,7 +90,6 @@ public class GraphicFeedListing extends BaseComponent {
         toolbar.setWidthFull();
         toolbar.setSpacing(true);
         toolbar.setPadding(true);
-        toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 
         title = new Span();
         toolbar.add(title);

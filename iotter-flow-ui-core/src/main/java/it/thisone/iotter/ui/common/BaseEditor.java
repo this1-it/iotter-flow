@@ -73,7 +73,6 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 		toolbar.setWidth("100%");
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
-		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 		HorizontalLayout buttonbar = createButtonbar();
 		toolbar.add(buttonbar);
 		//toolbar.setComponentAlignment(buttonbar, Alignment.MIDDLE_RIGHT);

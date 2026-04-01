@@ -234,7 +234,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver, Be
 
         private void logout() {
                 VaadinSession.getCurrent().getSession().invalidate();
-                UI.getCurrent().navigate("login");
+                UI.getCurrent().getPage().setLocation("login");
         }
 
         private boolean hasText(String value) {

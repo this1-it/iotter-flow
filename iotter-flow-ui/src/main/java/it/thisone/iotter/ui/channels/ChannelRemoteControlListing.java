@@ -86,7 +86,6 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
-		//toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
@@ -95,7 +94,6 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 		getButtonsLayout().add(createModifyButton());
 		toolbar.add(getButtonsLayout());
 		toolbar.setAlignSelf(Alignment.END, getButtonsLayout());
-		enableButtons(null);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);

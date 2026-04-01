@@ -86,7 +86,6 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 			dataProvider.refreshAll();
 			grid.scrollToStart();
 			grid.asSingleSelect().clear();
-			enableButtons(null);
 		}
 		this.others = others;
 	}
@@ -107,7 +106,6 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
-		toolbar.addClassName(UIUtils.TOOLBAR_STYLE);
 
 		dataProvider = new ListDataProvider<>(new ArrayList<>());
 		setDataProvider(dataProvider);
@@ -121,7 +119,6 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 		getButtonsLayout().add(createAddButton());
 		toolbar.add(getButtonsLayout());
 		toolbar.setVerticalComponentAlignment(Alignment.CENTER, getButtonsLayout());
-		enableButtons(null);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);
@@ -187,7 +184,7 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 		Button button = new Button();
 		button.setIcon(VaadinIcon.PLUS.create());
 		button.getElement().setProperty("title", getI18nLabel(ADD_BUTTON));
-		button.setId(ADD_BUTTON + getId() + ALWAYS_ENABLED_BUTTON);
+		button.setId(ADD_BUTTON + getId());
 		button.addClickListener(event -> openAdd());
 		button.setVisible(permissions.isCreateMode());
 		return button;
@@ -252,7 +249,6 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 			}
 			dataProvider.refreshAll();
 			dialog.close();
-			enableButtons(null);
 		});
 		dialog.open();
 	}
@@ -268,7 +264,6 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 			dataProvider.getItems().remove(item);
 			dataProvider.refreshAll();
 			grid.asSingleSelect().clear();
-			enableButtons(null);
 		});
 	}
 }

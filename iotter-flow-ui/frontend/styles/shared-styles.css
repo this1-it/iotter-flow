@@ -162,6 +162,17 @@ body {
     text-decoration: none;
 }
 
+.google-signin-btn {
+    background: white !important;
+    color: #444 !important;
+    font-weight: 500 !important;
+    border-radius: 4px;
+    margin-top: 4px;
+    --lumo-primary-color: white;
+    --lumo-primary-text-color: #444;
+    --lumo-body-text-color: #444;
+}
+
 .signup-view .login-panel {
     max-width: 660px;
 }
@@ -337,3 +348,4 @@ vaadin-side-nav-item[active] > vaadin-icon {
 .Discontinued {
     color: #f54993;
 }
+
