@@ -9,7 +9,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
@@ -18,7 +17,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.AbstractDataProvider;
 import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
-import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
 import it.thisone.iotter.config.Constants;
@@ -33,10 +31,8 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 
 	protected static final int DEFAULT_LIMIT = 100;
 
-
 	private final VerticalLayout mainLayout;
 	private VerticalLayout editorLayout;
-	private final HorizontalLayout buttonsLayout;
 	private Component selectable;
 	private AbstractDataProvider<T, ?> dataProvider;
 	private long totalSize = -1;
@@ -65,14 +61,6 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 		editorLayout.setSizeFull();
 		//setSizeFull();
 
-
-		buttonsLayout = new HorizontalLayout();
-		//buttonsLayout.setStyleName(UIUtils.BUTTONS_STYLE);
-		buttonsLayout.setSpacing(true);
-		//buttonsLayout.setDefaultComponentAlignment(Alignment.MIDDLE_RIGHT);
-		Span counter = new Span();
-
-		buttonsLayout.add(counter);
 		setRootComposition(mainLayout);
 	}
 
@@ -93,10 +81,6 @@ public abstract class AbstractBaseEntityListing<T extends BaseEntity> extends Ba
 
 	public void setEditorLayout(VerticalLayout editorLayout) {
 		this.editorLayout = editorLayout;
-	}
-
-	public HorizontalLayout getButtonsLayout() {
-		return buttonsLayout;
 	}
 
 	public Component getSelectable() {

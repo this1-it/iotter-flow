@@ -26,11 +26,18 @@
 			<version>2.13.0</version>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 		   <groupId>org.vaadin.addons.chartjs</groupId>
 		   <artifactId>chartjs</artifactId>
 		   <version>0.1.39</version>
-		</dependency>
+		</dependency> -->
+
+
+<dependency>
+   <groupId>software.xdev</groupId>
+   <artifactId>vaadin-chartjs-wrapper</artifactId>
+   <version>1.0.1</version>
+</dependency>
 
 		<dependency>
 			<groupId>com.flowingcode.addons</groupId>

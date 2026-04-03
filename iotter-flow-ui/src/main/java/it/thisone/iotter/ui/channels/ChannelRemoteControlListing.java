@@ -86,14 +86,16 @@ public class ChannelRemoteControlListing extends AbstractBaseEntityListing<Chann
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
+		HorizontalLayout buttonsLayout = new HorizontalLayout();
+		buttonsLayout.setSpacing(true);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
-		getButtonsLayout().add(createModifyButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setAlignSelf(Alignment.END, getButtonsLayout());
+		buttonsLayout.add(createModifyButton());
+		toolbar.add(buttonsLayout);
+		toolbar.setAlignSelf(Alignment.END, buttonsLayout);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);

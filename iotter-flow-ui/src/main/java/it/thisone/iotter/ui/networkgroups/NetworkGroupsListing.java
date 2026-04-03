@@ -104,6 +104,8 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
+		HorizontalLayout buttonsLayout = new HorizontalLayout();
+		buttonsLayout.setSpacing(true);
 
 		queryDefinition = new NetworkGroupQueryDefinition(NetworkGroup.class, DEFAULT_LIMIT, getPermissions());
 		queryDefinition.setNetwork(network);
@@ -120,8 +122,8 @@ public class NetworkGroupsListing extends AbstractBaseEntityListing<NetworkGroup
 		VerticalLayout contentLayout = createContentLayout(toolbar, grid);
 		setSelectable(grid);
 
-		getButtonsLayout().add(createAddButton());
-		toolbar.add(getButtonsLayout());
+		buttonsLayout.add(createAddButton());
+		toolbar.add(buttonsLayout);
 		toolbar.setAlignItems(Alignment.CENTER);
 
 		getMainLayout().add(contentLayout);

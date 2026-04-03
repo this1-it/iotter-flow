@@ -63,16 +63,17 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
+		HorizontalLayout buttonsLayout = new HorizontalLayout();
+		buttonsLayout.setSpacing(true);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
 		users = createUsersButton();
-		getButtonsLayout().add(users);
-		getButtonsLayout().add(createModifyButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setAlignSelf(Alignment.END, getButtonsLayout());
+		buttonsLayout.add(users, createModifyButton());
+		toolbar.add(buttonsLayout);
+		toolbar.setAlignSelf(Alignment.END, buttonsLayout);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);

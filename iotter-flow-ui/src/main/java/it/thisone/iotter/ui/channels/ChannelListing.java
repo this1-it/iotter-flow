@@ -66,15 +66,16 @@ public class ChannelListing extends AbstractBaseEntityListing<Channel> implement
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
+		HorizontalLayout buttonsLayout = new HorizontalLayout();
+		buttonsLayout.setSpacing(true);
 
 		grid = createGrid();
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
-		getButtonsLayout().add(createViewButton());
-		getButtonsLayout().add(createRemoveButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setAlignSelf(Alignment.END, getButtonsLayout());
+		buttonsLayout.add(createViewButton(), createRemoveButton());
+		toolbar.add(buttonsLayout);
+		toolbar.setAlignSelf(Alignment.END, buttonsLayout);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);

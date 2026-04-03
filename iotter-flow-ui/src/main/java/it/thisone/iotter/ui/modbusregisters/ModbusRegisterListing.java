@@ -7,9 +7,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -29,7 +33,7 @@ import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.ConfirmationDialogs;
-import it.thisone.iotter.ui.common.UIUtils;
+
 import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.util.BacNet;
 
@@ -106,6 +110,8 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 		toolbar.setWidthFull();
 		toolbar.setSpacing(true);
 		toolbar.setPadding(true);
+		HorizontalLayout buttonsLayout = new HorizontalLayout();
+		buttonsLayout.setSpacing(true);
 
 		dataProvider = new ListDataProvider<>(new ArrayList<>());
 		setDataProvider(dataProvider);
@@ -114,11 +120,9 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 		VerticalLayout content = createContent(grid);
 		setSelectable(grid);
 
-		getButtonsLayout().add(createRemoveButton());
-		getButtonsLayout().add(createModifyButton());
-		getButtonsLayout().add(createAddButton());
-		toolbar.add(getButtonsLayout());
-		toolbar.setVerticalComponentAlignment(Alignment.CENTER, getButtonsLayout());
+		buttonsLayout.add(createAddButton());
+		toolbar.add(buttonsLayout);
+		toolbar.setVerticalComponentAlignment(Alignment.CENTER, buttonsLayout);
 
 		getMainLayout().add(toolbar);
 		getMainLayout().add(content);
@@ -162,6 +166,21 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 
 		grid.setColumnOrder(columns.toArray(new Grid.Column[0]));
 
+		grid.addComponentColumn(item -> {
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+			MenuItem menuItem = menuBar.addItem("•••");
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			if (permissions.isModifyMode()) {
+				subMenu.addItem(getI18nLabel("modify_action"), event -> openEditor(item, getI18nLabel("modify_dialog"), false));
+			}
+			if (permissions.isRemoveMode()) {
+				subMenu.addItem(getI18nLabel("remove_action"), event -> openRemove(item));
+			}
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0).setKey("actions");
+
 		List<String> collapsedList = Arrays.asList(collapsed);
 		for (Grid.Column<ModbusRegister> column : columns) {
 			if (collapsedList.contains(column.getKey())) {
@@ -187,24 +206,6 @@ public class ModbusRegisterListing extends AbstractBaseEntityListing<ModbusRegis
 		button.setId(ADD_BUTTON + getId());
 		button.addClickListener(event -> openAdd());
 		button.setVisible(permissions.isCreateMode());
-		return button;
-	}
-
-	private Button createModifyButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.EDIT.create());
-		button.getElement().setProperty("title", getI18nLabel("modify_action"));
-		button.addClickListener(event -> openEditor(getCurrentValue(), getI18nLabel("modify_dialog"), false));
-		button.setVisible(permissions.isModifyMode());
-		return button;
-	}
-
-	private Button createRemoveButton() {
-		Button button = new Button();
-		button.setIcon(VaadinIcon.TRASH.create());
-		button.getElement().setProperty("title", getI18nLabel("remove_action"));
-		button.addClickListener(event -> openRemove(getCurrentValue()));
-		button.setVisible(permissions.isRemoveMode());
 		return button;
 	}
 
