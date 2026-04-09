@@ -72,22 +72,22 @@ public class DataWriteSet implements Serializable {
 
 
 
-	@JsonIgnore
+	@JsonProperty("ts")
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
 
-	@JsonIgnore
+	@JsonProperty("step")
 	public void setStep(float step) {
 		this.step = step;
 	}
 
-	@JsonIgnore
+	@JsonProperty("overwrite_tr")
 	public void setOverwrite_tr(long overwrite_tr) {
 		this.overwrite_tr = overwrite_tr;
 	}
 
-	@JsonIgnore
+	@JsonProperty("values")
 	public void setValues(List<DeviceData> values) {
 		this.values = values;
 	}

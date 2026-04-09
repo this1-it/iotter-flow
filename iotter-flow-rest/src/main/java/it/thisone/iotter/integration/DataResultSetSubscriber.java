@@ -142,6 +142,9 @@ public class DataResultSetSubscriber implements InitializingBean, DisposableBean
 	}
 
 	public void handleDataResultSet(String topic, byte[] payload) {
+		// if (payload.length == 0 || !topic.contains("7c1guq1901R2-1-79329")) {
+		// 	return;
+		// }
 		try {
 			byte[] uncompressed = decompress(payload);
 			String json = new String(uncompressed);

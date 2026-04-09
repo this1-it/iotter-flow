@@ -277,139 +277,139 @@ public class ModbusProvisioning {
 	 * 
 	 */
 	
-	@JsonIgnore
+	@JsonProperty("sn")
 	public void setDeviceId(String deviceId) {
 		this.deviceId = deviceId;
 	}
-	@JsonIgnore
+	@JsonProperty("slavename")
 	public void setSlaveName(String slaveName) {
 		this.slaveName = slaveName;
 	}
-	@JsonIgnore
+	@JsonProperty("slaveid")
 	public void setSlaveId(Integer slaveID) {
 		this.slaveId = slaveID;
 	}
-	@JsonIgnore
+	@JsonProperty("samplerate")
 	public void setSampleRate(Integer sampleRate) {
 		this.sampleRate = sampleRate;
 	}
-	@JsonIgnore
+	@JsonProperty("sp_speed")
 	public void setSerialPortSpeed(String serialPortSpeed) {
 		this.serialPortSpeed = serialPortSpeed;
 	}
-	@JsonIgnore
+	@JsonProperty("sp_databits")
 	public void setSerialPortDataBits(String serialPortDataBits) {
 		this.serialPortDataBits = serialPortDataBits;
 	}
-	@JsonIgnore
+	@JsonProperty("sp_parity")
 	public void setSerialPortParity(String serialPortParity) {
 		this.serialPortParity = serialPortParity;
 	}
-	@JsonIgnore
+	@JsonProperty("sp_stopbits")
 	public void setSerialPortStopBits(String serialStopBits) {
 		this.serialPortStopBits = serialStopBits;
 	}
-	
-	@JsonIgnore
+
+	@JsonProperty("active")
 	public void setActive(List<Boolean> active) {
 		this.active = active;
 	}
 
-	@JsonIgnore
+	@JsonProperty("address")
 	public void setAddress(List<Integer> address) {
 		this.address = address;
 	}
-	@JsonIgnore
+	@JsonProperty("label")
 	public void setLabel(List<String> label) {
 		this.label = label;
 	}
-	@JsonIgnore
+	@JsonProperty("typevar")
 	public void setTypeVar(List<String> typeVar) {
 		this.typeVar = typeVar;
 	}
-	@JsonIgnore
+	@JsonProperty("typeread")
 	public void setTypeRead(List<String> typeRead) {
 		this.typeRead = typeRead;
 	}
-	@JsonIgnore
+	@JsonProperty("format")
 	public void setFormat(List<String> format) {
 		this.format = format;
 	}
-	@JsonIgnore
+	@JsonProperty("signed")
 	public void setSigned(List<String> signed) {
 		this.signed = signed;
 	}
-	@JsonIgnore
+	@JsonProperty("permission")
 	public void setPermission(List<String> permission) {
 		this.permission = permission;
 	}
-	@JsonIgnore
+	@JsonProperty("functioncode")
 	public void setFunctionCode(List<String> functionCode) {
 		this.functionCode = functionCode;
 	}
-	@JsonIgnore
+	@JsonProperty("unit")
 	public void setUnit(List<Integer> unit) {
 		this.unit = unit;
 	}
-	@JsonIgnore
+	@JsonProperty("scalemultiplier")
 	public void setScaleMultiplier(List<Double> scaleMultiplier) {
 		this.scaleMultiplier = scaleMultiplier;
 	}
-	@JsonIgnore
+	@JsonProperty("offset")
 	public void setOffset(List<Double> offset) {
 		this.offset = offset;
 	}
-	@JsonIgnore
+	@JsonProperty("decimaldigits")
 	public void setDecimalDigits(List<Integer> decimalDigits) {
 		this.decimalDigits = decimalDigits;
 	}
-	@JsonIgnore
+	@JsonProperty("deltalogging")
 	public void setDeltaLogging(List<Double> deltaLogging) {
 		this.deltaLogging = deltaLogging;
 	}
-	@JsonIgnore
+	@JsonProperty("min")
 	public void setMin(List<Double> min) {
 		this.min = min;
 	}
-	@JsonIgnore
+	@JsonProperty("max")
 	public void setMax(List<Double> max) {
 		this.max = max;
 	}
-	@JsonIgnore
+	@JsonProperty("priority")
 	public void setPriority(List<String> priority) {
 		this.priority = priority;
 	}
-	
-	@JsonIgnore
+
+	@JsonProperty("profileid")
 	public void setProfileId(String uid) {
 		this.profileId = uid;
 	}
-	@JsonIgnore
+	@JsonProperty("oid")
 	public void setOid(List<String> externalId) {
 		this.oid = externalId;
 	}
 
-	@JsonIgnore
+	@JsonProperty("eth_host")
 	public void setHost(String ethHost) {
 		this.host = ethHost;
 	}
 
-	@JsonIgnore
+	@JsonProperty("eth_port")
 	public void setPort(String ethPort) {
 		this.port = ethPort;
 	}
 
-	@JsonIgnore
+	@JsonProperty("protocol")
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
 
-	@JsonIgnore
+	@JsonProperty("bitmask")
 	public void setBitmask(List<String> bitmask) {
 		this.bitmask = bitmask;
 	}
-	
-	@JsonIgnore
+
+	@JsonProperty("qualifier")
 	public void setQualifier(List<String> qualifier) {
 		this.qualifier = qualifier;
 	}

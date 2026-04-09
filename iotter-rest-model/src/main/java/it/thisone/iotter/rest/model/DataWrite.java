@@ -62,17 +62,17 @@ public class DataWrite implements Serializable {
 
 
 
-	@JsonIgnore
+	@JsonProperty("api-key")
 	public void setApi_key(String api_key) {
 		this.api_key = api_key;
 	}
 
-	@JsonIgnore
+	@JsonProperty("bat_lvl")
 	public void setBattery_level(int battery_level) {
 		this.battery_level = battery_level;
 	}
 
-	@JsonIgnore
+	@JsonProperty("data")
 	public void setData(List<DataWriteSet> data) {
 		this.data = data;
 	}

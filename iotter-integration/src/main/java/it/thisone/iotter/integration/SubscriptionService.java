@@ -572,8 +572,8 @@ public class SubscriptionService extends Initializator {
 			
 			if (device.isPublishing()) {
 				
-				DataResultSet data = CassandraService.publishingDataResultSet(device, dataPoint, lastContact);
-				mqttService.publishLastValues(device.getSerial(), data, false);
+				// DataResultSet data = CassandraService.publishingDataResultSet(device, dataPoint, lastContact);
+				// mqttService.publishLastValues(device.getSerial(), data, false);
 				
 //				List<DataPoint> changes = new ArrayList<>();
 //				for (Feed feed : feeds) {

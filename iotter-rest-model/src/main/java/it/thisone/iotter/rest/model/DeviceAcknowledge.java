@@ -47,12 +47,12 @@ public class DeviceAcknowledge implements Serializable{
 		}
 	}
 
-	@JsonIgnore
+	@JsonProperty("ts")
 	public void setTs(long ts) {
 		this.ts = ts;
 	}
 
-	@JsonIgnore
+	@JsonProperty("check_config")
 	public void setCheckConfig(String checkConfig) {
 		this.checkConfig = checkConfig;
 	}

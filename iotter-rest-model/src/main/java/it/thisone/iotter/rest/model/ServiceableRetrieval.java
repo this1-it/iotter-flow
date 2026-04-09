@@ -72,32 +72,32 @@ public class ServiceableRetrieval implements Serializable {
 	@JsonIgnore
 	private long expires;
 
-	@JsonIgnore
+	@JsonProperty("qid")
 	public void setQid(String qid) {
 		this.qid = qid;
 	}
 
-	@JsonIgnore
+	@JsonProperty("total")
 	public void setTotal(Long total) {
 		this.total = total;
 	}
 
-	@JsonIgnore
+	@JsonProperty("start")
 	public void setStart(Long start) {
 		this.start = start;
 	}
 
-	@JsonIgnore
+	@JsonProperty("batch_size")
 	public void setBatchSize(Integer size) {
 		this.batchSize = size;
 	}
 
-	@JsonIgnore
+	@JsonProperty("expires")
 	public void setExpires(long expires) {
 		this.expires = expires;
 	}
 
-	@JsonIgnore
+	@JsonProperty("next")
 	public void setNext(Long next) {
 		this.next = next;
 	}	

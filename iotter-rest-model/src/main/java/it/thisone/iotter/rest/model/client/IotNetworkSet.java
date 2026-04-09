@@ -24,7 +24,7 @@ public class IotNetworkSet {
 		return values;
 	}
 
-	@JsonIgnore
+	@JsonProperty("values")
 	public void setValues(List<IotNetwork> values) {
 		this.values = values;
 	}
@@ -42,7 +42,7 @@ public class IotNetworkSet {
 		return batch;
 	}
 
-	@JsonIgnore
+	@JsonProperty("batch")
 	public void setBatch(ServiceableRetrieval batch) {
 		this.batch = batch;
 	}

@@ -29,7 +29,7 @@ public class DeviceConfigurationRev implements Serializable {
 		return revision;
 	}
 
-	@JsonIgnore
+	@JsonProperty("conf_rev")
 	public void setRevision(int revision) {
 		this.revision = revision;
 	}

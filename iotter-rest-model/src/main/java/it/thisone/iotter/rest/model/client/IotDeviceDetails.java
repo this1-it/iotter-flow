@@ -79,7 +79,6 @@ public class IotDeviceDetails implements Serializable {
 		this.type = type;
 	}
     
-    @JsonIgnore
 	public void setStatus(@JsonProperty("status") String status) {
 		this.status = status;
 	}

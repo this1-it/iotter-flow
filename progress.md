@@ -51,8 +51,11 @@ $vaadin-flow-migration migrate package iotter-flow-ui/src/main/java/it/thisone/i
 
 
 
+mvn -pl iotter-flow-rest spring-boot:run \
+  -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
 
-
+mvn -pl iotter-flow-rest -am spring-boot:run \
+  -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
 
  mvn -pl iotter-flow-ui -am clean package

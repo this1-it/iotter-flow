@@ -135,58 +135,58 @@ public class DataPoint implements Serializable {
     @JsonIgnore
 	private Float offset;
     
-    @JsonIgnore
+    @JsonProperty("id")
 	public void setId(String id) {
 		this.id = id;
 	}
 
-    @JsonIgnore
+    @JsonProperty("ts")
 	public void setTs(Long ts) {
 		this.ts = ts;
 	}
 
-    @JsonIgnore
+    @JsonProperty("v")
 	public void setValue(Float value) {
 		this.value = value;
 	}
 
-    @JsonIgnore
+    @JsonProperty("err")
 	public void setError(String error) {
 		this.error = error;
 	}
 
-    @JsonIgnore
+    @JsonProperty("label")
 	public void setLabel(String label) {
 		this.label = label;
 	}
 
-    @JsonIgnore
+    @JsonProperty("unit")
 	public void setUnit(String unit) {
 		this.unit = unit;
 	}
 
-    @JsonIgnore
+    @JsonProperty("qual")
 	public void setQual(Integer qual) {
 		this.qual = qual;
 	}
-    
-    @JsonIgnore
+
+    @JsonProperty("typ")
 	public void setTypeVar(String typeVar) {
 		this.typeVar = typeVar;
 	}
-    
+
 	@Override
 	@JsonIgnore
 	public String toString() {
 		return String.format("%s %f %d", getId(), getValue(), getTs());
 	}
 
-	@JsonIgnore
+    @JsonProperty("scale")
 	public void setScale(Float scale) {
 		this.scale = scale;
 	}
-	
-	@JsonIgnore
+
+    @JsonProperty("offset")
 	public void setOffset(Float offset) {
 		this.offset = offset;
 	}

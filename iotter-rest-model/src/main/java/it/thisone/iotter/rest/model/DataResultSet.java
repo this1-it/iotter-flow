@@ -104,32 +104,32 @@ public class DataResultSet implements Serializable {
 		batch = new ServiceableRetrieval();
 	}
 
-	@JsonIgnore
+	@JsonProperty("from")
 	public void setFrom(long from) {
 		this.from = from;
 	}
 
-	@JsonIgnore
+	@JsonProperty("to")
 	public void setTo(long to) {
 		this.to = to;
 	}
 
-	@JsonIgnore
+	@JsonProperty("values")
 	public void setValues(List<DataPoint> values) {
 		this.values = values;
 	}
 
-	@JsonIgnore
+	@JsonProperty("batch")
 	public void setBatch(ServiceableRetrieval batch) {
 		this.batch = batch;
 	}
 
-	@JsonIgnore
+	@JsonProperty("rows")
 	public void setRows(List<DataRow> rows) {
 		this.rows = rows;
 	}
-	
-	@JsonIgnore
+
+	@JsonProperty("last_contact")
 	public void setLastContact(long lastContact) {
 		this.lastContact = lastContact;
 	}

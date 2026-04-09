@@ -114,43 +114,42 @@ public class DeviceData implements Serializable {
 	@JsonIgnore
 	private PartialData partial;
 
-	@JsonIgnore
+	@JsonProperty("sn")
 	public void setSerial(String serial) {
 		this.serial = serial;
 	}
 
-	@JsonIgnore
+	@JsonProperty("ids")
 	public void setIds(String[] ids) {
 		this.ids = ids;
 	}
 
-	@JsonIgnore
+	@JsonProperty("v")
 	public void setValue(float[] value) {
 		this.value = value;
 	}
 
-	@JsonIgnore
+	@JsonProperty("id")
 	public void setId(String id) {
 		this.id = id;
 	}
 
-	@JsonIgnore
+	@JsonProperty("blob")
 	public void setBlob(String blob) {
 		this.blob = blob;
 	}
 
-	@JsonIgnore
+	@JsonProperty("err")
 	public void setError(String[] error) {
 		this.error = error;
 	}
 
-	@JsonIgnore
+	@JsonProperty("batt_lvl")
 	public void setBattery_level(int battery_level) {
 		this.battery_level = battery_level;
 	}
 
-
-	@JsonIgnore
+	@JsonProperty("p")
 	public void setPartial(PartialData partial) {
 		this.partial = partial;
 	}

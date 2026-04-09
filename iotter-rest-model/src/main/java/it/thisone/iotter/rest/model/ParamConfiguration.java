@@ -258,19 +258,17 @@ public class ParamConfiguration implements Serializable {
 	}
 
 
-	@JsonIgnore
+	@JsonProperty("desc")
 	public void setDesc(String desc) {
 		this.desc = desc;
 	}
 
-
-	@JsonIgnore
+	@JsonProperty("qual")
 	public void setQual(int qual) {
 		this.qual = qual;
 	}
 
-
-	@JsonIgnore
+	@JsonProperty("sens")
 	public void setSens(int sens) {
 		this.sens = sens;
 	}

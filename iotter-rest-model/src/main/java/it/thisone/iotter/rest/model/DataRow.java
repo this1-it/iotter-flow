@@ -44,12 +44,12 @@ public class DataRow implements Serializable {
 		values = new ArrayList<Float>();
 	}
 
-    @JsonIgnore
+    @JsonProperty("ts")
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
 
-    @JsonIgnore
+    @JsonProperty("v")
 	public void setValues(List<Float> values) {
 		this.values = values;
 	}

@@ -236,7 +236,6 @@ public class IntegrationConfig implements AsyncConfigurer {
 				logger.info("HealthCheck Job scheduled");
 			}
 
-
 		} catch (SchedulerException e) {
 			logger.error("HealthCheck job not started", e);
 		}

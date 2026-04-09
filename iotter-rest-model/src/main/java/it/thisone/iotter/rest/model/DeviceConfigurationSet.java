@@ -59,27 +59,27 @@ public class DeviceConfigurationSet {
 	private String tz;
 
 
-	@JsonIgnore
+	@JsonProperty("conf_rev")
 	public void setRevision(int revision) {
 		this.revision = revision;
 	}
 
-	@JsonIgnore
+	@JsonProperty("conf")
 	public void setAttributes(List<ConfigAttribute> attributes) {
 		this.attributes = attributes;
 	}
 
-	@JsonIgnore
+	@JsonProperty("conf_ts")
 	public void setRevisionTime(long revisionTime) {
 		this.revisionTime = revisionTime;
 	}
 
-	@JsonIgnore
+	@JsonProperty("serial")
 	public void setSerial(String serial) {
 		this.serial = serial;
 	}
 
-	@JsonIgnore
+	@JsonProperty("conf_tz")
 	public void setTz(String tz) {
 		this.tz = tz;
 	}

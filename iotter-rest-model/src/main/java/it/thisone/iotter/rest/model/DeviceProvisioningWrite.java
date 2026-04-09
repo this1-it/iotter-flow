@@ -36,12 +36,12 @@ public class DeviceProvisioningWrite {
 	@JsonIgnore
 	private String apiKey;
 	
-	@JsonIgnore
+	@JsonProperty("profiles")
 	public void setProfiles(List<ModbusProvisioning> profiles) {
 		this.profiles = profiles;
 	}
 
-	@JsonIgnore
+	@JsonProperty("api-key")
 	public void setApiKey(String apikey) {
 		this.apiKey = apikey;
 	}

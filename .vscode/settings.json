@@ -1,7 +1,7 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
     "java.compile.nullAnalysis.mode": "disabled",
-      "java.configuration.runtimes": [
+    "java.configuration.runtimes": [
     {
       "name": "JavaSE-21",
       "path": "/usr/lib/jvm/java-21-openjdk-amd64",

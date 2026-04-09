@@ -21,7 +21,7 @@ public class IotNetworkDetails implements Serializable {
     @JsonIgnore
     private String timeZone;
 
-    @JsonIgnore
+    @JsonProperty("tz")
 	public void setTimeZone(String timeZone) {
 		this.timeZone = timeZone;
 	}

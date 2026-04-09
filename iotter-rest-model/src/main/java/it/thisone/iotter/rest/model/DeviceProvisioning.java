@@ -36,12 +36,12 @@ public class DeviceProvisioning {
 	@JsonIgnore
 	private String checksum;
 
-	@JsonIgnore
-	public void setProfiles(@JsonProperty("profiles") List<ModbusProvisioning> profiles) {
+	@JsonProperty("profiles")
+	public void setProfiles(List<ModbusProvisioning> profiles) {
 		this.profiles = profiles;
 	}
 
-	@JsonIgnore
+	@JsonProperty("checksum")
 	public void setChecksum(String checksum) {
 		this.checksum = checksum;
 	}

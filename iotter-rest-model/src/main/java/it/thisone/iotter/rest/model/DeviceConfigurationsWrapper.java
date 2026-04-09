@@ -20,7 +20,7 @@ public class DeviceConfigurationsWrapper {
         return configurations;
     }
 
-    @JsonIgnore
+    @JsonProperty
     public void setConfigurations(List<DeviceConfigurationSet> configurations) {
         this.configurations = configurations;
     }

@@ -144,6 +144,25 @@
         </plugins>
     </build>
 
-
+    <profiles>
+        <profile>
+            <id>debug</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <configuration>
+                            <jvmArguments>
+                                -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+                                --add-opens java.base/java.net=ALL-UNNAMED
+                            </jvmArguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

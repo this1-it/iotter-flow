@@ -3,10 +3,18 @@
   "configurations": [
     {
       "type": "java",
-      "name": "Attach to Spring Boot (iotter-flow-ui)",
+      "name": "Attach to Spring Boot",
       "request": "attach",
       "hostName": "localhost",
       "port": 5005
+    },
+    {
+      "type": "java",
+      "name": "Debug iotter-flow-rest",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5005,
+      "projectName": "iotter-flow-rest"
     }
   ]
 }

@@ -77,18 +77,18 @@ public class MqttService {
 	}
 
 	public void publishOnlineStatus(String serial, DeviceOnlineStatus data, boolean retained) {
-		try {
-			byte[] payload = new byte[0];
-			boolean online = false;
-			if (data != null) {
-				payload = gzipMapper.writeValueAsBytes(data);
-				online = data.isOnline();
-			}
-			if (mqttOutboundService.handleDeviceOnlineStatus(serial, payload, retained)) {
-				logger.debug("published status: serial {}, online {}, retained {}", serial, online, retained);
-			}
-		} catch (JsonProcessingException e) {
-		}
+		// try {
+		// 	byte[] payload = new byte[0];
+		// 	boolean online = false;
+		// 	if (data != null) {
+		// 		payload = gzipMapper.writeValueAsBytes(data);
+		// 		online = data.isOnline();
+		// 	}
+		// 	if (mqttOutboundService.handleDeviceOnlineStatus(serial, payload, retained)) {
+		// 		logger.debug("published status: serial {}, online {}, retained {}", serial, online, retained);
+		// 	}
+		// } catch (JsonProcessingException e) {
+		// }
 	}
 
 	@Deprecated // Feature #2162

@@ -23,7 +23,7 @@ public class IotUserSet {
 		return values;
 	}
 
-	@JsonIgnore
+	@JsonProperty("values")
 	public void setValues(List<IotUser> values) {
 		this.values = values;
 	}
@@ -41,7 +41,7 @@ public class IotUserSet {
 		return batch;
 	}
 
-	@JsonIgnore
+	@JsonProperty("batch")
 	public void setBatch(ServiceableRetrieval batch) {
 		this.batch = batch;
 	}
