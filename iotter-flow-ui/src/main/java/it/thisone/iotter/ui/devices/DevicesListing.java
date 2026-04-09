@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.vaadin.flow.components.TabSheet;
 
 import com.google.common.collect.Range;
 import com.google.common.eventbus.Subscribe;
@@ -41,7 +42,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-
+import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
 
@@ -85,6 +86,7 @@ import it.thisone.iotter.security.UserDetailsAdapter;
 
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
+import it.thisone.iotter.ui.common.GroupWidgetSelectedEvent;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
@@ -125,6 +127,8 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 	private static final String RESET_BUTTON = "reset";
 	private static final String MODIFY_BUTTON = "edit";
 	private static final String REMOVE_BUTTON = "remove";
+
+	private TabSheet tabsheet;
 
 	public static final int ALARMED_LABEL_COUNT = 4;
 
@@ -187,16 +191,17 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		super(Device.class, DEVICE_VIEW, DEVICE_VIEW, false);
 	}
 
-	public void init(Network network) {
-		init(network, true);
-	}
+	// public void init(Network network) {
+	// 	init(network, true);
+	// }
 
-	public void init(Network network, boolean hasParameters) {
+	public void init(Network network, TabSheet tabsheet ) {
 		if (grid != null) {
 			return;
 		}
 		this.network = network;
-		this.hasParameters = hasParameters;
+		this.hasParameters = tabsheet != null;
+		this.tabsheet = tabsheet;
 		currentUser = authenticatedUser.get()
 				.orElseThrow(() -> new IllegalStateException("User must be authenticated to edit devices"));
 		this.permissions = PermissionsUtils.getPermissionsForUserEntity(currentUser);
@@ -504,6 +509,25 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		return button;
 	}
 
+
+
+
+	private void openVisualizer(GroupWidget item) {
+        if (item == null) {
+            return;
+        }
+        GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true,  backendServices);
+
+
+
+        if (visualizer != null && this.tabsheet != null) {
+			Tab tab = tabsheet.addCloseableTab(item.getName(),visualizer);
+			tabsheet.setSelectedTab(tab);
+		}
+
+    }
+
+
 	private void openEditor(Device item, String label) {
 		if (item == null) {
 			return;
@@ -779,19 +803,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		boxes = new DeviceWidgetBox(currentUser, backendServices);
 
 		table.addSelectionListener(event -> boxes.refresh(event.getFirstSelectedItem().orElse(null)));
-		boxes.addListener(new EditorSavedListener() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void editorSaved(EditorSavedEvent event) {
-				if (event.getSavedItem() instanceof GroupWidget) {
-					openVisualization((GroupWidget) event.getSavedItem());
-				}
-				if (event.getSavedItem() instanceof Device) {
-					openProvisioning((Device) event.getSavedItem());
-				}
-			}
-		});
+		boxes.addGroupWidgetSelectedListener(event -> openVisualizer(event.getGroupWidget()));
 
 		// if (UIUtils.isMobile()) {
 		// return;

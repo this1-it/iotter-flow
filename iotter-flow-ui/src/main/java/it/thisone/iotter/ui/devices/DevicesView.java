@@ -1,8 +1,10 @@
 package it.thisone.iotter.ui.devices;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.vaadin.flow.components.TabSheet;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 
@@ -13,6 +15,7 @@ import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.MainLayout;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.BaseView;
+import it.thisone.iotter.ui.groupwidgets.GroupWidgetListing;
 
 @Route(value = "devices", layout = MainLayout.class)
 public class DevicesView extends BaseView {
@@ -45,10 +48,25 @@ public class DevicesView extends BaseView {
 		if (details != null && details.hasRole(Constants.ROLE_SUPERUSER)) {
 			network = networkService.findOne(details.getNetworkId());
 		}
+
+
+		TabSheet tabsheet = new TabSheet();
+		tabsheet.setSizeFull();
 		DevicesListing listing = listingProvider.getObject();
-		listing.init(network);
-		add(listing.getMainLayout());
-		setFlexGrow(1, listing.getMainLayout());
+		listing.init(network, tabsheet);
+		Tab listingTab = tabsheet.addTab(listing.getI18nLabel("listingTab"), listing.getMainLayout());
+		tabsheet.setSelectedTab(listingTab);
+
+
+		add(tabsheet);
+		setFlexGrow(1, tabsheet);
+		initialized = true;
+
+
+
+		// listing.init(network);
+		// add(listing.getMainLayout());
+		// setFlexGrow(1, listing.getMainLayout());
 	}
 
 	@Override

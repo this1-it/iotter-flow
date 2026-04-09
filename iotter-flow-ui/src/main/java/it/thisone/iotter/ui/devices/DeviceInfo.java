@@ -39,9 +39,10 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.User;
 import it.thisone.iotter.security.UserDetailsAdapter;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.shared.Registration;
 import it.thisone.iotter.ui.common.BaseComponent;
-import it.thisone.iotter.ui.common.ItemSelectedEvent;
-import it.thisone.iotter.ui.common.ItemSelectedListener;
+import it.thisone.iotter.ui.common.GroupWidgetSelectedEvent;
 
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.ifc.IDeviceInfo;
@@ -97,20 +98,8 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	// 	buildContent();
 	// }
 
-	@Override
-	public void addListener(ItemSelectedListener listener) {
-		// try {
-		// 	Method method = ItemSelectedListener.class.getDeclaredMethod(ItemSelectedListener.ITEM_SELECTED,
-		// 			new Class[] { ItemSelectedEvent.class });
-		// 	addListener(ItemSelectedEvent.class, listener, method);
-		// } catch (final java.lang.NoSuchMethodException e) {
-		// 	throw new java.lang.RuntimeException("Internal error,  method not found");
-		// }
-	}
-
-	@Override
-	public void removeListener(ItemSelectedListener listener) {
-		//removeListener(ItemSelectedEvent.class, listener);
+	public Registration addGroupWidgetSelectedListener(ComponentEventListener<GroupWidgetSelectedEvent> listener) {
+		return addListener(GroupWidgetSelectedEvent.class, listener);
 	}
 
 
@@ -141,15 +130,14 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 	}
 
 	
-	protected Component buildLinks() {
+	protected Component buildVisualizations() {
 		final Grid<GroupWidget> grid = new Grid<>();
 		grid.addClassName("smallgrid");
-		grid.setEnabled(false);
 
 		grid.addSelectionListener(event -> {
 			if (event.getFirstSelectedItem().isPresent()) {
 				GroupWidget selectedWidget = event.getFirstSelectedItem().get();
-				fireEvent(new ItemSelectedEvent(DeviceInfo.this, selectedWidget));
+				fireEvent(new GroupWidgetSelectedEvent(DeviceInfo.this, selectedWidget));
 				grid.getSelectionModel().deselectAll();
 			}
 		});
@@ -210,7 +198,7 @@ public class DeviceInfo extends BaseComponent implements IDeviceInfo {
 
 			widgets = backendServices.getGroupWidgetService().findByDevice(device);
 			if (widgets != null && !widgets.isEmpty()) {
-				multicomponent.add(getI18nLabel("visualizations"), buildLinks());
+				multicomponent.add(getI18nLabel("visualizations"), buildVisualizations());
 			} else {
 				general.add(buildInfoRow(VaadinIcon.BAR_CHART, getI18nLabel("no_visualizations")));
 			}

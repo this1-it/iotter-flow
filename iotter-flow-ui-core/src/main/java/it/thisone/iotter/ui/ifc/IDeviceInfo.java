@@ -2,18 +2,15 @@ package it.thisone.iotter.ui.ifc;
 
 import java.util.Collection;
 
-
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.shared.Registration;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
-import it.thisone.iotter.ui.common.ItemSelectedListener;
+import it.thisone.iotter.ui.common.GroupWidgetSelectedEvent;
 
-public interface IDeviceInfo  {
+public interface IDeviceInfo {
 
 	void setContent(Device device, Collection<GroupWidget> widgets);
-	
-	void addListener(ItemSelectedListener listener);
 
-	void removeListener(ItemSelectedListener listener);
-
-
+	Registration addGroupWidgetSelectedListener(ComponentEventListener<GroupWidgetSelectedEvent> listener);
 }

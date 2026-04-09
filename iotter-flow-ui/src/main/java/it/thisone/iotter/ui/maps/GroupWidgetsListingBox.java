@@ -30,6 +30,7 @@ import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
+import it.thisone.iotter.ui.common.GroupWidgetSelectedEvent;
 import it.thisone.iotter.ui.devices.DeviceInfo;
 import it.thisone.iotter.ui.groupwidgets.GroupWidgetVisualizer;
 import it.thisone.iotter.ui.providers.BackendServices;
@@ -164,11 +165,7 @@ public class GroupWidgetsListingBox extends Composite<Div> {
 
 
         DeviceInfo info = new DeviceInfo(device,authenticatedUser.get().orElse(null), backendServices);
-        info.addListener(event -> {
-            if (event.getSelected() instanceof GroupWidget) {
-                openVisualization((GroupWidget) event.getSelected());
-            }
-        });
+        info.addGroupWidgetSelectedListener(event -> openVisualization(event.getGroupWidget()));
 
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(true);

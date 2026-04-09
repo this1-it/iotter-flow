@@ -63,7 +63,7 @@ public class NetworkRelations extends VerticalLayout {
         tabSheet.addTab(getLabel("network_users"), users.getMainLayout());
 
         DevicesListing devices = devicesListingProvider.getObject();
-        devices.init(network, false);
+        devices.init(network, null);
         tabSheet.addTab(getLabel("network_devices"), devices.getMainLayout());
 
         if (Constants.USE_GROUPS) {

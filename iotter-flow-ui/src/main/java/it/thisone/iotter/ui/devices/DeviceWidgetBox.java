@@ -1,34 +1,23 @@
 package it.thisone.iotter.ui.devices;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
-
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-
+import com.vaadin.flow.shared.Registration;
 
 import it.thisone.iotter.enums.DeviceStatus;
 import it.thisone.iotter.enums.Protocol;
 import it.thisone.iotter.persistence.model.Device;
 import it.thisone.iotter.persistence.model.GroupWidget;
-import it.thisone.iotter.persistence.service.DeviceService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
-import it.thisone.iotter.ui.common.EditorSavedListener;
-import it.thisone.iotter.ui.common.ItemSelectedEvent;
-import it.thisone.iotter.ui.common.ItemSelectedListener;
+import it.thisone.iotter.ui.common.GroupWidgetSelectedEvent;
 import it.thisone.iotter.ui.providers.BackendServices;
 
 
@@ -87,17 +76,9 @@ public class DeviceWidgetBox extends Composite<Div> {
 
 		if (device.isAvailableForVisualization()) {
 	
-			DeviceInfo info = new DeviceInfo(device,currentUser,backendServices);
-			info.addListener(new ItemSelectedListener() {
-				@Override
-				@SuppressWarnings("unchecked")
-				public void itemSelected(ItemSelectedEvent event) {
-					if (event.getSelected() != null && event.getSelected() instanceof GroupWidget) {
-						GroupWidget bean =  (GroupWidget)event.getSelected();
-						fireEvent(new EditorSavedEvent(DeviceWidgetBox.this, bean));
-					}
-				}
-			});
+			DeviceInfo info = new DeviceInfo(device, currentUser, backendServices);
+			info.addGroupWidgetSelectedListener(event ->
+					fireEvent(new GroupWidgetSelectedEvent(DeviceWidgetBox.this, event.getGroupWidget())));
 			info.buildContent();
 			mainLayout.add(info);
 		}
@@ -122,18 +103,8 @@ public class DeviceWidgetBox extends Composite<Div> {
 		getContent().add(buildLayout(bean));
 	}
 
-	public void addListener(EditorSavedListener listener) {
-		// try {
-		// 	Method method = EditorSavedListener.class.getDeclaredMethod(
-		// 			EditorSavedListener.EDITOR_SAVED, new Class[] { EditorSavedEvent.class });
-		// 	addListener(EditorSavedEvent.class, listener, method);
-		// } catch (final java.lang.NoSuchMethodException e) {
-		// 	throw new RuntimeException("Internal error, editor saved method not found");
-		// }
-	}
-
-	public void removeListener(EditorSavedListener listener) {
-		// removeListener(EditorSavedEvent.class, listener);
+	public Registration addGroupWidgetSelectedListener(ComponentEventListener<GroupWidgetSelectedEvent> listener) {
+		return addListener(GroupWidgetSelectedEvent.class, listener);
 	}
 
     public String getI18nLabel(String key) {
