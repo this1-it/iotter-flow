@@ -438,11 +438,12 @@ public class RollupQueries extends RollupQueryBuilder {
 			
 		}
 		Date sinceDate = calendar.getTime().after(stats.getSince()) ? calendar.getTime() : stats.getSince();
+		Date lastDate = stats.getLastMeasureDate().before(sinceDate) ? new Date() : sinceDate;
 		Range<Date> interval = null;
 		
 		try {
 			// Bug #2091
-			interval = Range.closed(sinceDate, stats.getLastMeasureDate());
+			interval = Range.closed(sinceDate, lastDate);
 			logger.debug("Available rollup interval {} from {} to {} ", stats.getKey(),
 					sdf.format(interval.lowerEndpoint()), sdf.format(interval.upperEndpoint()));
 

@@ -74,7 +74,7 @@ import it.thisone.iotter.ui.uitask.UIRunnable;
 
 
 
-@JsModule("./src/chartjs-init.js")
+@JsModule("./src/chartjs-bridge.js")
 public abstract class AbstractChartAdapter extends AbstractWidgetVisualizer implements IExportable {
 
 

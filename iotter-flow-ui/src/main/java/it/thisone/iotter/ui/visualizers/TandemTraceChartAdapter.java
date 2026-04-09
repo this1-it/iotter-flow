@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vaadin.addons.chartjs.ChartJs;
-
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
@@ -18,6 +16,7 @@ import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.persistence.model.MeasureRange;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.charts.MultiTraceChartAdapter;
+import it.thisone.iotter.ui.common.charts.bridge.ChartJsBridge;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.providers.BackendServices;
@@ -152,7 +151,7 @@ public class TandemTraceChartAdapter extends MultiTraceChartAdapter {
     }
 
     @Override
-    public ChartJs getChart() {
+    public ChartJsBridge getChart() {
         throw new UnsupportedOperationException();
     }
 

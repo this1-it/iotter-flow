@@ -11,9 +11,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vaadin.addons.chartjs.ChartJs;
-import org.vaadin.addons.chartjs.config.RadarChartConfig;
-import org.vaadin.addons.chartjs.data.RadarDataset;
 
 import com.google.common.collect.Range;
 import com.vaadin.flow.component.Component;
@@ -31,6 +28,9 @@ import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.MeasureUnit;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
+import it.thisone.iotter.ui.common.charts.bridge.ChartConfig;
+import it.thisone.iotter.ui.common.charts.bridge.ChartJsBridge;
+import it.thisone.iotter.ui.common.charts.bridge.RadarDataset;
 import it.thisone.iotter.ui.common.fields.ChannelAcceptor;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.providers.BackendServices;
@@ -47,8 +47,8 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
     private static final Integer[] DEGREE_PETALS = { 4, 8, 16 };
 
     private final CassandraRollup rollup;
-    private ChartJs chart;
-    private RadarChartConfig chartConfig;
+    private ChartJsBridge chart;
+    private ChartConfig chartConfig;
 
     private List<String> measureCategories = new ArrayList<>();
     private List<String> measureColors = new ArrayList<>();
@@ -75,14 +75,14 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
 
     @Override
     protected Component buildVisualization() {
-        ChartJs chart = new ChartJs();
+        ChartJsBridge chart = new ChartJsBridge();
         chart.setId(String.valueOf(getWidget().getId()));
         setChart(chart);
         createMeasureCategories();
         createDegreeCategories();
-        chartConfig = new RadarChartConfig();
-        chartConfig.options().responsive(true).maintainAspectRatio(false);
-        chartConfig.options().legend().display(getGraphWidget().getOptions().getShowLegend());
+        chartConfig = new ChartConfig("radar");
+        chartConfig.getOptions().setResponsive(true).setMaintainAspectRatio(false);
+        chartConfig.getOptions().getPlugins().getLegend().setDisplay(getGraphWidget().getOptions().getShowLegend());
         chart.configure(chartConfig);
         return chart;
     }
@@ -152,9 +152,9 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
         degreeRanges.add(Range.closedOpen(0d, current / 1000d));
         for (int i = 1; i < petals; i++) {
             double lower = current;
-            double upper = current + step;
-            degreeRanges.add(Range.closedOpen(lower / 1000d, upper / 1000d));
-            current = upper;
+            double upperVal = current + step;
+            degreeRanges.add(Range.closedOpen(lower / 1000d, upperVal / 1000d));
+            current = upperVal;
         }
         degreeRanges.add(Range.closed(current / 1000d, (current + (step / 2d)) / 1000d));
     }
@@ -232,10 +232,10 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
             }
         }
 
-        chartConfig = new RadarChartConfig();
-        chartConfig.options().responsive(true).maintainAspectRatio(false);
-        chartConfig.options().legend().display(getGraphWidget().getOptions().getShowLegend());
-        chartConfig.data().labelsAsList(degreeCategories);
+        chartConfig = new ChartConfig("radar");
+        chartConfig.getOptions().setResponsive(true).setMaintainAspectRatio(false);
+        chartConfig.getOptions().getPlugins().getLegend().setDisplay(getGraphWidget().getOptions().getShowLegend());
+        chartConfig.getData().setLabels(degreeCategories);
 
         DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getInstance(UI.getCurrent().getLocale());
         decimalFormat.applyPattern("0.##");
@@ -252,14 +252,14 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
             }
 
             String color = measureColors.get(row) == null ? ChartUtils.quiteRandomHexColor() : measureColors.get(row);
-            RadarDataset ds = new RadarDataset()
-                    .label(measureCategories.get(row))
-                    .dataAsList(values)
-                    .borderColor(color)
-                    .backgroundColor(color)
-                    .fill(false)
-                    .pointRadius(0);
-            chartConfig.data().addDataset(ds);
+            RadarDataset ds = new RadarDataset();
+            ds.setLabel(measureCategories.get(row));
+            ds.dataAsList(values);
+            ds.setBorderColor(color);
+            ds.setBackgroundColor(color);
+            ds.setFill(false);
+            ds.setPointRadius(0);
+            chartConfig.getData().addDataset(ds);
         }
 
         // TODO(flow-chartjs): polar stacked wind-rose petals are approximated with radar datasets.
@@ -367,12 +367,12 @@ public class WindRoseChartAdapter extends AbstractChartAdapter {
     }
 
     @Override
-    public ChartJs getChart() {
+    public ChartJsBridge getChart() {
         return chart;
     }
 
     @Override
     protected void setChart(Component chart) {
-        this.chart = (ChartJs) chart;
+        this.chart = (ChartJsBridge) chart;
     }
 }

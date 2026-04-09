@@ -15,8 +15,6 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
 
-import it.thisone.iotter.config.Constants;
-
 public abstract class CassandraQueryBuilder implements CassandraConstants {
 
 	public static final ConsistencyLevel DELETE_CONSISTENCY_LEVEL = ConsistencyLevel.LOCAL_QUORUM;
@@ -97,6 +95,7 @@ public abstract class CassandraQueryBuilder implements CassandraConstants {
 
 	public static SimpleStatement simpleStatement(String query, ConsistencyLevel consistency, Object... values) {
 		// Normalize legacy java.util.Date bindings to Instant for Cassandra timestamp columns.
+		logger.info(query);
 		Object[] normalizedValues = normalizeDateValues(values);
 		SimpleStatement stmt;
 		if (normalizedValues == null || normalizedValues.length == 0) {

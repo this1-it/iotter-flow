@@ -1,6 +1,7 @@
 package it.thisone.iotter.ui.graphicwidgets;
 
 import java.io.Serializable;
+import java.text.ChoiceFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,17 +12,27 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 
+
 import it.thisone.iotter.enums.GraphicWidgetType;
 
 import it.thisone.iotter.integration.IClassPathScanner;
+import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
+import it.thisone.iotter.ui.charts.HistogramChartAdapter;
+import it.thisone.iotter.ui.charts.MultiTraceChartAdapter;
+import it.thisone.iotter.ui.charts.TableAdapter;
+import it.thisone.iotter.ui.charts.VariationChartAdapter;
+import it.thisone.iotter.ui.charts.WindRoseChartAdapter;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractWidgetVisualizer;
+import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.main.UiConstants;
 import it.thisone.iotter.ui.providers.BackendServices;
 import it.thisone.iotter.ui.providers.GraphicWidgetProvider;
-
+import it.thisone.iotter.ui.visualizers.EmbeddedAdapter;
+import it.thisone.iotter.ui.visualizers.LastMeasureAdapter;
+import it.thisone.iotter.ui.visualizers.WebPageAdapter;
 import it.thisone.iotter.util.EncryptUtils;
 
 public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
@@ -65,13 +76,51 @@ public class GraphicWidgetFactory implements Serializable,IClassPathScanner {
 	}
 
 	public static AbstractWidgetVisualizer createWidgetVisualizer(
-			GraphicWidget widget, BackendServices services) {
+			GraphicWidget widget, BackendServices backendServices) {
 		AbstractWidgetVisualizer visualizer = null;
+		
 		if (widget != null) {
-			if (GraphicWidgetType.CUSTOM.equals(widget.getType())) {
-				visualizer = customWidgetVisualizer(widget, services);
-			}
+			switch (widget.getType()) {
 
+			case WEBPAGE:
+				visualizer = new WebPageAdapter(widget);
+				break;
+			case EMBEDDED:
+				visualizer = new EmbeddedAdapter(widget);
+				break;
+			case TABLE:
+				visualizer = new TableAdapter(widget,backendServices);
+				break;
+
+			case LAST_MEASURE_TABLE:
+			case LAST_MEASURE:
+				visualizer = new LastMeasureAdapter(widget);
+				break;
+			case MULTI_TRACE:
+				visualizer = new MultiTraceChartAdapter(widget,backendServices);
+				break;
+			case WIND_ROSE:
+				visualizer = new WindRoseChartAdapter(widget,backendServices);
+				break;
+			case HISTOGRAM:
+				if (!widget.getFeeds().isEmpty()) {
+					GraphicFeed feed = widget.getFeeds().get(0);
+					ChoiceFormat formatter = ChannelUtils.enumChoiceFormat(feed.getChannel());
+					if (formatter!=null) {
+						visualizer = new VariationChartAdapter(widget,backendServices);
+					}
+					else {
+						visualizer = new HistogramChartAdapter(widget,backendServices);
+					}
+				}
+
+				break;
+			case CUSTOM:
+				visualizer = customWidgetVisualizer(widget,backendServices);
+				break;
+			default:
+				break;
+			}
 			widget.removeOrphanFeeds();
 		}
 

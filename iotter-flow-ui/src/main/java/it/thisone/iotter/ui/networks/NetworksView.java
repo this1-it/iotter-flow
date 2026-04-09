@@ -4,7 +4,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.vaadin.flow.components.TabSheet;
 
 import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.router.Route;
 

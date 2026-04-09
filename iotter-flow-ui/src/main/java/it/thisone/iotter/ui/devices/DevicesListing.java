@@ -55,6 +55,7 @@ import it.thisone.iotter.enums.ExportFormat;
 import it.thisone.iotter.exceptions.BackendServiceException;
 import it.thisone.iotter.exporter.ExportConfig;
 import it.thisone.iotter.exporter.ExportProperties;
+import it.thisone.iotter.cassandra.model.DataSink;
 import it.thisone.iotter.integration.AlarmService;
 import it.thisone.iotter.integration.CassandraService;
 import it.thisone.iotter.integration.SubscriptionService;
@@ -1061,22 +1062,28 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 		private void populateAlarmStatusBatch(List<Device> devices) {
 			for (Device device : devices) {
+				if (device.getStatus() == null || device.getStatus().equals(DeviceStatus.PRODUCED)) {
+					device.changedAlarmStatus(null, false, false);
+					continue;
+				}
 				try {
-					Date lastContactDate = cassandraService.getMeasures().getLastTick(device.getSerial(), null);
-					device.changedAlarmStatus(lastContactDate, device.isAlarmed(), hasActiveAlarms(device));
+					Date lastContact = null;
+					boolean alarmed = false;
+					boolean activeAlarms = false;
+
+					if (device.isRunning()) {
+						DataSink item = cassandraService.findDataSinkCacheable(device.getSerial());
+						if (item != null) {
+							lastContact = item.getLastContact();
+							alarmed = item.isAlarmed();
+							activeAlarms = item.hasActiveAlarms() != null && item.hasActiveAlarms();
+						}
+					}
+					device.changedAlarmStatus(lastContact, alarmed, activeAlarms);
 				} catch (Exception e) {
 					logger.error("Error populating alarm status for device {}", device.getSerial(), e);
 				}
 			}
-		}
-
-		private boolean hasActiveAlarms(Device device) {
-			if (device.getChannels() == null || device.getChannels().isEmpty()) {
-				return false;
-			}
-			return device.getChannels().stream()
-					.anyMatch(ch -> ch.getConfiguration() != null && ch.getConfiguration().isActive()
-							&& it.thisone.iotter.util.Utils.isTypeAlarm(ch.getMetaData()));
 		}
 
 		private long countTotal() {

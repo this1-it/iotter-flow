@@ -364,7 +364,7 @@ public class DeviceDataService {
 						Constants.Error.INVALID_DATA_ERROR_CODE, "data values are missing");
 			}
 		}
-		postProcessWrite(main, events, devices, lastValuesMap, aggregations, tickMap,dataPointMap);
+		postProcessWrite(main, events, devices, lastValuesMap, aggregations, tickMap, dataPointMap);
 	}
 
 	/**

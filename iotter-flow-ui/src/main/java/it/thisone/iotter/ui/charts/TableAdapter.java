@@ -18,6 +18,7 @@ import it.thisone.iotter.enums.Order;
 import it.thisone.iotter.exporter.DataFormat;
 import it.thisone.iotter.exporter.cassandra.CassandraExportDataProvider;
 import it.thisone.iotter.exporter.cassandra.CassandraExportQuery;
+import it.thisone.iotter.integration.ExportService;
 import it.thisone.iotter.cassandra.CassandraMeasures;
 import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.GraphicWidget;
@@ -36,13 +37,13 @@ public class TableAdapter extends AbstractChartAdapter {
 	private static final long serialVersionUID = 4605827865960616327L;
 	private SimpleDateFormat sdf;
 	private CassandraExportDataProvider container;
-	private final IMeasureExporter exporter;
+	private final ExportService exporter;
 	private final CassandraRollup rollup;
 	private final CassandraMeasures cassandraMeasures;
 
-	public TableAdapter(GraphicWidget widget, IMeasureExporter exporter, BackendServices backendServices) {
+	public TableAdapter(GraphicWidget widget, BackendServices backendServices) {
 		super(widget, backendServices);
-		this.exporter = exporter;
+		this.exporter = backendServices.getExportService();
 		this.rollup = backendServices.getCassandraRollup();
 		this.cassandraMeasures = backendServices.getCassandraMeasures();
 		optionsField.getScale().setVisible(false);
@@ -64,7 +65,7 @@ public class TableAdapter extends AbstractChartAdapter {
 		
 		boolean ascending = getGraphWidget().getOptions().getOrder().equals(Order.ASCENDING);
 		
-		IMeasureExporter exporter = this.exporter;
+		IMeasureExporter exporter = (IMeasureExporter)this.exporter;
 		container = new CassandraExportDataProvider(exporter, feeds, dataFormat, CassandraExportQuery.BATCH_SIZE, ascending);
 		container.getQueryDefinition().setInterpolation(Interpolation.RAW);
 		

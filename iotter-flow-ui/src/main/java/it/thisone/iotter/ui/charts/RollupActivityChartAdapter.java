@@ -4,15 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.vaadin.addons.chartjs.ChartJs;
-import org.vaadin.addons.chartjs.config.LineChartConfig;
-import org.vaadin.addons.chartjs.data.TimeLineDataset;
-import org.vaadin.addons.chartjs.options.Position;
-import org.vaadin.addons.chartjs.options.scale.Axis;
-import org.vaadin.addons.chartjs.options.scale.LinearScale;
-import org.vaadin.addons.chartjs.options.scale.TimeScale;
-import org.vaadin.addons.chartjs.utils.Pair;
-
 import com.google.common.collect.Range;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -24,6 +15,11 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.cassandra.CassandraRollup;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
+import it.thisone.iotter.ui.common.charts.bridge.ChartConfig;
+import it.thisone.iotter.ui.common.charts.bridge.ChartJsBridge;
+import it.thisone.iotter.ui.common.charts.bridge.ScaleConfig;
+import it.thisone.iotter.ui.common.charts.bridge.TimeLineDataset;
+import it.thisone.iotter.ui.common.charts.bridge.TimePoint;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.providers.BackendServices;
 
@@ -31,9 +27,9 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
 
     private static final long serialVersionUID = -1879789719298795301L;
 
-    private ChartJs chart;
-    private LineChartConfig chartConfig;
-    private TimeScale xScale;
+    private ChartJsBridge chart;
+    private ChartConfig chartConfig;
+    private ScaleConfig xScale;
     private final CassandraRollup rollup;
 
     public RollupActivityChartAdapter(GraphicWidget widget, BackendServices backendServices) {
@@ -49,7 +45,7 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
         if (getGraphWidget().getFeeds().isEmpty()) {
             return new VerticalLayout();
         }
-        ChartJs chart = new ChartJs();
+        ChartJsBridge chart = new ChartJsBridge();
         chart.setId("rollup-" + getWidget().getId());
         setChart(chart);
         chartConfig = createBaseConfiguration();
@@ -57,22 +53,23 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
         return chart;
     }
 
-    private LineChartConfig createBaseConfiguration() {
-        LineChartConfig config = new LineChartConfig();
-        config.data().labelsAsList(new ArrayList<>());
-        config.options().responsive(true).maintainAspectRatio(false);
-        config.options().legend().display(false).position(Position.BOTTOM);
+    private ChartConfig createBaseConfiguration() {
+        ChartConfig config = new ChartConfig("line");
+        config.getData().setLabels(new ArrayList<>());
+        config.getOptions().setResponsive(true).setMaintainAspectRatio(false);
+        config.getOptions().getPlugins().getLegend().setDisplay(false).setPosition("bottom");
 
-        xScale = new TimeScale();
-        xScale.time().tooltipFormat(ChartUtils.X_DATEFORMAT);
-        LinearScale yScale = new LinearScale();
-        yScale.ticks().beginAtZero(true);
+        xScale = ScaleConfig.time();
+        xScale.getTime().setTooltipFormat(ChartUtils.X_DATEFORMAT);
+        ScaleConfig yScaleConfig = ScaleConfig.linear();
+        yScaleConfig.getTicks().setBeginAtZero(true);
 
         int grid = getGraphWidget().getOptions().getShowGrid() ? ((Number) ChartUtils.GRID_LINE_WIDTH).intValue() : 0;
-        xScale.gridLines().display(getGraphWidget().getOptions().getShowGrid()).lineWidth(grid);
-        yScale.gridLines().display(getGraphWidget().getOptions().getShowGrid()).lineWidth(grid);
+        xScale.getGrid().setDisplay(getGraphWidget().getOptions().getShowGrid()).setLineWidth(grid);
+        yScaleConfig.getGrid().setDisplay(getGraphWidget().getOptions().getShowGrid()).setLineWidth(grid);
 
-        config.options().scales().add(Axis.X, xScale).add(Axis.Y, yScale);
+        config.getOptions().addScale("x", xScale);
+        config.getOptions().addScale("y", yScaleConfig);
         return config;
     }
 
@@ -84,25 +81,27 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
 
         GraphicFeed feed = getGraphWidget().getFeeds().get(0);
         chartConfig = createBaseConfiguration();
-        chartConfig.options().title().display(true).text(getWidget().getLabel());
+        chartConfig.getOptions().getPlugins().getTitle().setDisplay(true).setText(getWidget().getLabel());
 
         TimeLineDataset dataset = new TimeLineDataset();
-        dataset.label(ChartUtils.getFeedLabel(feed, backendServices.getDeviceService()));
-        dataset.borderColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
-        dataset.backgroundColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
-        dataset.fill(false);
-        dataset.pointRadius(0);
+        dataset.setLabel(ChartUtils.getFeedLabel(feed, backendServices.getDeviceService()));
+        dataset.setBorderColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
+        dataset.setBackgroundColor(feed.getOptions().getFillColor() == null ? ChartUtils.quiteRandomHexColor() : feed.getOptions().getFillColor());
+        dataset.setFill(false);
+        dataset.setPointRadius(0);
 
         Range<Date> range = Range.closedOpen(interval.getStartDate(), interval.getEndDate());
         List<MeasureAggregation> measures = rollup.rollUpData(feed.getKey(), Interpolation.MIN15, range);
-        List<Pair<java.time.LocalDateTime, Double>> data = new ArrayList<>();
+        List<TimePoint> data = new ArrayList<>();
         for (MeasureAggregation measure : measures) {
-            data.add(Pair.of(toLocalDateTime(measure.getDate()), (double) measure.getRecords()));
+            data.add(TimePoint.of(toLocalDateTime(measure.getDate()), (double) measure.getRecords()));
         }
         dataset.dataAsList(data);
 
-        chartConfig.data().addDataset(dataset);
-        xScale.time().min(toLocalDateTime(interval.getStartDate())).max(toLocalDateTime(interval.getEndDate()));
+        chartConfig.getData().addDataset(dataset);
+        xScale.getTime()
+                .setMin(toLocalDateTime(interval.getStartDate()).toString())
+                .setMax(toLocalDateTime(interval.getEndDate()).toString());
         chart.configure(chartConfig);
     }
 
@@ -145,6 +144,6 @@ public class RollupActivityChartAdapter extends AbstractChartAdapter {
 
     @Override
     protected void setChart(Component chart) {
-        this.chart = (ChartJs) chart;
+        this.chart = (ChartJsBridge) chart;
     }
 }

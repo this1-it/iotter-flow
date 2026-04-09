@@ -28,6 +28,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
+import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
 import it.thisone.iotter.lazyquerydataprovider.FilterableQueryDefinition;
@@ -318,13 +319,20 @@ public class GroupWidgetListing extends AbstractBaseEntityListing<GroupWidget> {
             return;
         }
         GroupWidgetVisualizer visualizer = new GroupWidgetVisualizer(item.getId(), true,  backendServices);
-        Dialog dialog = createDialog(getI18nLabel("view_action"), visualizer);
-        if (dialog instanceof SideDrawer) {
-            dialog.addThemeName("side-drawer-fullscreen");
-        }
-        dialog.setWidth("100vw");
-        dialog.setHeight("100vh");
-        dialog.open();
+        // Dialog dialog = createDialog(getI18nLabel("view_action"), visualizer);
+        // if (dialog instanceof SideDrawer) {
+        //     dialog.addThemeName("side-drawer-fullscreen");
+        // }
+        // dialog.setWidth("100vw");
+        // dialog.setHeight("100vh");
+        // dialog.open();
+
+
+        if (visualizer != null) {
+			Tab tab = tabsheet.addCloseableTab(item.getName(),visualizer);
+			tabsheet.setSelectedTab(tab);
+		}
+
     }
 
     private void openEditor(GroupWidget item, String label) {

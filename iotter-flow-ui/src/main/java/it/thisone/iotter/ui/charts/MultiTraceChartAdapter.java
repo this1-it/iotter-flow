@@ -9,16 +9,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vaadin.addons.chartjs.ChartJs;
-import org.vaadin.addons.chartjs.config.LineChartConfig;
-import org.vaadin.addons.chartjs.data.TimeLineDataset;
-import org.vaadin.addons.chartjs.options.Position;
-import org.vaadin.addons.chartjs.options.scale.Axis;
-import org.vaadin.addons.chartjs.options.scale.BaseScale;
-import org.vaadin.addons.chartjs.options.scale.LinearScale;
-import org.vaadin.addons.chartjs.options.scale.LogarithmicScale;
-import org.vaadin.addons.chartjs.options.scale.TimeScale;
-import org.vaadin.addons.chartjs.utils.Pair;
 
 import com.vaadin.flow.component.Component;
 
@@ -30,6 +20,11 @@ import it.thisone.iotter.persistence.model.GraphicFeed;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GraphicWidgetOptions;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
+import it.thisone.iotter.ui.common.charts.bridge.ChartConfig;
+import it.thisone.iotter.ui.common.charts.bridge.ChartJsBridge;
+import it.thisone.iotter.ui.common.charts.bridge.ScaleConfig;
+import it.thisone.iotter.ui.common.charts.bridge.TimeLineDataset;
+import it.thisone.iotter.ui.common.charts.bridge.TimePoint;
 import it.thisone.iotter.ui.model.TimeInterval;
 import it.thisone.iotter.ui.providers.BackendServices;
 
@@ -41,11 +36,12 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
     private final Map<String, Date> refreshed = new HashMap<>();
     private final Map<String, TimeLineDataset> datasetsByFeed = new LinkedHashMap<>();
+    private final Map<String, Integer> datasetIndexByFeed = new LinkedHashMap<>();
 
-    private ChartJs chart;
-    private LineChartConfig chartConfig;
-    private TimeScale xScale;
-    private BaseScale<?> yScale;
+    private ChartJsBridge chart;
+    private ChartConfig chartConfig;
+    private ScaleConfig xScale;
+    private ScaleConfig yScale;
     private TimeInterval currentInterval;
 
     public MultiTraceChartAdapter(GraphicWidget widget, BackendServices backendServices) {
@@ -55,7 +51,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
     @Override
     protected Component buildVisualization() {
-        ChartJs chart = new ChartJs();
+        ChartJsBridge chart = new ChartJsBridge();
         chart.setId(String.valueOf(getWidget().getId()));
         setChart(chart);
         chartConfig = createBaseConfiguration();
@@ -63,42 +59,44 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
         return chart;
     }
 
-    protected LineChartConfig createBaseConfiguration() {
-        LineChartConfig config = new LineChartConfig();
-        config.data().labelsAsList(new ArrayList<>());
-        config.options().responsive(true).maintainAspectRatio(false);
-        config.options().legend().display(getGraphWidget().getOptions().getShowLegend()).position(Position.BOTTOM);
+    protected ChartConfig createBaseConfiguration() {
+        ChartConfig config = new ChartConfig("line");
+        config.getData().setLabels(new ArrayList<>());
+        config.getOptions().setResponsive(true).setMaintainAspectRatio(false);
+        config.getOptions().getPlugins().getLegend()
+                .setDisplay(getGraphWidget().getOptions().getShowLegend())
+                .setPosition("bottom");
 
-        xScale = new TimeScale();
-        xScale.time().tooltipFormat(ChartUtils.X_DATEFORMAT);
+        xScale = ScaleConfig.time();
+        xScale.getTime().setTooltipFormat(ChartUtils.X_DATEFORMAT);
         applyGridVisibility(getGraphWidget().getOptions().getShowGrid());
-        config.options().scales().add(Axis.X, xScale);
+        config.getOptions().addScale("x", xScale);
 
         yScale = buildYScale(getGraphWidget().getOptions().getScale());
         applyGridVisibility(getGraphWidget().getOptions().getShowGrid());
-        config.options().scales().add(Axis.Y, yScale);
+        config.getOptions().addScale("y", yScale);
 
         return config;
     }
 
-    private BaseScale<?> buildYScale(ChartScaleType scaleType) {
+    private ScaleConfig buildYScale(ChartScaleType scaleType) {
         if (scaleType == ChartScaleType.LOGARITHMIC) {
-            LogarithmicScale log = new LogarithmicScale();
-            log.ticks().beginAtZero(false);
+            ScaleConfig log = ScaleConfig.logarithmic();
+            log.getTicks().setBeginAtZero(false);
             return log;
         }
-        LinearScale linear = new LinearScale();
-        linear.ticks().beginAtZero(false);
+        ScaleConfig linear = ScaleConfig.linear();
+        linear.getTicks().setBeginAtZero(false);
         return linear;
     }
 
     private void applyGridVisibility(boolean showGrid) {
         int width = showGrid ? ((Number) ChartUtils.GRID_LINE_WIDTH).intValue() : 0;
         if (xScale != null) {
-            xScale.gridLines().display(showGrid).lineWidth(width);
+            xScale.getGrid().setDisplay(showGrid).setLineWidth(width);
         }
         if (yScale != null) {
-            yScale.gridLines().display(showGrid).lineWidth(width);
+            yScale.getGrid().setDisplay(showGrid).setLineWidth(width);
         }
     }
 
@@ -107,11 +105,15 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
         currentInterval = interval;
         chartConfig = createBaseConfiguration();
         datasetsByFeed.clear();
+        datasetIndexByFeed.clear();
 
+        int index = 0;
         for (GraphicFeed feed : getGraphWidget().getFeeds()) {
             TimeLineDataset dataset = createFeedDataset(feed, interval, null);
             datasetsByFeed.put(feed.getKey(), dataset);
-            chartConfig.data().addDataset(dataset);
+            datasetIndexByFeed.put(feed.getKey(), index);
+            chartConfig.getData().addDataset(dataset);
+            index++;
         }
 
         getChart().configure(chartConfig);
@@ -120,15 +122,15 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
     private TimeLineDataset createFeedDataset(GraphicFeed feed, TimeInterval interval, Float ratio) {
         TimeLineDataset dataset = new TimeLineDataset();
-        dataset.label(ChartUtils.getFeedLabel(feed, backendServices.getDeviceService()));
-        dataset.borderColor(resolveColor(feed));
-        dataset.backgroundColor(resolveColor(feed));
-        dataset.borderWidth(ChartUtils.PLOT_LINE_WIDTH.intValue());
-        dataset.fill(false);
+        dataset.setLabel(ChartUtils.getFeedLabel(feed, backendServices.getDeviceService()));
+        dataset.setBorderColor(resolveColor(feed));
+        dataset.setBackgroundColor(resolveColor(feed));
+        dataset.setBorderWidth(ChartUtils.PLOT_LINE_WIDTH.intValue());
+        dataset.setFill(false);
         int markerRadius = ((Number) ChartUtils.MARKER_RADIUS).intValue();
-        dataset.pointRadius(getGraphWidget().getOptions().getShowMarkers() ? markerRadius : 0);
+        dataset.setPointRadius(getGraphWidget().getOptions().getShowMarkers() ? markerRadius : 0);
 
-        List<Pair<java.time.LocalDateTime, Double>> points = loadPoints(feed, interval, ratio);
+        List<TimePoint> points = loadPoints(feed, interval, ratio);
         dataset.dataAsList(points);
         return dataset;
     }
@@ -140,8 +142,8 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
         return feed.getOptions().getFillColor();
     }
 
-    private List<Pair<java.time.LocalDateTime, Double>> loadPoints(GraphicFeed feed, TimeInterval interval, Float ratio) {
-        List<Pair<java.time.LocalDateTime, Double>> data = new ArrayList<>();
+    private List<TimePoint> loadPoints(GraphicFeed feed, TimeInterval interval, Float ratio) {
+        List<TimePoint> data = new ArrayList<>();
         if (feed.getChannel() == null) {
             return data;
         }
@@ -156,7 +158,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
             return data;
         }
 
-        int points = Math.max(1, (int) Math.ceil(getWidget().getWidth() * 1000f));
+        int points = 1000;
         if (ratio != null) {
             points = (int) Math.ceil(points * ratio);
         }
@@ -174,13 +176,12 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
             }
             try {
                 Number value = ChartUtils.calculateMeasure(measure.getValue(), feed.getMeasure());
-                data.add(Pair.of(toLocalDateTime(measure.getDate()), value.doubleValue()));
+                data.add(TimePoint.of(toLocalDateTime(measure.getDate()), value.doubleValue()));
             } catch (MeasureException e) {
                 logger.debug("Invalid measure for feed {}: {}", feed.getKey(), e.getMessage());
             }
         }
 
-        // TODO(flow-chartjs): marker-reference arrow symbols are not available in Chart.js addon.
         return data;
     }
 
@@ -211,7 +212,12 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
             end = new Date(end.getTime() + quarter);
         }
 
-        xScale.time().min(toLocalDateTime(start)).max(toLocalDateTime(end));
+        java.time.LocalDateTime minDt = toLocalDateTime(start);
+        java.time.LocalDateTime maxDt = toLocalDateTime(end);
+        xScale.getTime().setMin(minDt.toString()).setMax(maxDt.toString());
+
+        // For live chart updates without full re-render
+        getChart().updateScaleBounds("x", minDt, maxDt);
     }
 
     @Override
@@ -229,7 +235,8 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
         for (GraphicFeed feed : getGraphWidget().getFeeds()) {
             TimeLineDataset dataset = datasetsByFeed.get(feed.getKey());
-            if (dataset == null) {
+            Integer dsIndex = datasetIndexByFeed.get(feed.getKey());
+            if (dataset == null || dsIndex == null) {
                 continue;
             }
 
@@ -243,13 +250,15 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
             }
 
             float ratio = (float) periodField.getValue().getTime() / (float) Math.max(1L, (now.getTime() - from.getTime()));
-            List<Pair<java.time.LocalDateTime, Double>> points = loadPoints(feed, new TimeInterval(from, now), ratio);
+            List<TimePoint> points = loadPoints(feed, new TimeInterval(from, now), ratio);
 
             long lastMillis = getLastMillis(dataset);
-            for (Pair<java.time.LocalDateTime, Double> point : points) {
-                long millis = point.getFirst().atZone(getNetworkTimeZone().toZoneId()).toInstant().toEpochMilli();
+            for (TimePoint point : points) {
+                long millis = point.getDateTime().atZone(getNetworkTimeZone().toZoneId()).toInstant().toEpochMilli();
                 if (millis > lastMillis) {
                     dataset.addData(point);
+                    // Real-time append via JS interop — no chart destroy/recreate
+                    chart.addDataPoint(dsIndex, point.getDateTime(), point.getY());
                     lastMillis = millis;
                     redraw = true;
                 }
@@ -261,12 +270,12 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
     }
 
     private long getLastMillis(TimeLineDataset dataset) {
-        List<Pair<java.time.LocalDateTime, Double>> data = dataset.getData();
+        List<TimePoint> data = dataset.getData();
         if (data == null || data.isEmpty()) {
             return Long.MIN_VALUE;
         }
-        Pair<java.time.LocalDateTime, Double> last = data.get(data.size() - 1);
-        return last.getFirst().atZone(getNetworkTimeZone().toZoneId()).toInstant().toEpochMilli();
+        TimePoint last = data.get(data.size() - 1);
+        return last.getDateTime().atZone(getNetworkTimeZone().toZoneId()).toInstant().toEpochMilli();
     }
 
     @Override
@@ -289,7 +298,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
 
         if (getGraphWidget().getOptions().getShowLegend() != options.getShowLegend()) {
             getGraphWidget().getOptions().setShowLegend(options.getShowLegend());
-            chartConfig.options().legend().display(options.getShowLegend());
+            chartConfig.getOptions().getPlugins().getLegend().setDisplay(options.getShowLegend());
             redraw = true;
         }
 
@@ -297,7 +306,7 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
             getGraphWidget().getOptions().setShowMarkers(options.getShowMarkers());
             int markerRadius = ((Number) ChartUtils.MARKER_RADIUS).intValue();
             for (TimeLineDataset ds : datasetsByFeed.values()) {
-                ds.pointRadius(options.getShowMarkers() ? markerRadius : 0);
+                ds.setPointRadius(options.getShowMarkers() ? markerRadius : 0);
             }
             redraw = true;
         }
@@ -358,20 +367,22 @@ public class MultiTraceChartAdapter extends AbstractChartAdapter {
             return;
         }
         TimeLineDataset dataset = datasetsByFeed.get(measure.getKey());
-        if (dataset == null || measure.getValue() == null) {
+        Integer dsIndex = datasetIndexByFeed.get(measure.getKey());
+        if (dataset == null || dsIndex == null || measure.getValue() == null) {
             return;
         }
-        dataset.addData(toLocalDateTime(measure.getDate()), measure.getValue().doubleValue());
-        getChart().update();
+        java.time.LocalDateTime dt = toLocalDateTime(measure.getDate());
+        dataset.addData(dt, measure.getValue().doubleValue());
+        chart.addDataPoint(dsIndex, dt, measure.getValue().doubleValue());
     }
 
     @Override
-    public ChartJs getChart() {
+    public ChartJsBridge getChart() {
         return chart;
     }
 
     @Override
     protected void setChart(Component chart) {
-        this.chart = (ChartJs) chart;
+        this.chart = (ChartJsBridge) chart;
     }
 }

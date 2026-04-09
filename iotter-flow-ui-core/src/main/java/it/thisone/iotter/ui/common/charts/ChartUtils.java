@@ -56,7 +56,7 @@ public class ChartUtils {
 	public static final String MONTH_DATEFORMAT = "%e. %b %y";
 	public static final String YEAR_DATEFORMAT = "%b %y";
 	// http://api.highcharts.com/highstock/xAxis.dateTimeLabelFormats
-	public static final String X_DATEFORMAT = "%Y/%m/%d %H:%M:%S.%L";
+	public static final String X_DATEFORMAT = "yyyy/MM/dd HH:mm:ss.SSS";
 	// Bug #208 (Resolved): [VAADIN] in export csv there are wrong timestamp
 	// HH.mm,ss it should be HH:m.
 	public static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss ZZZ";

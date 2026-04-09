@@ -66,22 +66,6 @@ public class CassandraMeasures implements Serializable, CassandraConstants {
 
 	}
 
-	public void _insertRawBatch(List<MeasureRaw> items) throws BackendServiceException {
-		if (items.isEmpty()) {
-			return;
-		}
-		if (client.getSession().getMetadata().getNodes().isEmpty()) {
-			throw new BackendServiceException("No Connected Hosts");
-		}
-		List<Statement<?>> batch = new ArrayList<Statement<?>>();
-		for (MeasureRaw measure : items) {
-			Statement<?> stmt = MeasuresQueries.prepareInsertMeasure(measure, client.getMeasuresTTL(),
-					client.writeConsistencyLevel());
-			batch.add(stmt);
-		}
-		client.executeAsyncBatch(batch);
-
-	}
 
 	
 	public void insertTickBatch(String key, List<Date> dates) throws BackendServiceException {
