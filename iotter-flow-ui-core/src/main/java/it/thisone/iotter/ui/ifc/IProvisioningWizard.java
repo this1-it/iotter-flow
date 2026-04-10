@@ -3,10 +3,12 @@ package it.thisone.iotter.ui.ifc;
 import java.util.List;
 import java.util.Map;
 
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.shared.Registration;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.model.ModbusProfile;
-import it.thisone.iotter.ui.common.EditorSavedListener;
+import it.thisone.iotter.ui.common.EditorSavedEvent;
 
 public interface IProvisioningWizard {
 
@@ -24,7 +26,8 @@ public interface IProvisioningWizard {
 	
 	Map<String, GraphicWidget> getMapGraphics();
 
-	void addListener(EditorSavedListener editorSavedListener);
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	Registration addEditorSavedListener(ComponentEventListener<EditorSavedEvent<?>> listener);
 
 	float[] getWindowDimension();
 

@@ -8,8 +8,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.component.button.ButtonVariant;
 
 import it.thisone.iotter.config.Constants.Provisioning;
@@ -26,7 +28,6 @@ import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
-import it.thisone.iotter.ui.common.EditorSavedListener;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.graphicwidgets.ControlPanelBaseStep;
 import it.thisone.iotter.ui.ifc.IProvisioningWizard;
@@ -72,7 +73,6 @@ public class ProvisioningWizard extends Composite<VerticalLayout> implements
 	private ModbusTemplatesStep templatesStep;
 	private ModbusProfilesStep profilesStep;
 	private ControlPanelBaseStep aernetProStep;
-	private final List<EditorSavedListener> editorSavedListeners = new ArrayList<>();
 
 
 	@SuppressWarnings("serial")
@@ -152,17 +152,13 @@ public class ProvisioningWizard extends Composite<VerticalLayout> implements
 		return UIUtils.XL_DIMENSION;
 	}
 
-	public void addListener(EditorSavedListener listener) {
-		if (listener != null) {
-			editorSavedListeners.add(listener);
-		}
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public Registration addEditorSavedListener(ComponentEventListener<EditorSavedEvent<?>> listener) {
+		return addListener(EditorSavedEvent.class, (ComponentEventListener) listener);
 	}
 
 	private void fireEditorSaved(Device savedItem) {
-		EditorSavedEvent<Device> event = new EditorSavedEvent<>(this, savedItem);
-		for (EditorSavedListener listener : editorSavedListeners) {
-			listener.editorSaved(event);
-		}
+		fireEvent(new EditorSavedEvent<>(this, savedItem));
 	}
 
 	public Device getMaster() {

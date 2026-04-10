@@ -266,9 +266,10 @@ public class GraphicFeedListing extends BaseComponent {
         Dialog dialog = createDialog(caption, content);
         dialog.addThemeName("side-drawer-fullscreen");
 
-        content.addListener(event -> {
+        content.addEditorSelectedListener(event -> {
             dialog.close();
             if (event.getSelected() != null) {
+                @SuppressWarnings("unchecked")
                 Set<GraphicFeed> items = (Set<GraphicFeed>) event.getSelected();
                 for (GraphicFeed item : items) {
                     if (!feeds.contains(item)) {

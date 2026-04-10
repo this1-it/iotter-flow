@@ -90,9 +90,7 @@ import it.thisone.iotter.ui.common.GroupWidgetSelectedEvent;
 import it.thisone.iotter.ui.common.AuthenticatedUser;
 import it.thisone.iotter.ui.common.ConfirmationDialogs;
 import it.thisone.iotter.ui.common.EditorSavedEvent;
-import it.thisone.iotter.ui.common.EditorSavedListener;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
-import it.thisone.iotter.ui.common.EditorSelectedListener;
 
 import it.thisone.iotter.ui.common.PermissionsUtils;
 import it.thisone.iotter.ui.common.SideDrawer;
@@ -583,26 +581,21 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 		// if (dialog instanceof SideDrawer) {
 		// ((SideDrawer) dialog).applyDimension(content.getWindowDimension());
 		// }
-		content.addListener(new EditorSelectedListener() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			@SuppressWarnings("unchecked")
-			public void editorSelected(EditorSelectedEvent event) {
-				dialog.close();
-				if (event.getSelected() == null) {
-					return;
-				}
-				Set<Device> items = (Set<Device>) event.getSelected();
-				for (Device item : items) {
-					try {
-						deviceService.create(item);
-					} catch (Exception e) {
-						PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
-					}
-				}
-				refreshCurrentPage();
+		content.addEditorSelectedListener(event -> {
+			dialog.close();
+			if (event.getSelected() == null) {
+				return;
 			}
+			@SuppressWarnings("unchecked")
+			Set<Device> items = (Set<Device>) event.getSelected();
+			for (Device item : items) {
+				try {
+					deviceService.create(item);
+				} catch (Exception e) {
+					PopupNotification.show(e.getMessage(), PopupNotification.Type.ERROR);
+				}
+			}
+			refreshCurrentPage();
 		});
 		dialog.open();
 	}
@@ -725,14 +718,11 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 		Dialog dialog = createDialog(getI18nLabel("device_provisioning"), (Component)
 		wizard);
-		wizard.addListener(new EditorSavedListener() {
-		@Override
-		public void editorSaved(EditorSavedEvent event) {
-		if (event.getSavedItem() != null) {
-		refreshCurrentPage();
-		}
-		dialog.close();
-		}
+		wizard.addEditorSavedListener(event -> {
+			if (event.getSavedItem() != null) {
+				refreshCurrentPage();
+			}
+			dialog.close();
 		});
 		dialog.open();
 	}

@@ -45,7 +45,9 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.menubar.MenuBar;
 
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.shared.Registration;
 
 // import com.vaadin.ui.Grid.SelectionMode;
 // import com.vaadin.ui.MenuBar.Command;
@@ -205,18 +207,9 @@ public class DeviceProductionImporter extends BaseComponent {
 		return getTranslation(getI18nKey() + "." + key);
 	}
 
-	public void addListener(EditorSelectedListener listener) {
-		// try {
-		// 	Method method = EditorSelectedListener.class.getDeclaredMethod(EditorSelectedListener.EDITOR_SELECTED,
-		// 			new Class[] { EditorSelectedEvent.class });
-		// 	addListener(EditorSelectedEvent.class, listener, method);
-		// } catch (final java.lang.NoSuchMethodException e) {
-		// 	throw new java.lang.RuntimeException("Internal error, editor selected method not found");
-		// }
-	}
-
-	public void removeListener(EditorSelectedListener listener) {
-		//removeListener(EditorSelectedEvent.class, listener);
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public Registration addEditorSelectedListener(ComponentEventListener<EditorSelectedEvent<?>> listener) {
+		return addListener(EditorSelectedEvent.class, (ComponentEventListener) listener);
 	}
 
 

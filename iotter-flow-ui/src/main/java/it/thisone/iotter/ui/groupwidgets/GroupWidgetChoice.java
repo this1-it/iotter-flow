@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
@@ -12,7 +14,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import it.thisone.iotter.enums.GraphicWidgetType;
 import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
-import it.thisone.iotter.ui.common.EditorSelectedListener;
 import it.thisone.iotter.ui.common.WidgetTypeInstance;
 import it.thisone.iotter.ui.ifc.IGroupWidgetUiFactory;
 
@@ -21,7 +22,6 @@ public class GroupWidgetChoice extends Composite<VerticalLayout> {
     private static final long serialVersionUID = 1L;
 
     private final IGroupWidgetUiFactory config;
-    private final List<EditorSelectedListener> listeners = new ArrayList<>();
 
     public GroupWidgetChoice(IGroupWidgetUiFactory config) {
         this.config = config;
@@ -62,20 +62,12 @@ public class GroupWidgetChoice extends Composite<VerticalLayout> {
     }
 
     private void notifySelected(GraphicWidget widget) {
-        EditorSelectedEvent<GraphicWidget> event = new EditorSelectedEvent<>(this, widget);
-        for (EditorSelectedListener listener : listeners) {
-            listener.editorSelected(event);
-        }
+        fireEvent(new EditorSelectedEvent<>(this, widget));
     }
 
-    public void addListener(EditorSelectedListener listener) {
-        if (listener != null) {
-            listeners.add(listener);
-        }
-    }
-
-    public void removeListener(EditorSelectedListener listener) {
-        listeners.remove(listener);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Registration addEditorSelectedListener(ComponentEventListener<EditorSelectedEvent<?>> listener) {
+        return addListener(EditorSelectedEvent.class, (ComponentEventListener) listener);
     }
 
     public String getWindowStyle() {

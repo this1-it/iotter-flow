@@ -25,8 +25,6 @@ import it.thisone.iotter.persistence.model.GraphicWidget;
 import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.security.UserDetailsAdapter;
 import it.thisone.iotter.ui.common.BaseEditor;
-import it.thisone.iotter.ui.common.EditorSelectedEvent;
-import it.thisone.iotter.ui.common.EditorSelectedListener;
 import it.thisone.iotter.ui.common.charts.ChartUtils;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
@@ -334,20 +332,15 @@ public class GroupWidgetDesigner extends BaseEditor<GroupWidget> {
         placeHolder.openEditor(placeHolder.getWidget(), true);
     }
 
-    @SuppressWarnings("unchecked")
     public void openChoice() {
         GroupWidgetChoice content = new GroupWidgetChoice(new GroupWidgetUiFactory());
         Dialog dialog = createDialog(getI18nLabel("add_graph"), content);
-        content.addListener(new EditorSelectedListener() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void editorSelected(EditorSelectedEvent event) {
-                dialog.close();
-                if (event.getSelected() != null) {
-                    GraphicWidget item = (GraphicWidget) event.getSelected().iterator().next();
-                    createPlaceHolder(item.getType(), item.getProvider());
-                }
+        content.addEditorSelectedListener(event -> {
+            dialog.close();
+            if (event.getSelected() != null) {
+                @SuppressWarnings("unchecked")
+                GraphicWidget item = (GraphicWidget) event.getSelected().iterator().next();
+                createPlaceHolder(item.getType(), item.getProvider());
             }
         });
         dialog.open();

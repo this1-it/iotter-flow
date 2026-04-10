@@ -22,6 +22,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 
@@ -36,7 +37,6 @@ import it.thisone.iotter.persistence.model.MeasureUnit;
 import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.ui.common.BaseComponent;
 import it.thisone.iotter.ui.common.EditorSelectedEvent;
-import it.thisone.iotter.ui.common.EditorSelectedListener;
 import it.thisone.iotter.ui.common.MarkupsUtils;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
@@ -167,7 +167,6 @@ public class GraphicFeedChoice extends BaseComponent {
     private TreeDataProvider<TreeItem> dataProvider;
     private Map<Integer, GraphicFeed> selected;
     private Map<Integer, String> units;
-    private final List<EditorSelectedListener> listeners = new ArrayList<>();
 
     private Span selectionStatusLabel;
     private TextField textFilter;
@@ -509,14 +508,9 @@ public class GraphicFeedChoice extends BaseComponent {
         this.maxParameters = maxParameters;
     }
 
-    public void addListener(EditorSelectedListener listener) {
-        if (listener != null) {
-            listeners.add(listener);
-        }
-    }
-
-    public void removeListener(EditorSelectedListener listener) {
-        listeners.remove(listener);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Registration addEditorSelectedListener(ComponentEventListener<EditorSelectedEvent<?>> listener) {
+        return addListener(EditorSelectedEvent.class, (ComponentEventListener) listener);
     }
 
     public String getWindowStyle() {
@@ -535,10 +529,7 @@ public class GraphicFeedChoice extends BaseComponent {
     }
 
     private void notifySelection(List<GraphicFeed> items) {
-        EditorSelectedEvent<GraphicFeed> event = new EditorSelectedEvent<>(this, items);
-        for (EditorSelectedListener listener : listeners) {
-            listener.editorSelected(event);
-        }
+        fireEvent(new EditorSelectedEvent<>(this, items));
     }
 
     private void filterTree(String text) {

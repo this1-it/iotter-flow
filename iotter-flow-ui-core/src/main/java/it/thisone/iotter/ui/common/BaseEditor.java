@@ -4,9 +4,11 @@ import java.util.function.Consumer;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.shared.Registration;
 
 import it.thisone.iotter.persistence.model.BaseEntity;
 import it.thisone.iotter.ui.eventbus.PendingChangesEvent;
@@ -141,17 +143,9 @@ public abstract class BaseEditor<T extends BaseEntity> extends BaseComponent {
 	}
 
 	
-	public void addListener(EditorSavedListener listener) {
-//		try {
-//			Method method = EditorSavedListener.class.getDeclaredMethod(EditorSavedListener.EDITOR_SAVED, new Class[] { EditorSavedEvent.class });
-//			addListener(EditorSavedEvent.class, listener, method);
-//		} catch (final java.lang.NoSuchMethodException e) {
-//			throw new java.lang.RuntimeException("Internal error, editor saved method not found");
-//		}
-	}
-
-	public void removeListener(EditorSavedListener listener) {
-		//removeListener(EditorSavedEvent.class, listener);
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public Registration addEditorSavedListener(ComponentEventListener<EditorSavedEvent<?>> listener) {
+		return addListener(EditorSavedEvent.class, (ComponentEventListener) listener);
 	}
 	
 	

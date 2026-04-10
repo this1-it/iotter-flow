@@ -26,8 +26,6 @@ import it.thisone.iotter.persistence.model.NetworkGroup;
 import it.thisone.iotter.security.Permissions;
 import it.thisone.iotter.ui.common.AbstractBaseEntityForm;
 import it.thisone.iotter.ui.common.AbstractBaseEntityListing;
-import it.thisone.iotter.ui.common.EditorSavedEvent;
-import it.thisone.iotter.ui.common.EditorSavedListener;
 import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.ChannelUtils;
 import it.thisone.iotter.ui.ifc.ITabContent;
@@ -176,17 +174,10 @@ public class ChannelAlarmListing extends AbstractBaseEntityListing<Channel> impl
 		button.setIcon(VaadinIcon.USERS.create());
 		button.setId("users_button");
 		button.getElement().setProperty("title", getI18nLabel("alarm.notify_users"));
-		button.addClickListener(event -> {
+		button.addClickListener(clickEvent -> {
 			ChannelAlarmsUsers content = new ChannelAlarmsUsers(entity);
 			Dialog dialog = createDialog(getI18nLabel("alarm.notify_users"), content);
-			content.addListener(new EditorSavedListener() {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void editorSaved(EditorSavedEvent event) {
-					dialog.close();
-				}
-			});
+			content.addEditorSavedListener(savedEvent -> dialog.close());
 			dialog.open();
 		});
 		return button;
