@@ -11,11 +11,10 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 
-//import com.vaadin.flow.component.orderedlayout.Alignment;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 import it.thisone.iotter.enums.Period;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.model.TimePeriod;
 import it.thisone.iotter.ui.model.TimePeriod.TimePeriodEnum;
 
@@ -38,11 +37,14 @@ public class TimePeriodPopup extends CustomField<TimePeriod> {
 		}
 
 		content = new HorizontalLayout();
+		content.setAlignItems(Alignment.CENTER);
+		content.setPadding(false);
+		content.setSpacing(false);
+		content.getStyle().set("gap", "var(--lumo-space-xs)");
 		content.addClassName("timefield");
-		//content.setAlignItems(Alignment.CENTER);
 
 		label = new Span();
-		//label.addClassName(UIUtils.DISPLAY_1024PX_STYLE);
+		label.getStyle().set("white-space", "nowrap");
 
 		root = createPeriodsMenuBar();
 		content.add(label, root);

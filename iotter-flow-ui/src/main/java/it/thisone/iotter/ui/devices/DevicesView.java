@@ -1,9 +1,11 @@
 package it.thisone.iotter.ui.devices;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.vaadin.flow.components.TabLabel;
 import org.vaadin.flow.components.TabSheet;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
@@ -54,7 +56,8 @@ public class DevicesView extends BaseView {
 		tabsheet.setSizeFull();
 		DevicesListing listing = listingProvider.getObject();
 		listing.init(network, tabsheet);
-		Tab listingTab = tabsheet.addTab(listing.getI18nLabel("listingTab"), listing.getMainLayout());
+		
+		Tab listingTab = tabsheet.addTab(TabLabel.of(VaadinIcon.LIST,null), listing.getMainLayout());
 		tabsheet.setSelectedTab(listingTab);
 
 

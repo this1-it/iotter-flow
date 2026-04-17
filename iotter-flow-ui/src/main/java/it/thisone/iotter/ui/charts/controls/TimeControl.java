@@ -1,14 +1,13 @@
 package it.thisone.iotter.ui.charts.controls;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.eventbus.CloseOpenWindowsEvent;
 import it.thisone.iotter.ui.eventbus.UIEventBus;
 import it.thisone.iotter.ui.main.UiConstants;
-import it.thisone.iotter.util.PopupNotification;
 
 /**
  * component which contains field to control window and scroll
@@ -16,7 +15,7 @@ import it.thisone.iotter.util.PopupNotification;
  * Feature #261 Enhance chart Timecontrols for mobile display
  * changed layout to CssLayout
  */
-public class TimeControl extends Div {
+public class TimeControl extends HorizontalLayout {
 
 	private static final long serialVersionUID = 1L;
 	private static final String TIMEBUTTONS = "timebuttons";
@@ -38,6 +37,12 @@ public class TimeControl extends Div {
 
 	public TimeControl(TimeIntervalField interval, TimePeriodPopup period, TimeLastMeasureButton lastMeasure) {
 		addClassName(TIMEBUTTONS);
+		setPadding(false);
+		setSpacing(false);
+		setAlignItems(Alignment.CENTER);
+		getStyle().set("gap", "var(--lumo-space-xs)")
+				  .set("overflow", "hidden")
+				  .set("font-size", "var(--lumo-font-size-s)");
 
 		timePeriod = period;
 		timePeriod.getElement().setProperty("title", getI18nLabel("timePeriodPopup"));
@@ -47,35 +52,39 @@ public class TimeControl extends Div {
 
 		minus = new Button();
 		minus.setIcon(com.vaadin.flow.component.icon.VaadinIcon.ARROW_LEFT.create());
+		minus.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY_INLINE);
 		minus.getElement().setProperty("title", getI18nLabel("minus"));
 		minus.addClickListener(event -> timeInterval.scrollWindow(
 				timePeriod.getValue().getPeriod(), -timePeriod.getValue().getAmount()));
 
 		plus = new Button();
 		plus.setIcon(com.vaadin.flow.component.icon.VaadinIcon.ARROW_RIGHT.create());
+		plus.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY_INLINE);
 		plus.getElement().setProperty("title", getI18nLabel("plus"));
 		plus.addClickListener(event -> timeInterval.scrollWindow(
 				timePeriod.getValue().getPeriod(), timePeriod.getValue().getAmount()));
 
 		scrollLayout = new HorizontalLayout(minus, timePeriod, plus);
-		//scrollLayout.setAlignItems(Alignment.CENTER);
+		scrollLayout.setPadding(false);
+		scrollLayout.setSpacing(false);
+		scrollLayout.setAlignItems(Alignment.CENTER);
+		scrollLayout.getStyle().set("gap", "var(--lumo-space-xs)");
 
 		buttonsLayout = new HorizontalLayout();
-		//buttonsLayout.setAlignItems(Alignment.CENTER);
+		buttonsLayout.setPadding(false);
+		buttonsLayout.setSpacing(false);
+		buttonsLayout.setAlignItems(Alignment.CENTER);
 		buttonsLayout.addClassName(TIMEBUTTONS);
 
 		apply = new Button();
 		String setCaption = getI18nLabel("setCaption");
 		apply.setIcon(com.vaadin.flow.component.icon.VaadinIcon.CHECK.create());
-		//apply.addClassName(UIUtils.FOCUSED_STYLE);
+		apply.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY_INLINE);
 		apply.getElement().setProperty("title", setCaption);
 		apply.addClickListener(event -> {
 			if (uiEventBus != null) {
 				uiEventBus.post(new CloseOpenWindowsEvent());
 			}
-//			if (!timeInterval.updateValue()) {
-//				PopupNotification.show(getI18nLabel("invalidInterval"), PopupNotification.Type.WARNING);
-//			}
 		});
 
 		clear = new Button();
@@ -85,11 +94,11 @@ public class TimeControl extends Div {
 
 		buttonsLayout.add(apply);
 
-		add(scrollLayout);
-		add(timeInterval.getFromLayout());
-		add(timeInterval.getToLayout());
-		add(timeInterval.getPeriodLayout());
-		add(buttonsLayout);
+		HorizontalLayout fromLayout = timeInterval.getFromLayout();
+		HorizontalLayout toLayout = timeInterval.getToLayout();
+		add(scrollLayout, fromLayout, toLayout, timeInterval.getPeriodLayout(), buttonsLayout);
+		setFlexGrow(1f, fromLayout);
+		setFlexGrow(1f, toLayout);
 	}
 
 	public String getI18nLabel(String key) {

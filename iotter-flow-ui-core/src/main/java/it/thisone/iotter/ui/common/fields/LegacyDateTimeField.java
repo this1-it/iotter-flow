@@ -25,6 +25,7 @@ public class LegacyDateTimeField
         this.internalField = getContent();
 
         internalField.addValueChangeListener(e -> updateModelValue());
+        internalField.getElement().getStyle().set("min-width", "0");
     }
 
     public LegacyDateTimeField(String label,TimeZone tz) {

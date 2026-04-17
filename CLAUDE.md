@@ -24,7 +24,7 @@ If you violate these rules, you are breaking critical development protocols.
 
 ## Project Overview
 
-iotter-flow is a multi-module Java/Maven IoT application with a Vaadin Flow UI (Vaadin 14.8.14). The system provides device management, data collection, and visualization capabilities with MQTT integration, Cassandra time-series data storage, and a Spring Boot-based web interface.
+iotter-flow is a multi-module Java 21/Maven IoT application with a Vaadin Flow UI (Vaadin 24.10.0) and Spring Boot 3.4.3. The system provides device management, data collection, and visualization capabilities with MQTT integration, Cassandra time-series data storage, and a Spring Boot-based web interface.
 
 Many of the patterns used in Vaadin 8 are no longer compatible with Vaadin Flow.
 
@@ -144,15 +144,37 @@ iotter-flow-it            → Integration tests with Vaadin TestBench
 
 ### Technology Stack
 
-- **Java 8** (source/target 1.8)
-- **Spring Framework 5.3.39** (core, context, security)
-- **Spring Boot 2.7.18** (UI module only)
-- **Vaadin 14.8.14** (Flow framework for Java-based UI)
-- **Cassandra** with Spring Data Cassandra 3.4.18 and DataStax driver 4.17.0
-- **JPA/EclipseLink 2.6.2** for relational persistence
-- **MQTT** via Spring Integration 5.5.20 and Eclipse Paho 1.2.5
-- **Quartz 2.2.1** for job scheduling
-- **Webpack 4** for frontend bundling
+- **Java 21** (source/target 21)
+- **Spring Framework 6.2.5** (core, context, security)
+- **Spring Boot 3.4.3** (UI module only)
+- **Spring Security 6.5.9**
+- **Vaadin 24.10.0** (Flow framework for Java-based UI)
+- **Cassandra** with Spring Data Cassandra 4.4.3
+- **JPA/EclipseLink 4.0.4** with Jakarta Persistence 3.1.0
+- **MQTT** via Spring Integration 6.4.3
+- **Vite** for frontend bundling (Vaadin 24)
+
+### CSS Styling in Vaadin 24
+
+**Rule: never use `@CssImport` on classes inside JAR modules (e.g. `iotter-flow-ui-core`).**
+Vaadin 24 uses Vite for bundling. `@CssImport` annotations on classes inside dependency JARs are NOT reliably picked up by the dev bundle generator — the CSS will silently be absent.
+
+#### Correct approaches
+
+| Goal | How |
+|------|-----|
+| Global / utility CSS (light DOM) | Add file to `iotter-flow-ui/frontend/themes/iotter/` and `@import` it from `styles.css` |
+| Style a specific Vaadin web component's shadow DOM | `@CssImport(value="./themes/iotter/components/vaadin-xyz.css", themeFor="vaadin-xyz")` on a view/layout class **in the UI module** |
+| Load an external stylesheet | `@StyleSheet("context://css/file.css")` on a view class in the UI module |
+
+#### Where things live
+- `iotter-flow-ui/frontend/themes/iotter/styles.css` — main theme entry point, `@import` all custom CSS files here
+- `iotter-flow-ui/frontend/themes/iotter/components/` — per-component shadow DOM overrides
+- `iotter-flow-ui/frontend/themes/iotter/*.css` — custom light-DOM CSS files imported from `styles.css`
+
+#### What does NOT work
+- `@CssImport` on any class inside `iotter-flow-ui-core` or other non-UI modules — the annotation is ignored by the Vite bundle
+- Placing CSS only in a JAR's `META-INF/resources/frontend/` and expecting it to be auto-included — it won't be
 
 ### Key Application Components
 

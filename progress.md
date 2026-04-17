@@ -38,7 +38,7 @@ mvn -pl iotter-flow-ui spring-boot:run \
 mvn -pl iotter-flow-rest -am -DskipTests compile
 
 mvn -pl iotter-flow-rest spring-boot:run 
-
+mvn -pl iotter-flow-rest spring-boot:run -Pdebug
 
  mvn -pl iotter-flow-ui-core install && mvn -pl iotter-flow-ui spring-boot:run 
 
@@ -67,3 +67,10 @@ https://console.developers.google.com/
 
 find out if Vaadin 8 reflection-based listener registration are still in place and prepare list for replacing with proper Vaadin Flow ComponentEvent + ComponentEventListener + Registration
  pattern.
+
+
+2c1voh1901R2-1-67826
+
+
+find . -name target -type d -prune -exec rm -rf {} + && mvn -pl iotter-flow-ui-core install -q && rm -rf                               
+      iotter-flow-ui/target/dev-bundle iotter-flow-ui/target/

@@ -34,6 +34,7 @@ import it.thisone.iotter.persistence.model.GroupWidget;
 import it.thisone.iotter.persistence.service.GroupWidgetService;
 import it.thisone.iotter.ui.charts.AbstractChartAdapter;
 import it.thisone.iotter.ui.charts.controls.GraphicWidgetOptionsField;
+import it.thisone.iotter.ui.charts.controls.RealtimeButton;
 import it.thisone.iotter.ui.charts.controls.TimeControl;
 import it.thisone.iotter.ui.charts.controls.TimeIntervalField;
 import it.thisone.iotter.ui.charts.controls.TimePeriodPopup;
@@ -59,7 +60,6 @@ public class GroupWidgetVisualizer extends BaseComponent {
     public static Logger logger = LoggerFactory.getLogger(GroupWidgetVisualizer.class);
 
     private static final long serialVersionUID = -6776667672616201904L;
-    private static final int TIMECONTROLS_HEIGHT = 40;
 
 
     private final BackendServices backendServices;
@@ -161,13 +161,16 @@ public class GroupWidgetVisualizer extends BaseComponent {
 
     private Component buildContent() {
         HorizontalLayout toolbar = new HorizontalLayout();
-        toolbar.setHeight(TIMECONTROLS_HEIGHT + "px");
         toolbar.setWidthFull();
         toolbar.setPadding(false);
         toolbar.setSpacing(true);
+        toolbar.getStyle()
+                .set("flex-shrink", "0")
+                .set("align-items", "flex-start")
+                .set("border-bottom", "1px solid var(--lumo-contrast-10pct)")
+                .set("padding-bottom", "var(--lumo-space-xs)");
         Component controls = buildTimeControls();
         toolbar.add(controls);
-        toolbar.setVerticalComponentAlignment(Alignment.CENTER, controls);
         toolbar.setFlexGrow(1f, controls);
 
         VerticalLayout content = new VerticalLayout();
@@ -175,7 +178,6 @@ public class GroupWidgetVisualizer extends BaseComponent {
         content.setPadding(false);
         content.setSizeFull();
         content.add(toolbar, gridstackBoard);
-        content.setHorizontalComponentAlignment(Alignment.CENTER, toolbar);
         content.setFlexGrow(1f, gridstackBoard);
         content.addClickListener(event -> postEvent(new CloseOpenWindowsEvent()));
         return content;
@@ -183,6 +185,7 @@ public class GroupWidgetVisualizer extends BaseComponent {
 
     private Component buildTimeControls() {
         exportButton = new Button(VaadinIcon.DOWNLOAD.create());
+        exportButton.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_SMALL, com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE);
         exportButton.getElement().setProperty("title", getI18nLabel("export"));
         exportButton.addClickListener(event -> {
             ExportDialog dialog = new ExportDialog(createExportConfig(), createExportProperties(), null, ForkJoinPool.commonPool(),
@@ -214,7 +217,8 @@ public class GroupWidgetVisualizer extends BaseComponent {
         timeControl = new TimeControl(intervalField, periodField, null);
         timeControl.setUiEventBus(uiEventBus);
 
-        optionsField = new GraphicWidgetOptionsField();
+        //optionsField = new GraphicWidgetOptionsField();
+        optionsField = new RealtimeButton();
         GraphicWidgetOptions options = new GraphicWidgetOptions();
         options.setRealTime(entity.getOptions().isRealTime());
         optionsField.setValue(options);
@@ -233,18 +237,16 @@ public class GroupWidgetVisualizer extends BaseComponent {
         });
 
         HorizontalLayout controls = new HorizontalLayout();
-        controls.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+        controls.setDefaultVerticalComponentAlignment(Alignment.START);
         controls.addClassName(TIME_BUTTONS_STYLE);
         controls.addClassName(TIME_CONTROLS_STYLE);
         controls.setPadding(false);
         controls.setSpacing(true);
 
         controls.add(timeControl);
-        controls.setFlexGrow(0.8f, timeControl);
+        controls.setFlexGrow(1f, timeControl);
         controls.add(exportButton);
-        controls.setFlexGrow(0.1f, exportButton);
         controls.add(optionsField);
-        controls.setFlexGrow(0.1f, optionsField);
         return controls;
     }
 

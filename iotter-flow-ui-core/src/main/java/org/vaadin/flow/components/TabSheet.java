@@ -4,6 +4,7 @@ import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -93,22 +94,22 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
 
 
     public Tab addCloseableTab(String title, Component contents) {
-        // final Tab tab = createTab();
-        // if (label != null) {
-        //     tab.setLabel(label);
-        // }
-
         Span label = new Span(title);
+        label.addClassName("closeable-tab-label");
 
-        Button close = new Button(VaadinIcon.CLOSE_SMALL.create());
-        close.getElement().getStyle().set("margin-left", "6px");
-        close.getElement().getStyle().set("padding", "0");
-        close.getElement().getStyle().set("min-width", "auto");
+        Icon closeIcon = VaadinIcon.CLOSE.create();
+        closeIcon.getStyle().set("width", "14px").set("height", "14px")
+                            .set("color", "var(--lumo-secondary-text-color)");
+        Button close = new Button(closeIcon);
+        close.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE);
+        close.getElement().getStyle().set("padding", "0").set("min-width", "auto");
 
         HorizontalLayout header = new HorizontalLayout(label, close);
+        header.addClassName("closeable-tab-header");
         header.setPadding(false);
         header.setSpacing(false);
         header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setFlexGrow(1, label);
 
         Tab tab = new Tab(header);
 
@@ -136,7 +137,7 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
      */
     
     public Tab addTab(String label) {
-        return addTab(label, null);
+        return addTab(label, (Component) null);
     }
 
     /**
@@ -148,7 +149,7 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
      */
     
     public Tab addTab(Component contents) {
-        return addTab(null, contents);
+        return addTab((String) null, contents);
     }
 
     /**
@@ -160,7 +161,7 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
      */
     
     public Tab addTab() {
-        return addTab(null, null);
+        return addTab((String)null, null);
     }
 
     /**
@@ -187,7 +188,7 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
      */
     
     public Tab addLazyTab( SerializableSupplier<? extends Component> contentsProvider) {
-        return addLazyTab(null, contentsProvider);
+        return addLazyTab((String)null, contentsProvider);
     }
 
     /**
@@ -229,6 +230,68 @@ public class TabSheet extends Composite<Component> implements HasStyle, HasSize 
         if (!tabsToContents.containsKey(tab)) {
             throw new IllegalArgumentException("Parameter tab: invalid value " + tab + ": not hosted in this TabSheet");
         }
+    }
+
+    /**
+     * Adds a tab with a responsive {@link TabLabel} (icon + text).
+     */
+    public Tab addTab(TabLabel label, Component contents) {
+        Tab tab = new Tab(label);
+        tabsComponent.add(tab);
+        tabsToContents.put(tab, contents);
+        update();
+        return tab;
+    }
+
+    /**
+     * Adds a tab with a responsive {@link TabLabel} (icon + text) and no contents.
+     */
+    public Tab addTab(TabLabel label) {
+        return addTab(label, null);
+    }
+
+    /**
+     * Adds a lazy tab with a responsive {@link TabLabel} (icon + text).
+     */
+    public Tab addLazyTab(TabLabel label, SerializableSupplier<? extends Component> contentsProvider) {
+        Objects.requireNonNull(contentsProvider);
+        Tab tab = new Tab(label);
+        tabsComponent.add(tab);
+        tabsToContents.put(tab, null);
+        tabsToContentProvider.put(tab, contentsProvider);
+        update();
+        return tab;
+    }
+
+    /**
+     * Adds a closeable tab with a responsive {@link TabLabel} (icon + text).
+     */
+    public Tab addCloseableTab(TabLabel label, Component contents) {
+        Icon closeIcon = VaadinIcon.CLOSE.create();
+        closeIcon.getStyle().set("width", "14px").set("height", "14px")
+                            .set("color", "var(--lumo-secondary-text-color)");
+        Button close = new Button(closeIcon);
+        close.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY_INLINE);
+        close.getElement().getStyle().set("padding", "0").set("min-width", "auto");
+
+        HorizontalLayout header = new HorizontalLayout(label, close);
+        header.addClassName("closeable-tab-header");
+        header.setPadding(false);
+        header.setSpacing(false);
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setFlexGrow(1, label);
+
+        Tab tab = new Tab(header);
+        close.addClickListener(e -> {
+            tabsComponent.remove(tab);
+            tabsToContents.remove(tab);
+            update();
+        });
+
+        tabsComponent.add(tab);
+        tabsToContents.put(tab, contents);
+        update();
+        return tab;
     }
 
     /**

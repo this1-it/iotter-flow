@@ -137,7 +137,7 @@ public class DataResultSetSubscriber implements InitializingBean, DisposableBean
 			mqtt.start();
 		}
 		logger.info("DataResultSetSubscriber initialized");
-		subscriptionService.checkSumDevices();
+		//subscriptionService.checkSumDevices();
 
 	}
 

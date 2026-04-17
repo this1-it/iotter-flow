@@ -1,4 +1,9 @@
 /* =============================================================
+   Tab label – responsive icon+text tabs
+   ============================================================= */
+@import './tab-label.css';
+
+/* =============================================================
    iotter theme – layout overrides
    Fix parity main-layout.css hardcoded colors that break dark mode
    ============================================================= */

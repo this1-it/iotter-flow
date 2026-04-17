@@ -8,18 +8,15 @@ import java.util.TimeZone;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.combobox.ComboBox;
-//import com.vaadin.flow.component.combobox.ComboBoxVariant;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-//import com.vaadin.flow.component.menubar.MenuItem;
-//import com.vaadin.flow.component.orderedlayout.Alignment;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 import it.thisone.iotter.enums.Period;
-import it.thisone.iotter.ui.common.UIUtils;
 import it.thisone.iotter.ui.common.charts.TimeIntervalHelper;
 import it.thisone.iotter.ui.common.fields.LegacyDateTimeField;
 import it.thisone.iotter.ui.model.TimeInterval;
@@ -69,49 +66,53 @@ public class TimeIntervalField extends CustomField<TimeInterval> {
 		Span to = new Span(toCaption);
 
 		fromDateField = new LegacyDateTimeField(TimeZone.getTimeZone("Europe/Rome"));
-		//fromDateField.addClassName("small");
+		fromDateField.getElement().setAttribute("theme", "small");
 
 		toDateField = new LegacyDateTimeField(TimeZone.getTimeZone("Europe/Rome"));
-		//toDateField.addClassName("small");
+		toDateField.getElement().setAttribute("theme", "small");
 		toDateField.setMax(new Date());
 
 		fromLayout = new HorizontalLayout();
-		//fromLayout.setAlignItems(Alignment.CENTER);
+		fromLayout.setAlignItems(Alignment.CENTER);
+		fromLayout.setPadding(false);
+		fromLayout.setSpacing(false);
+		fromLayout.getStyle().set("gap", "var(--lumo-space-xs)").set("min-width", "0").set("flex-shrink", "1");
 		fromLayout.addClassName("timefield");
 		fromLayout.add(from, fromDateField);
-		fromLayout.setFlexGrow(0.2f, from);
-		fromLayout.setFlexGrow(0.8f, fromDateField);
+		fromLayout.setFlexGrow(1f, fromDateField);
 		if (fromTimeField != null) {
 			fromLayout.add(fromTimeField);
-			fromLayout.setFlexGrow(0.4f, fromTimeField);
 		}
 
 		toLayout = new HorizontalLayout();
-		//toLayout.setAlignItems(Alignment.CENTER);
+		toLayout.setAlignItems(Alignment.CENTER);
+		toLayout.setPadding(false);
+		toLayout.setSpacing(false);
+		toLayout.getStyle().set("gap", "var(--lumo-space-xs)").set("min-width", "0").set("flex-shrink", "1");
 		toLayout.addClassName("timefield");
 		toLayout.add(to, toDateField);
-		toLayout.setFlexGrow(0.2f, to);
-		toLayout.setFlexGrow(0.8f, toDateField);
+		toLayout.setFlexGrow(1f, toDateField);
 		if (toTimeField != null) {
 			toLayout.add(toTimeField);
-			toLayout.setFlexGrow(0.4f, toTimeField);
 		}
 
 		Calendar calendar = helper.getCalendar();
 		SimpleDateFormat sdf = new SimpleDateFormat("XXX");
 		sdf.setTimeZone(helper.getTimeZone());
 		gmt = new Span(sdf.format(calendar.getTime()));
-		//gmt.addClassName(UIUtils.DISPLAY_1024PX_STYLE);
 
 		periodLayout = new HorizontalLayout();
-//		periodLayout.setAlignItems(Alignment.CENTER);
+		periodLayout.setAlignItems(Alignment.CENTER);
+		periodLayout.setPadding(false);
+		periodLayout.setSpacing(false);
+		periodLayout.getStyle().set("gap", "var(--lumo-space-xs)");
 		periodLayout.addClassName("timefield");
 		periodLayout.add(gmt);
 		periodMenu = createPeriodsMenuBar();
 		periodLayout.add(periodMenu);
 
 		content = new HorizontalLayout(fromLayout, toLayout, periodLayout);
-//		content.setAlignItems(Alignment.CENTER);
+		content.setAlignItems(Alignment.CENTER);
 		add(content);
 		return content;
 	}

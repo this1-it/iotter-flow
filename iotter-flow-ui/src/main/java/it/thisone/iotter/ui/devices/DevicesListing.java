@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.vaadin.flow.components.TabLabel;
 import org.vaadin.flow.components.TabSheet;
 
 import com.google.common.collect.Range;
@@ -519,7 +520,7 @@ public class DevicesListing extends AbstractBaseEntityListing<Device> {
 
 
         if (visualizer != null && this.tabsheet != null) {
-			Tab tab = tabsheet.addCloseableTab(item.getName(),visualizer);
+			Tab tab = tabsheet.addCloseableTab(TabLabel.of(VaadinIcon.CHART, item.getName()), visualizer);
 			tabsheet.setSelectedTab(tab);
 		}
 
